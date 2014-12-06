@@ -8,6 +8,10 @@ authors = [ "Nikita Pekin <contact@nikitapek.in>" ]
 
 name = "colonize"
 
+[dependencies.conrod]
+
+git = "https://github.com/PistonDevelopers/conrod"
+
 [dependencies.event]
 
 git = "https://github.com/PistonDevelopers/event"

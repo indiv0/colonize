@@ -2,12 +2,26 @@
 name = "colonize"
 version = "0.0.1"
 dependencies = [
+ "conrod 0.0.0 (git+https://github.com/PistonDevelopers/conrod)",
  "event 0.0.0 (git+https://github.com/PistonDevelopers/event)",
  "glfw_window 0.0.0 (git+https://github.com/PistonDevelopers/glfw_window)",
  "nice_glfw 1.0.0 (git+https://github.com/cmr/nice_glfw)",
  "opengl_graphics 0.0.0 (git+https://github.com/PistonDevelopers/opengl_graphics)",
  "resources_package 0.0.1-pre.1 (git+https://github.com/tomaka/rust-package)",
  "shader_version 0.0.0 (git+https://github.com/pistondevelopers/shader_version)",
+]
+
+[[package]]
+name = "conrod"
+version = "0.0.0"
+source = "git+https://github.com/PistonDevelopers/conrod#cdaefb2b4e7df16c77170b265d7e5c4fc350c03d"
+dependencies = [
+ "event 0.0.0 (git+https://github.com/PistonDevelopers/event)",
+ "freetype-rs 0.0.0 (git+https://github.com/PistonDevelopers/freetype-rs.git)",
+ "graphics 0.0.0 (git+https://github.com/pistondevelopers/graphics)",
+ "input 0.0.0 (git+https://github.com/pistondevelopers/input)",
+ "opengl_graphics 0.0.0 (git+https://github.com/PistonDevelopers/opengl_graphics)",
+ "vecmath 0.0.0 (git+https://github.com/PistonDevelopers/vecmath)",
 ]
 
 [[package]]

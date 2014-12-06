@@ -7,3 +7,27 @@ authors = [ "Nikita Pekin <contact@nikitapek.in>" ]
 [[bin]]
 
 name = "colonize"
+
+[dependencies.event]
+
+git = "https://github.com/PistonDevelopers/event"
+
+[dependencies.glfw_window]
+
+git = "https://github.com/PistonDevelopers/glfw_window"
+
+[dependencies.nice_glfw]
+
+git = "https://github.com/cmr/nice_glfw"
+
+[dependencies.opengl_graphics]
+
+git = "https://github.com/PistonDevelopers/opengl_graphics"
+
+[dependencies.shader_version]
+
+git = "https://github.com/PistonDevelopers/shader_version"
+
+[dependencies.resources_package]
+
+git = "https://github.com/tomaka/rust-package"

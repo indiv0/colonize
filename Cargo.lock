@@ -1,4 +1,210 @@
 [root]
 name = "colonize"
 version = "0.0.1"
+dependencies = [
+ "event 0.0.0 (git+https://github.com/PistonDevelopers/event)",
+ "glfw_window 0.0.0 (git+https://github.com/PistonDevelopers/glfw_window)",
+ "nice_glfw 1.0.0 (git+https://github.com/cmr/nice_glfw)",
+ "opengl_graphics 0.0.0 (git+https://github.com/PistonDevelopers/opengl_graphics)",
+ "resources_package 0.0.1-pre.1 (git+https://github.com/tomaka/rust-package)",
+ "shader_version 0.0.0 (git+https://github.com/pistondevelopers/shader_version)",
+]
+
+[[package]]
+name = "current"
+version = "0.0.0"
+source = "git+https://github.com/pistondevelopers/current#ad63ba6a342071ddbcc1652e503c91358504d708"
+
+[[package]]
+name = "event"
+version = "0.0.0"
+source = "git+https://github.com/PistonDevelopers/event#04fa0d834574c6b59e6773d485387f55ebebfcb6"
+dependencies = [
+ "current 0.0.0 (git+https://github.com/pistondevelopers/current)",
+ "event_loop 0.0.0 (git+https://github.com/pistondevelopers/event_loop)",
+ "input 0.0.0 (git+https://github.com/pistondevelopers/input)",
+ "window 0.0.0 (git+https://github.com/pistondevelopers/window)",
+]
+
+[[package]]
+name = "event_loop"
+version = "0.0.0"
+source = "git+https://github.com/pistondevelopers/event_loop#b2a47dd133069467b3ec83d4ff3d585789d6a851"
+dependencies = [
+ "current 0.0.0 (git+https://github.com/pistondevelopers/current)",
+ "time 0.1.0 (git+https://github.com/rust-lang/time)",
+]
+
+[[package]]
+name = "freetype-rs"
+version = "0.0.0"
+source = "git+https://github.com/PistonDevelopers/freetype-rs.git#994de62bd9117da3f666e2a257008371eb18d2e0"
+
+[[package]]
+name = "gcc"
+version = "0.1.0"
+source = "git+https://github.com/alexcrichton/gcc-rs#d32b24466d3e0094cef1c1809a04d7a28536f0e0"
+
+[[package]]
+name = "gl"
+version = "0.0.1"
+source = "git+https://github.com/bjz/gl-rs#d212190fa35b0c5192565a4e3ac08be16ef8d235"
+dependencies = [
+ "gl_generator 0.0.1 (git+https://github.com/bjz/gl-rs)",
+]
+
+[[package]]
+name = "gl_common"
+version = "0.0.1"
+source = "git+https://github.com/bjz/gl-rs#d212190fa35b0c5192565a4e3ac08be16ef8d235"
+
+[[package]]
+name = "gl_generator"
+version = "0.0.1"
+source = "git+https://github.com/bjz/gl-rs#d212190fa35b0c5192565a4e3ac08be16ef8d235"
+dependencies = [
+ "gl_common 0.0.1 (git+https://github.com/bjz/gl-rs)",
+ "khronos_api 0.0.2 (git+https://github.com/bjz/gl-rs)",
+ "rust-xml 0.1.2-pre (git+https://github.com/netvl/rust-xml)",
+]
+
+[[package]]
+name = "glfw"
+version = "0.0.1"
+source = "git+https://github.com/bjz/glfw-rs#978384d89cb2371216f184129ab8cae62b250614"
+dependencies = [
+ "glfw-sys 3.0.4 (git+https://github.com/servo/glfw?ref=cargo-3.0.4)",
+ "semver 0.1.3 (git+https://github.com/rust-lang/semver)",
+]
+
+[[package]]
+name = "glfw-sys"
+version = "3.0.4"
+source = "git+https://github.com/servo/glfw?ref=cargo-3.0.4#765dace7e4125b87c764f5ac0e7a80eae5c550b2"
+
+[[package]]
+name = "glfw_window"
+version = "0.0.0"
+source = "git+https://github.com/PistonDevelopers/glfw_window#c6f754f0524dc9ec6d8eaf28aa9ad78bbf39f05a"
+dependencies = [
+ "gl 0.0.1 (git+https://github.com/bjz/gl-rs)",
+ "glfw 0.0.1 (git+https://github.com/bjz/glfw-rs)",
+ "input 0.0.0 (git+https://github.com/pistondevelopers/input)",
+ "shader_version 0.0.0 (git+https://github.com/pistondevelopers/shader_version)",
+ "window 0.0.0 (git+https://github.com/pistondevelopers/window)",
+]
+
+[[package]]
+name = "graphics"
+version = "0.0.0"
+source = "git+https://github.com/pistondevelopers/graphics#409f2c08c6fb71c1e7013f32a0e12e75d6e4f3cc"
+dependencies = [
+ "current 0.0.0 (git+https://github.com/pistondevelopers/current)",
+ "read_color 0.0.1 (git+https://github.com/PistonDevelopers/read_color)",
+ "texture 0.0.0 (git+https://github.com/pistondevelopers/texture)",
+ "vecmath 0.0.0 (git+https://github.com/PistonDevelopers/vecmath)",
+]
+
+[[package]]
+name = "image"
+version = "0.2.0-alpha.2"
+source = "git+https://github.com/pistondevelopers/image#a48cd66d42192a06988eb3e5db94381303e26b9a"
+
+[[package]]
+name = "input"
+version = "0.0.0"
+source = "git+https://github.com/pistondevelopers/input#fb351501f522c8ee0d88954d5c77936458def122"
+
+[[package]]
+name = "khronos_api"
+version = "0.0.2"
+source = "git+https://github.com/bjz/gl-rs#d212190fa35b0c5192565a4e3ac08be16ef8d235"
+
+[[package]]
+name = "libglfw"
+version = "3.0.3"
+source = "git+https://github.com/csherratt/glfw#9f2ffe50c5575f2a7f4d44928d39697a78c9f7be"
+
+[[package]]
+name = "nice_glfw"
+version = "1.0.0"
+source = "git+https://github.com/cmr/nice_glfw#110b4197ae2fe06842869e254cb959c3ad49d749"
+dependencies = [
+ "glfw 0.0.1 (git+https://github.com/bjz/glfw-rs)",
+ "libglfw 3.0.3 (git+https://github.com/csherratt/glfw)",
+]
+
+[[package]]
+name = "opengl_graphics"
+version = "0.0.0"
+source = "git+https://github.com/PistonDevelopers/opengl_graphics#fbf15e4f9f494e635fdf1667be317b35c727705f"
+dependencies = [
+ "freetype-rs 0.0.0 (git+https://github.com/PistonDevelopers/freetype-rs.git)",
+ "gl 0.0.1 (git+https://github.com/bjz/gl-rs)",
+ "graphics 0.0.0 (git+https://github.com/pistondevelopers/graphics)",
+ "image 0.2.0-alpha.2 (git+https://github.com/pistondevelopers/image)",
+ "shader_version 0.0.0 (git+https://github.com/pistondevelopers/shader_version)",
+ "texture 0.0.0 (git+https://github.com/pistondevelopers/texture)",
+]
+
+[[package]]
+name = "read_color"
+version = "0.0.1"
+source = "git+https://github.com/PistonDevelopers/read_color#c563f9f02a0879353f1c360be1817fe0dadfa9d3"
+
+[[package]]
+name = "resources_package"
+version = "0.0.1-pre.1"
+source = "git+https://github.com/tomaka/rust-package#d3746f29260ca841e245cdc20bae108549943f00"
+dependencies = [
+ "resources_package_package 0.0.1-pre.1 (git+https://github.com/tomaka/rust-package)",
+]
+
+[[package]]
+name = "resources_package_package"
+version = "0.0.1-pre.1"
+source = "git+https://github.com/tomaka/rust-package#d3746f29260ca841e245cdc20bae108549943f00"
+
+[[package]]
+name = "rust-xml"
+version = "0.1.2-pre"
+source = "git+https://github.com/netvl/rust-xml#2d9df3267aeaa4d442e1e19a4dfed733cb1397ed"
+
+[[package]]
+name = "semver"
+version = "0.1.3"
+source = "git+https://github.com/rust-lang/semver#29212953f839337c672d185dde74e14b5dfb1f46"
+
+[[package]]
+name = "shader_version"
+version = "0.0.0"
+source = "git+https://github.com/pistondevelopers/shader_version#32364088516495b11b5ac484df923c9fc2854b85"
+
+[[package]]
+name = "texture"
+version = "0.0.0"
+source = "git+https://github.com/pistondevelopers/texture#65e7bbd59a2a2e8354ec0dd0cdd35260db64f85b"
+
+[[package]]
+name = "time"
+version = "0.1.0"
+source = "git+https://github.com/rust-lang/time#b8e219aa9fca15ed1377a7d62aff1eb4378f3ba4"
+dependencies = [
+ "gcc 0.1.0 (git+https://github.com/alexcrichton/gcc-rs)",
+]
+
+[[package]]
+name = "vecmath"
+version = "0.0.0"
+source = "git+https://github.com/PistonDevelopers/vecmath#e0efa852073bf6129dc6b888752306f0de7aea30"
+
+[[package]]
+name = "window"
+version = "0.0.0"
+source = "git+https://github.com/pistondevelopers/window#888aeccd551a9bd12cd0324a13b919c1ae34e9ee"
+dependencies = [
+ "current 0.0.0 (git+https://github.com/pistondevelopers/current)",
+ "event_loop 0.0.0 (git+https://github.com/pistondevelopers/event_loop)",
+ "input 0.0.0 (git+https://github.com/pistondevelopers/input)",
+]
 

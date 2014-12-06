@@ -55,7 +55,7 @@ fn main() {
     let glyph_cache = GlyphCache::new(&font_path).unwrap();
     let mut uic = UiContext::new(glyph_cache, theme);
 
-    let mut app = App::new(uic);
+    let mut app = App::new();
     app.load();
 
     for e in event_iter {
@@ -66,7 +66,7 @@ fn main() {
                     app.update(&args),
                 Event::Render(args) => {
                     gl.draw([0, 0, args.width as i32, args.height as i32], |_, gl| {
-                        app.render(&args, gl);
+                        app.render(&args, gl, &mut uic);
                     });
                 },
                 Event::Input(Press(button)) =>

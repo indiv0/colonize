@@ -9,8 +9,11 @@ extern crate glfw;
 extern crate glfw_window;
 extern crate nice_glfw;
 extern crate opengl_graphics;
+extern crate quack;
+extern crate sdl2_window;
 extern crate shader_version;
-extern crate window;
+
+use std::cell::RefCell;
 
 // External use imports.
 use conrod::{Theme, UiContext};
@@ -20,6 +23,7 @@ use glfw_window::GlfwWindow;
 use nice_glfw::WindowBuilder;
 use opengl_graphics::Gl;
 use opengl_graphics::glyph_cache::GlyphCache;
+use quack::Set;
 use shader_version::opengl::OpenGL;
 
 // Local imports.
@@ -59,7 +63,7 @@ fn main() {
     app.load();
 
     for e in event_iter {
-            use input::InputEvent::{ Press, Release };
+            use input::Input::{ Press, Release };
 
             match e {
                 Event::Update(args) =>

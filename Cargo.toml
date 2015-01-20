@@ -35,3 +35,7 @@ git = "https://github.com/PistonDevelopers/shader_version"
 [dependencies.resources_package]
 
 git = "https://github.com/tomaka/rust-package"
+
+[dependencies.quack]
+
+git = "https://github.com/PistonDevelopers/quack"

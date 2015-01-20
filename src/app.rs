@@ -67,7 +67,7 @@ impl App {
                     .rgba(0.4, 0.75, 0.6, 1.0)
                     .frame(self.frame_width)
                     .label("Singleplayer")
-                    .callback(|| self.bg_color = Color::random())
+                    .callback(Box::new(|| self.bg_color = Color::random()))
                     .draw(gl);
                 uic.button(0u64)
                     .dimensions(90.0, 60.0)
@@ -75,7 +75,7 @@ impl App {
                     .rgba(0.4, 0.75, 0.6, 1.0)
                     .frame(self.frame_width)
                     .label("Multiplayer")
-                    .callback(|| self.bg_color = Color::random())
+                    .callback(Box::new(|| self.bg_color = Color::random()))
                     .draw(gl);
                 uic.button(0u64)
                     .dimensions(90.0, 60.0)
@@ -83,7 +83,7 @@ impl App {
                     .rgba(0.4, 0.75, 0.6, 1.0)
                     .frame(self.frame_width)
                     .label("Options")
-                    .callback(|| self.bg_color = Color::random())
+                    .callback(Box::new(|| self.bg_color = Color::random()))
                     .draw(gl);
                 uic.button(0u64)
                     .dimensions(90.0, 60.0)
@@ -91,7 +91,7 @@ impl App {
                     .rgba(0.4, 0.75, 0.6, 1.0)
                     .frame(self.frame_width)
                     .label("Credits")
-                    .callback(|| self.bg_color = Color::random())
+                    .callback(Box::new(|| self.bg_color = Color::random()))
                     .draw(gl);
             }
         }

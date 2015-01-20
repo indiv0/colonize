@@ -12,11 +12,11 @@ name = "colonize"
 
 git = "https://github.com/PistonDevelopers/conrod"
 
-[dependencies.event]
+[dependencies.pistoncore-event]
 
 git = "https://github.com/PistonDevelopers/event"
 
-[dependencies.glfw_window]
+[dependencies.pistoncore-glfw_window]
 
 git = "https://github.com/PistonDevelopers/glfw_window"
 
@@ -24,7 +24,7 @@ git = "https://github.com/PistonDevelopers/glfw_window"
 
 git = "https://github.com/cmr/nice_glfw"
 
-[dependencies.opengl_graphics]
+[dependencies.piston2d-opengl_graphics]
 
 git = "https://github.com/PistonDevelopers/opengl_graphics"
 

@@ -10,6 +10,7 @@ dependencies = [
  "pistoncore-event 0.0.5 (git+https://github.com/PistonDevelopers/event)",
  "pistoncore-glfw_window 0.0.1 (git+https://github.com/PistonDevelopers/glfw_window)",
  "pistoncore-input 0.0.5 (git+https://github.com/PistonDevelopers/input)",
+ "pistoncore-sdl2_window 0.0.0 (git+https://github.com/PistonDevelopers/sdl2_window.git)",
  "quack 0.0.2 (git+https://github.com/PistonDevelopers/quack)",
  "resources_package 0.0.4-pre (git+https://github.com/tomaka/rust-package)",
  "shader_version 0.0.1 (git+https://github.com/PistonDevelopers/shader_version)",
@@ -33,19 +34,19 @@ dependencies = [
  "bitflags 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "clock_ticks 0.0.2 (git+https://github.com/tomaka/clock_ticks)",
  "freetype-rs 0.0.5 (git+https://github.com/PistonDevelopers/freetype-rs.git)",
- "piston2d-graphics 0.0.6 (git+https://github.com/PistonDevelopers/graphics.git)",
+ "piston2d-graphics 0.0.6 (git+https://github.com/pistondevelopers/graphics)",
  "piston2d-opengl_graphics 0.0.6 (git+https://github.com/PistonDevelopers/opengl_graphics)",
  "pistoncore-event 0.0.5 (git+https://github.com/PistonDevelopers/event)",
  "pistoncore-input 0.0.5 (git+https://github.com/PistonDevelopers/input)",
  "quack 0.0.2 (git+https://github.com/PistonDevelopers/quack)",
  "rustc-serialize 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)",
- "vecmath 0.0.3 (git+https://github.com/PistonDevelopers/vecmath.git)",
+ "vecmath 0.0.3 (git+https://github.com/PistonDevelopers/vecmath)",
 ]
 
 [[package]]
 name = "freetype-rs"
 version = "0.0.5"
-source = "git+https://github.com/PistonDevelopers/freetype-rs.git#2384f5e21e7841c9be2fefc788a7decccdf1035c"
+source = "git+https://github.com/PistonDevelopers/freetype-rs.git#8c548000474ba0e770631f7b265058e19d91f28d"
 dependencies = [
  "bitflags 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "freetype-sys 0.0.2 (git+https://github.com/PistonDevelopers/freetype-sys)",
@@ -167,31 +168,31 @@ dependencies = [
 [[package]]
 name = "piston-texture"
 version = "0.0.1"
-source = "git+https://github.com/PistonDevelopers/texture#0380876cec71e384841d5a06ad32cb462c97be20"
+source = "git+https://github.com/pistondevelopers/texture#0380876cec71e384841d5a06ad32cb462c97be20"
 
 [[package]]
 name = "piston2d-graphics"
 version = "0.0.6"
-source = "git+https://github.com/PistonDevelopers/graphics.git#630f727de164552e73f65f1ddc923c5dfc9d9f8f"
+source = "git+https://github.com/pistondevelopers/graphics#630f727de164552e73f65f1ddc923c5dfc9d9f8f"
 dependencies = [
  "interpolation 0.0.1 (git+https://github.com/PistonDevelopers/interpolation)",
- "piston-texture 0.0.1 (git+https://github.com/PistonDevelopers/texture)",
+ "piston-texture 0.0.1 (git+https://github.com/pistondevelopers/texture)",
  "quack 0.0.2 (git+https://github.com/PistonDevelopers/quack)",
  "read_color 0.0.2 (git+https://github.com/PistonDevelopers/read_color)",
- "vecmath 0.0.3 (git+https://github.com/PistonDevelopers/vecmath.git)",
+ "vecmath 0.0.3 (git+https://github.com/PistonDevelopers/vecmath)",
 ]
 
 [[package]]
 name = "piston2d-opengl_graphics"
 version = "0.0.6"
-source = "git+https://github.com/PistonDevelopers/opengl_graphics#04e7bcab89bf311aa0a19babbb0ddcd3f7c7e8fb"
+source = "git+https://github.com/PistonDevelopers/opengl_graphics#e2f2279042ba83057152d60b333b780dce37f4ba"
 dependencies = [
  "freetype-rs 0.0.5 (git+https://github.com/PistonDevelopers/freetype-rs.git)",
  "gl 0.0.6 (git+https://github.com/bjz/gl-rs)",
  "image 0.2.0-alpha.8 (git+https://github.com/pistondevelopers/image)",
  "khronos_api 0.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "piston-texture 0.0.1 (git+https://github.com/PistonDevelopers/texture)",
- "piston2d-graphics 0.0.6 (git+https://github.com/PistonDevelopers/graphics.git)",
+ "piston-texture 0.0.1 (git+https://github.com/pistondevelopers/texture)",
+ "piston2d-graphics 0.0.6 (git+https://github.com/pistondevelopers/graphics)",
  "shader_version 0.0.1 (git+https://github.com/PistonDevelopers/shader_version)",
 ]
 
@@ -234,6 +235,19 @@ source = "git+https://github.com/PistonDevelopers/input#ce3ba43c2757b20a8fc5b92e
 dependencies = [
  "bitflags 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustc-serialize 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "pistoncore-sdl2_window"
+version = "0.0.0"
+source = "git+https://github.com/PistonDevelopers/sdl2_window.git#1395de2326474fae062d1cf13c8a035a123a62e9"
+dependencies = [
+ "gl 0.0.6 (git+https://github.com/bjz/gl-rs)",
+ "pistoncore-input 0.0.5 (git+https://github.com/PistonDevelopers/input)",
+ "pistoncore-window 0.0.3 (git+https://github.com/PistonDevelopers/window)",
+ "quack 0.0.2 (git+https://github.com/PistonDevelopers/quack)",
+ "sdl2 0.0.19 (git+https://github.com/AngryLawyer/rust-sdl2)",
+ "shader_version 0.0.1 (git+https://github.com/PistonDevelopers/shader_version)",
 ]
 
 [[package]]
@@ -285,6 +299,23 @@ version = "0.2.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "sdl2"
+version = "0.0.19"
+source = "git+https://github.com/AngryLawyer/rust-sdl2#c3d2d8b5999b28cafe23c26a644d780590094d31"
+dependencies = [
+ "bitflags 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sdl2-sys 0.0.19 (git+https://github.com/AngryLawyer/rust-sdl2)",
+]
+
+[[package]]
+name = "sdl2-sys"
+version = "0.0.19"
+source = "git+https://github.com/AngryLawyer/rust-sdl2#c3d2d8b5999b28cafe23c26a644d780590094d31"
+dependencies = [
+ "pkg-config 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "semver"
 version = "0.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -297,7 +328,7 @@ source = "git+https://github.com/PistonDevelopers/shader_version#71300bf707ef3cd
 [[package]]
 name = "vecmath"
 version = "0.0.3"
-source = "git+https://github.com/PistonDevelopers/vecmath.git#3080ca140d4f856b7a6ca44f88208dfacce7809c"
+source = "git+https://github.com/PistonDevelopers/vecmath#3080ca140d4f856b7a6ca44f88208dfacce7809c"
 
 [[package]]
 name = "xml-rs"

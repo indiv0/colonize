@@ -18,7 +18,8 @@ use opengl_graphics::Gl;
 
 /// The current state the game is in.
 enum PlayState {
-    MainMenu
+    MainMenu,
+    SinglePlayer
 }
 
 pub struct App {
@@ -49,37 +50,37 @@ impl App {
     }
 
     pub fn render(&mut self, _args: &RenderArgs, gl: &mut Gl, uic: &mut UiContext) {
+        // Draw a background color.
+        uic.background().color(self.bg_color).draw(gl);
+
         match self.state {
             PlayState::MainMenu => {
-                // Draw a background color.
-                uic.background().color(self.bg_color).draw(gl);
-
                 // Draw a label with the game name.
                 uic.label("Colonize")
-                    .position(10.0, 30.0)
+                    .position(10.0, 10.0)
                     .size(48u32)
                     .color(self.bg_color.plain_contrast())
                     .draw(gl);
 
                 uic.button(0u64)
                     .dimensions(90.0, 60.0)
-                    .position(50.0, 110.0)
+                    .position(50.0, 50.0)
                     .rgba(0.4, 0.75, 0.6, 1.0)
                     .frame(self.frame_width)
                     .label("Singleplayer")
-                    .callback(Box::new(|| self.bg_color = Color::random()))
+                    .callback(Box::new(|| self.state = PlayState::SinglePlayer))
                     .draw(gl);
                 uic.button(0u64)
                     .dimensions(90.0, 60.0)
-                    .position(50.0, 140.0)
+                    .position(50.0, 150.0)
                     .rgba(0.4, 0.75, 0.6, 1.0)
                     .frame(self.frame_width)
                     .label("Multiplayer")
-                    .callback(Box::new(|| self.bg_color = Color::random()))
+                    .callback(Box::new(|| println!("TEST")))
                     .draw(gl);
                 uic.button(0u64)
                     .dimensions(90.0, 60.0)
-                    .position(50.0, 170.0)
+                    .position(50.0, 250.0)
                     .rgba(0.4, 0.75, 0.6, 1.0)
                     .frame(self.frame_width)
                     .label("Options")
@@ -87,13 +88,20 @@ impl App {
                     .draw(gl);
                 uic.button(0u64)
                     .dimensions(90.0, 60.0)
-                    .position(50.0, 200.0)
+                    .position(50.0, 350.0)
                     .rgba(0.4, 0.75, 0.6, 1.0)
                     .frame(self.frame_width)
                     .label("Credits")
                     .callback(Box::new(|| self.bg_color = Color::random()))
                     .draw(gl);
-            }
+            },
+            PlayState::SinglePlayer => {
+                uic.label("SP")
+                    .position(10.0, 30.0)
+                    .size(48u32)
+                    .color(self.bg_color.plain_contrast())
+                    .draw(gl);
+            },
         }
     }
 }

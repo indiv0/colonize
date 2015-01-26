@@ -9,33 +9,37 @@ authors = [ "Nikita Pekin <contact@nikitapek.in>" ]
 name = "colonize"
 
 [dependencies.conrod]
-
 git = "https://github.com/PistonDevelopers/conrod"
 
-[dependencies.pistoncore-event]
+[dependencies.current]
+git = "https://github.com/PistonDevelopers/current"
 
+[dependencies.gl]
+git = "https://github.com/bjz/gl-rs"
+
+[dependencies.glfw]
+git = "https://github.com/bjz/glfw-rs"
+
+[dependencies.nice_glfw]
+git = "https://github.com/cmr/nice_glfw"
+
+[dependencies.pistoncore-event]
 git = "https://github.com/PistonDevelopers/event"
 
 [dependencies.pistoncore-glfw_window]
-
 git = "https://github.com/PistonDevelopers/glfw_window"
 
-[dependencies.nice_glfw]
-
-git = "https://github.com/cmr/nice_glfw"
+[dependencies.pistoncore-input]
+git = "https://github.com/PistonDevelopers/input"
 
 [dependencies.piston2d-opengl_graphics]
-
 git = "https://github.com/PistonDevelopers/opengl_graphics"
 
-[dependencies.shader_version]
-
-git = "https://github.com/PistonDevelopers/shader_version"
+[dependencies.quack]
+git = "https://github.com/PistonDevelopers/quack"
 
 [dependencies.resources_package]
-
 git = "https://github.com/tomaka/rust-package"
 
-[dependencies.quack]
-
-git = "https://github.com/PistonDevelopers/quack"
+[dependencies.shader_version]
+git = "https://github.com/PistonDevelopers/shader_version"

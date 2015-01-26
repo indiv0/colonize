@@ -1,6 +1,5 @@
 // External crates.
 extern crate conrod;
-extern crate current;
 extern crate event;
 extern crate input;
 extern crate gl;
@@ -15,6 +14,7 @@ extern crate shader_version;
 use conrod::{Theme, UiContext};
 use event::{ Event, Events, MaxFps, Ups };
 use glfw_window::GlfwWindow;
+use input::Input::{ Press, Release };
 use nice_glfw::WindowBuilder;
 use opengl_graphics::Gl;
 use opengl_graphics::glyph_cache::GlyphCache;
@@ -58,21 +58,19 @@ fn main() {
     app.load();
 
     for e in event_iter {
-            use input::Input::{ Press, Release };
-
-            match e {
-                Event::Update(args) =>
-                    app.update(&args),
-                Event::Render(args) => {
-                    gl.draw([0, 0, args.width as i32, args.height as i32], |_, gl| {
-                        app.render(&args, gl, &mut uic);
-                    });
-                },
-                Event::Input(Press(button)) =>
-                    app.key_press(button),
-                Event::Input(Release(button)) =>
-                    app.key_release(button),
-                _ => {}
-            }
+        match e {
+            Event::Update(args) =>
+                app.update(&args),
+            Event::Render(args) => {
+                gl.draw([0, 0, args.width as i32, args.height as i32], |_, gl| {
+                    app.render(&args, gl, &mut uic);
+                });
+            },
+            Event::Input(Press(button)) =>
+                app.key_press(button),
+            Event::Input(Release(button)) =>
+                app.key_release(button),
+            _ => {}
+        }
     }
 }

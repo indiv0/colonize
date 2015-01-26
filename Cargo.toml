@@ -11,9 +11,6 @@ name = "colonize"
 [dependencies.conrod]
 git = "https://github.com/PistonDevelopers/conrod"
 
-[dependencies.current]
-git = "https://github.com/PistonDevelopers/current"
-
 [dependencies.gl]
 git = "https://github.com/bjz/gl-rs"
 

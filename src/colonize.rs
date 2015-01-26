@@ -67,7 +67,7 @@ fn main() {
                 app.update(&args),
             Event::Render(args) => {
                 gl.draw([0, 0, args.width as i32, args.height as i32], |_, gl| {
-                    app.render(gl, &mut uic);
+                    app.draw_ui(gl, &mut uic);
                 });
             },
             Event::Input(Press(button)) =>

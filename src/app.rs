@@ -12,7 +12,7 @@ use conrod::{
     Shapeable,
     UiContext,
 };
-use event::{RenderArgs, UpdateArgs};
+use event::UpdateArgs;
 use input;
 use opengl_graphics::Gl;
 
@@ -49,7 +49,7 @@ impl App {
     pub fn key_release(&mut self, _button: input::Button) {
     }
 
-    pub fn render(&mut self, _args: &RenderArgs, gl: &mut Gl, uic: &mut UiContext) {
+    pub fn draw_ui(&mut self, gl: &mut Gl, uic: &mut UiContext) {
         // Draw a background color.
         uic.background().color(self.bg_color).draw(gl);
 
@@ -62,7 +62,8 @@ impl App {
                     .color(self.bg_color.plain_contrast())
                     .draw(gl);
 
-                uic.button(0u64)
+                const SINGLEPLAYER: u64 = 1;
+                uic.button(SINGLEPLAYER)
                     .dimensions(90.0, 60.0)
                     .position(50.0, 50.0)
                     .rgba(0.4, 0.75, 0.6, 1.0)
@@ -70,7 +71,8 @@ impl App {
                     .label("Singleplayer")
                     .callback(Box::new(|| self.state = PlayState::SinglePlayer))
                     .draw(gl);
-                uic.button(0u64)
+                const MULTIPLAYER: u64 = SINGLEPLAYER + 1;
+                uic.button(MULTIPLAYER)
                     .dimensions(90.0, 60.0)
                     .position(50.0, 150.0)
                     .rgba(0.4, 0.75, 0.6, 1.0)
@@ -78,7 +80,8 @@ impl App {
                     .label("Multiplayer")
                     .callback(Box::new(|| println!("TEST")))
                     .draw(gl);
-                uic.button(0u64)
+                const OPTIONS: u64 = MULTIPLAYER + 1;
+                uic.button(OPTIONS)
                     .dimensions(90.0, 60.0)
                     .position(50.0, 250.0)
                     .rgba(0.4, 0.75, 0.6, 1.0)
@@ -86,7 +89,8 @@ impl App {
                     .label("Options")
                     .callback(Box::new(|| self.bg_color = Color::random()))
                     .draw(gl);
-                uic.button(0u64)
+                const CREDITS: u64 = OPTIONS + 1;
+                uic.button(CREDITS)
                     .dimensions(90.0, 60.0)
                     .position(50.0, 350.0)
                     .rgba(0.4, 0.75, 0.6, 1.0)

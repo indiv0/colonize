@@ -58,6 +58,7 @@ fn main() {
     app.load();
 
     for e in event_iter {
+        uic.handle_event(&e);
         match e {
             Event::Update(args) =>
                 app.update(&args),

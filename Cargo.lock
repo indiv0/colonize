@@ -4,11 +4,8 @@ version = "0.0.1"
 dependencies = [
  "conrod 0.0.3 (git+https://github.com/PistonDevelopers/conrod)",
  "gl 0.0.6 (git+https://github.com/bjz/gl-rs)",
- "glfw 0.0.2 (git+https://github.com/bjz/glfw-rs)",
- "nice_glfw 1.0.0 (git+https://github.com/cmr/nice_glfw)",
  "piston2d-opengl_graphics 0.0.6 (git+https://github.com/PistonDevelopers/opengl_graphics)",
  "pistoncore-event 0.0.5 (git+https://github.com/PistonDevelopers/event)",
- "pistoncore-glfw_window 0.0.1 (git+https://github.com/PistonDevelopers/glfw_window)",
  "pistoncore-input 0.0.5 (git+https://github.com/PistonDevelopers/input)",
  "pistoncore-sdl2_window 0.0.0 (git+https://github.com/PistonDevelopers/sdl2_window.git)",
  "quack 0.0.2 (git+https://github.com/PistonDevelopers/quack)",
@@ -88,23 +85,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "glfw"
-version = "0.0.2"
-source = "git+https://github.com/bjz/glfw-rs#2aed6cc66f07bdd1e9e93f48a68877a3ccecbca2"
-dependencies = [
- "bitflags 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "glfw-sys 3.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
- "libc 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "log 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
- "semver 0.1.13 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "glfw-sys"
-version = "3.0.41"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-
-[[package]]
 name = "image"
 version = "0.2.0-alpha.8"
 source = "git+https://github.com/pistondevelopers/image#da11929ddd89943c4abdc3fa3baf5d4419b841ed"
@@ -128,11 +108,6 @@ version = "0.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
-name = "libc"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-
-[[package]]
 name = "libz-sys"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -146,15 +121,6 @@ version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "regex 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "nice_glfw"
-version = "1.0.0"
-source = "git+https://github.com/cmr/nice_glfw#1a64f0e6562ef3c2dd937e3886b1af2c1bdd52d4"
-dependencies = [
- "glfw 0.0.2 (git+https://github.com/bjz/glfw-rs)",
- "log 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -213,19 +179,6 @@ source = "git+https://github.com/PistonDevelopers/event_loop#05766fd21dd7c9c3631
 dependencies = [
  "clock_ticks 0.0.2 (git+https://github.com/tomaka/clock_ticks)",
  "quack 0.0.2 (git+https://github.com/PistonDevelopers/quack)",
-]
-
-[[package]]
-name = "pistoncore-glfw_window"
-version = "0.0.1"
-source = "git+https://github.com/PistonDevelopers/glfw_window#2ba90222a43453c270482a9464a290cff740461a"
-dependencies = [
- "gl 0.0.6 (git+https://github.com/bjz/gl-rs)",
- "glfw 0.0.2 (git+https://github.com/bjz/glfw-rs)",
- "pistoncore-input 0.0.5 (git+https://github.com/PistonDevelopers/input)",
- "pistoncore-window 0.0.3 (git+https://github.com/PistonDevelopers/window)",
- "quack 0.0.2 (git+https://github.com/PistonDevelopers/quack)",
- "shader_version 0.0.1 (git+https://github.com/PistonDevelopers/shader_version)",
 ]
 
 [[package]]
@@ -314,11 +267,6 @@ source = "git+https://github.com/AngryLawyer/rust-sdl2#c3d2d8b5999b28cafe23c26a6
 dependencies = [
  "pkg-config 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
-
-[[package]]
-name = "semver"
-version = "0.1.13"
-source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "shader_version"

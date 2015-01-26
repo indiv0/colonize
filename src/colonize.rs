@@ -3,21 +3,16 @@ extern crate conrod;
 extern crate current;
 extern crate event;
 extern crate input;
-extern crate collections;
 extern crate gl;
 extern crate glfw;
 extern crate glfw_window;
 extern crate nice_glfw;
 extern crate opengl_graphics;
 extern crate quack;
-extern crate sdl2_window;
 extern crate shader_version;
-
-use std::cell::RefCell;
 
 // External use imports.
 use conrod::{Theme, UiContext};
-use current::Set;
 use event::{ Event, Events, MaxFps, Ups };
 use glfw_window::GlfwWindow;
 use nice_glfw::WindowBuilder;
@@ -33,11 +28,11 @@ use app::App;
 mod app;
 
 fn main() {
-    let opengl = OpenGL::OpenGL_3_0;
+    let opengl = OpenGL::_3_0;
 
     // TODO: Get rid of this unwrap.
-    let glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
-    let (glfw_window, events) = WindowBuilder::new(&glfw)
+    let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
+    let (glfw_window, events) = WindowBuilder::new(&mut glfw)
         .try_modern_context_hints()
         .size(854, 480)
         .create().expect("Couldn't create window :(");

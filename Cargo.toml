@@ -7,6 +7,7 @@ authors = [ "Nikita Pekin <contact@nikitapek.in>" ]
 [[bin]]
 
 name = "colonize"
+path = "src/client.rs"
 
 [dependencies.conrod]
 git = "https://github.com/PistonDevelopers/conrod"

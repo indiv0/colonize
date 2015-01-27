@@ -1,11 +1,8 @@
-// External crates.
 extern crate conrod;
 extern crate event;
 extern crate input;
 extern crate gl;
-extern crate glfw;
-extern crate glfw_window;
-extern crate nice_glfw;
+extern crate graphics;
 extern crate opengl_graphics;
 extern crate quack;
 extern crate sdl2_window;
@@ -13,16 +10,13 @@ extern crate shader_version;
 
 use std::cell::RefCell;
 
-// External use imports.
 use conrod::{Theme, UiContext};
 use event::{
-    Event,
     Events,
     MaxFps,
     Ups,
     WindowSettings,
 };
-use input::Input::{ Press, Release };
 use opengl_graphics::Gl;
 use opengl_graphics::glyph_cache::GlyphCache;
 use quack::Set;
@@ -30,10 +24,14 @@ use sdl2_window::Sdl2Window;
 use shader_version::opengl::OpenGL;
 
 // Local imports.
-use app::App;
+use scene::Scene;
 
 // Modules.
-mod app;
+mod gamescene;
+mod gamestate;
+mod grid;
+mod menuscene;
+mod scene;
 
 fn main() {
     let opengl = OpenGL::_3_2;
@@ -41,7 +39,7 @@ fn main() {
         opengl,
         WindowSettings {
             title: "Colonize".to_string(),
-            size: [1180, 580],
+            size: [800, 600],
             fullscreen: false,
             exit_on_esc: true,
             samples: 4,
@@ -49,32 +47,23 @@ fn main() {
     );
     let window = RefCell::new(window);
     let mut event_iter = Events::new(&window).set(Ups(180)).set(MaxFps(60));
-    let mut gl = Gl::new(opengl);
+
+    let asset_path = Path::new("./assets");
 
     // Load font and generate UiContext/
-    let font_path = Path::new("./assets/Cyanotype.ttf");
+    let font_path = asset_path.join("Cyanotype.ttf");
     let theme = Theme::default();
     let glyph_cache = GlyphCache::new(&font_path).unwrap();
-    let mut uic = UiContext::new(glyph_cache, theme);
+    let context = UiContext::new(glyph_cache, theme);
 
-    let mut app = App::new();
-    app.load();
+    let mut gamestate = gamestate::GameState::new(context, Gl::new(opengl), &asset_path);
+    let mut current_scene = menuscene::MenuScene::new();
 
-    for e in event_iter {
-        uic.handle_event(&e);
-        match e {
-            Event::Update(args) =>
-                app.update(&args),
-            Event::Render(args) => {
-                gl.draw([0, 0, args.width as i32, args.height as i32], |_, gl| {
-                    app.draw_ui(gl, &mut uic);
-                });
-            },
-            Event::Input(Press(button)) =>
-                app.key_press(button),
-            Event::Input(Release(button)) =>
-                app.key_release(button),
-            _ => {}
-        }
+    for ref e in event_iter {
+        gamestate.get_uic().handle_event(e);
+        match current_scene.handle_event(e, &mut gamestate) {
+            Some(scene) => current_scene = scene,
+            None => ()
+        };
     }
 }

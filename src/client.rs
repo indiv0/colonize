@@ -1,8 +1,10 @@
 extern crate conrod;
 extern crate event;
 extern crate input;
+extern crate gfx_voxel;
 extern crate gl;
 extern crate graphics;
+extern crate noise;
 extern crate opengl_graphics;
 extern crate quack;
 extern crate sdl2_window;
@@ -27,9 +29,10 @@ use shader_version::opengl::OpenGL;
 use scene::Scene;
 
 // Modules.
+mod chunk;
 mod gamescene;
 mod gamestate;
-mod grid;
+mod map;
 mod menuscene;
 mod scene;
 

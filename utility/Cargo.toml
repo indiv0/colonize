@@ -1,0 +1,10 @@
+[package]
+
+name = "colonize-utility"
+version = "0.0.1"
+authors = [
+    "Nicholas Mazzuca <npmazzuca@gmail.com>",
+    "Nikita Pekin <contact@nikitapek.in>"
+]
+
+description = "Utilities for general roguelike creation"

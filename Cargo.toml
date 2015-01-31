@@ -7,7 +7,6 @@ authors = [ "Nikita Pekin <contact@nikitapek.in>" ]
 [[bin]]
 
 name = "colonize"
-path = "src/client.rs"
 
 [dependencies.noise]
 git = "https://github.com/bjz/noise-rs"

@@ -1,30 +1,81 @@
+extern crate event;
 extern crate gfx_voxel;
+extern crate input;
+extern crate noise;
+extern crate quack;
 extern crate tcod;
+extern crate tcod_window;
+extern crate window;
 
+use std::cell::RefCell;
 use std::rand::Rng;
-use tcod::{BackgroundFlag, Console, KeyCode};
+
+use event::{ Event, Events, MaxFps, Ups };
+use quack::Set;
+use tcod_window::TcodWindow;
+use tcod::{ BackgroundFlag, Console, KeyCode };
 use tcod::Key::Special;
+use window::WindowSettings;
 
 // Local imports.
-//use scene::Scene;
+use scene::Scene;
+use gamestate::GameState;
+use menuscene::MenuScene;
 
 // Modules.
-/*d chunk;
+mod chunk;
 mod gamescene;
 mod gamestate;
 mod map;
 mod menuscene;
-mod scene;*/
+mod scene;
 
-fn render(con: &mut Console, x: i32, y: i32, dogX: i32, dogY: i32) {
+/*fn render(con: &mut Console, x: i32, y: i32, dogX: i32, dogY: i32) {
     con.clear();
     con.put_char(x, y, '@', BackgroundFlag::Set);
     con.put_char(dogX, dogY, 'd', BackgroundFlag::Set);
     Console::flush();
-}
+}*/
 
 fn main() {
-    let conX = 80i32;
+    let window = TcodWindow::new(
+        WindowSettings {
+            title: "TcodWindow".to_string(),
+            size: [80, 50],
+            fullscreen: false,
+            exit_on_esc: true,
+            samples: 0,
+        }
+    );
+    let ref window = RefCell::new(window);
+    let mut event_iter = Events::new(window).set(Ups(180)).set(MaxFps(60));
+
+    let mut gamestate = GameState::new();
+    let mut current_scene = MenuScene::new();
+
+    for e in event_iter {
+        use input::Button::Keyboard;
+        use input::Input::{ Move, Press };
+        use input::keyboard::Key;
+        use input::Motion::MouseCursor;
+
+        match e {
+            Event::Render(_) => {},
+            Event::Update(_) => {},
+            Event::Input(Press(Keyboard(key))) => {
+                println!("Pressed: {:?}", key);
+            },
+            Event::Input(Move(MouseCursor(x, y))) => {
+                println!("Moved mouse: {} {}", x, y);
+            },
+            Event::Input(Press(input::Button::Mouse(button))) => {
+                println!("Mouse: {:?}", button);
+            },
+            _ => {},
+        }
+    }
+
+    /*let conX = 80i32;
     let conY = 50i32;
     let mut con = Console::init_root(conX, conY, "Colonize", false);
     let mut exit = false;
@@ -73,5 +124,5 @@ fn main() {
         }
 
         render(&mut con, charX, charY, dogX, dogY);
-    }
+    }*/
 }

@@ -1,16 +1,3 @@
-use conrod::{
-    Background,
-    Button,
-    Callable,
-    Color,
-    Colorable,
-    Drawable,
-    Frameable,
-    Label,
-    Labelable,
-    Positionable,
-    Shapeable,
-};
 use event::Event;
 use event::Event::Render;
 
@@ -18,15 +5,11 @@ use gamescene::GameScene;
 use gamestate::GameState;
 use scene::{Scene, BoxedScene};
 
-pub struct MenuScene {
-    bg_color: Color,
-}
+pub struct MenuScene;
 
 impl MenuScene {
     pub fn new() -> BoxedScene {
-        Box::new(MenuScene {
-            bg_color: Color::new(0.2, 0.35, 0.45, 1.0),
-        })
+        Box::new(MenuScene)
     }
 }
 
@@ -34,8 +17,8 @@ impl Scene for MenuScene {
     fn handle_event(&mut self, e: &Event, state: &mut GameState) -> Option<BoxedScene> {
         match e {
             &Render(args) => {
-                let (uic, gl) = state.get_drawables();
                 let mut maybe_scene = None;
+                /*let (uic, gl) = state.get_drawables();
                 gl.draw([0, 0, args.width as i32, args.height as i32], |_, gl| {
                     // Draw a background color.
                     uic.background().color(self.bg_color).draw(gl);
@@ -83,7 +66,7 @@ impl Scene for MenuScene {
                         .label("Credits")
                         .callback(Box::new(|| self.bg_color = Color::random()))
                         .draw(gl);
-                });
+                });*/
 
                 maybe_scene
             },

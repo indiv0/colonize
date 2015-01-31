@@ -11,8 +11,23 @@ name = "colonize"
 [dependencies.noise]
 git = "https://github.com/bjz/noise-rs"
 
+[dependencies.pistoncore-event]
+git = "https://github.com/PistonDevelopers/event"
+
+[dependencies.pistoncore-input]
+git = "https://github.com/PistonDevelopers/input"
+
+[dependencies.pistoncore-window]
+git = "https://github.com/PistonDevelopers/window"
+
 [dependencies.piston3d-gfx_voxel]
 git = "https://github.com/PistonDevelopers/gfx_voxel"
 
+[dependencies.quack]
+git = "https://github.com/PistonDevelopers/quack"
+
 [dependencies.tcod]
-git = "https://github.com/tomassedovic/tcod-rs.git"
+git = "https://github.com/tomassedovic/tcod-rs"
+
+[dependencies.tcod_window]
+git = "https://github.com/indiv0/tcod_window"

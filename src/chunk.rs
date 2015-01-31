@@ -1,9 +1,8 @@
 use gfx_voxel::array::Array;
-use graphics::Context;
-use opengl_graphics::Gl;
 
-static SIZE: usize = 16;
+const SIZE: usize = 16;
 
+#[derive(Copy)]
 pub struct BlockState {
     pub value: u16
 }
@@ -17,22 +16,22 @@ pub struct Chunk {
 pub const EMPTY_CHUNK: &'static Chunk = &Chunk {
     blocks: [[[EMPTY_BLOCK; SIZE]; SIZE]; SIZE]
 };
-/*
-fn array_16x16x16<T, F>(mut f: F) -> [[[f32; SIZE]; SIZE]; SIZE]
+
+fn array_16x16x16<T, F>(mut f: F) -> [[[T; SIZE]; SIZE]; SIZE]
     where F: FnMut(usize, usize, usize) -> T
 {
     Array::from_fn(|y| -> [[T; SIZE]; SIZE]
-        Array::from_fn(|z| -> [T; SIZE]
-            Array::from_fn(|x| -> f(x, y, z))
+        Array::from_fn(|z| -> [T; 16]
+            Array::from_fn(|x| f(x, y, z))
         )
     )
-}*/
+}
 
 impl Chunk {
     pub fn generate<H>(height_map: [[f32; SIZE]; SIZE]) -> Chunk {
         Chunk {
             blocks: array_16x16x16(|x, y, z| {
-                let height = height_map[x][z] * SIZE;
+                let height = (height_map[x][z] * SIZE as f32) as usize;
                 BlockState {
                     value: match height {
                             h if h < y => 0,
@@ -43,11 +42,10 @@ impl Chunk {
         }
     }
 
-    pub fn render(&self, gl: &mut Gl, ctx: &Context) {
+    pub fn render(&self) {
         for column in self.blocks.iter() {
             for row in column.iter() {
                 for block in row.iter() {
-                    block.render(gl, ctx);
                 }
             }
         }

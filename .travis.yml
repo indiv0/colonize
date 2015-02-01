@@ -2,9 +2,8 @@ language: rust
 os:
     - linux
     - osx
-before_script:
-    - rustc -v
-    - cargo -V
+install:
+    - sudo apt-get update
+    - sudo apt-get install gcc g++ make upx electric-fence libsdl1.2-dev mercurial
 script:
     - cargo build -v
-    - cargo test -v

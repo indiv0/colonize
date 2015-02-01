@@ -49,7 +49,7 @@ impl Chunk {
             for x in (0..SIZE) {
                 let display_char = match self.blocks[height][z][x].value {
                     0 => ' ',
-                    1 => 'W',
+                    1 => 177u8 as char,
                     _ => '?',
                 };
                 renderer.render_obj(Point { x: x as i32, y: z as i32 }, display_char);

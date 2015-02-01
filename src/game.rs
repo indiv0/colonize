@@ -1,5 +1,3 @@
-use std::cell::RefCell;
-
 use backend::Renderer;
 use event::{ Events, MaxFps, Ups };
 use quack::Set;
@@ -36,8 +34,7 @@ impl<'a> Game<'a> {
     }
 
     pub fn run(mut self) {
-        let window = RefCell::new(self.window);
-        let mut event_iter = Events::new(&window).set(Ups(180)).set(MaxFps(60));
+        let mut event_iter = Events::new(self.window).set(Ups(180)).set(MaxFps(10_000));
 
         for ref e in event_iter {
             match self.current_scene.handle_event(e, &mut self.gamestate) {

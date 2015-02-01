@@ -1,13 +1,14 @@
 use std::collections::HashMap;
-use std::num::{self, Float, NumCast};
+use std::num::{ self, NumCast };
 
+use backend::Renderer;
 use gfx_voxel::array::Array;
-use noise::{open_simplex2, Seed};
+use noise::{ open_simplex2, Seed };
+use utility::{ Bounds, Point };
 
 use chunk::Chunk;
 
 static SEED: u32 = 0;
-static SIZE: usize = 4;
 
 pub struct Map {
     chunks: HashMap<(i32, i32), Chunk>,
@@ -38,9 +39,19 @@ impl Map {
         self.chunks.insert((x, z), c);
     }
 
-    /*pub fn generate_chunk(&self) -> Chunk {
+    pub fn generate_chunk(&self) -> Chunk {
         let height_map = array_16x16(|x, z| {
-            open_simplex2(&self.seed, &[cast::<_, f32>(x), cast::<_, f32>(z)]);
+            open_simplex2(&self.seed, &[cast::<_, f32>(x), cast::<_, f32>(z)])
         });
-    }*/
+
+        Chunk::generate(height_map)
+    }
+
+    pub fn render(&self, renderer: &mut Renderer, bounds: Bounds, height: usize) {
+        for (&(x, y), chunk) in self.chunks.iter() {
+            if bounds.contains(Point { x: x, y: y }) {
+                chunk.render(renderer, height);
+            }
+        }
+    }
 }

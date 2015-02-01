@@ -6,7 +6,9 @@ pub struct GameState {
 
 impl GameState {
     pub fn new(renderer: Renderer) -> GameState {
-        GameState { renderer: renderer }
+        GameState {
+            renderer: renderer,
+        }
     }
 
     pub fn get_renderer(&mut self) -> &mut Renderer {

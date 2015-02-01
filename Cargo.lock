@@ -2,6 +2,8 @@
 name = "colonize"
 version = "0.0.1"
 dependencies = [
+ "colonize-backend 0.0.1",
+ "colonize-utility 0.0.1",
  "noise 0.0.3 (git+https://github.com/bjz/noise-rs)",
  "piston3d-gfx_voxel 0.0.1 (git+https://github.com/PistonDevelopers/gfx_voxel)",
  "pistoncore-event 0.0.7 (git+https://github.com/PistonDevelopers/event)",
@@ -21,6 +23,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "clock_ticks"
 version = "0.0.2"
 source = "git+https://github.com/tomaka/clock_ticks#75347002bc4fee853b385da8d3b50fee1c146aae"
+
+[[package]]
+name = "colonize-backend"
+version = "0.0.1"
+dependencies = [
+ "colonize-utility 0.0.1",
+ "tcod 0.4.6 (git+https://github.com/tomassedovic/tcod-rs)",
+]
+
+[[package]]
+name = "colonize-utility"
+version = "0.0.1"
 
 [[package]]
 name = "device"

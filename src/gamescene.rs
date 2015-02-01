@@ -1,90 +1,67 @@
+use backend::{ RendererTrait, Window, WindowTrait };
 use event::Event;
-use event::Event::Render;
+use event::Event::{ Input, Render, Update };
+use input::keyboard::Key;
+use input::Button::Keyboard;
+use input::Input::Press;
+use utility::Bounds;
 
 use gamestate::GameState;
-//use map::Map;
+use map::Map;
 use scene::{Scene, BoxedScene};
 
-pub struct GameScene;
-    //map: Map,
-//}
+pub struct GameScene {
+    msg_window: Window,
+    map: Map,
+    height: usize,
+}
 
 impl GameScene {
     pub fn new() -> BoxedScene {
-        Box::new(GameScene
-            //map: Map::new(),
-        )
+        let mut map = Map::new();
+        let chunk = map.generate_chunk();
+        map.add_chunk(0, 0, chunk);
+
+        Box::new(GameScene {
+            msg_window: Window::new(Bounds::new(0, 54, 99, 61)),
+            map: map,
+            height: 0,
+        })
     }
 }
 
 impl Scene for GameScene {
     fn handle_event(&mut self, e: &Event, state: &mut GameState) -> Option<BoxedScene> {
         match e {
-            &Render(args) => {
-                /*let (uic, gl) = state.get_drawables();
-                gl.draw([0, 0, args.width as i32, args.height as i32], |ctx, gl| {
-                    self.map.render(gl, &ctx);
-
-                    // Draw a background color.
-                    uic.background().color(self.bg_color).draw(gl);
-
-                    uic.label("SP")
-                        .position(10.0, 30.0)
-                        .size(48u32)
-                        .color(self.bg_color.plain_contrast())
-                        .draw(gl);
-                });*/
-
-        /*let conX = 80i32;
-        let conY = 50i32;
-        let mut con = Console::init_root(conX, conY, "Colonize", false);
-        let mut exit = false;
-        let mut charX = 40i32;
-        let mut charY = 25i32;
-        let mut dogX = 10i32;
-        let mut dogY = 10i32;
-        // render
-        render(&mut con, charX, charY, dogX, dogY);
-        while !(Console::window_closed() || exit) {
-            let keypress = Console::wait_for_keypress(true);
-
-            match keypress.key {
-                Special(KeyCode::Escape) => exit = true,
-                Special(KeyCode::Up) => {
-                    if charY >= 1 {
-                        charY -= 1;
+            &Input(Press(Keyboard(key))) => {
+                match key {
+                    Key::Less => {
+                        self.height -= 1;
+                        None
                     }
-                },
-                Special(KeyCode::Down) => {
-                    if charY <= (conY - 1) {
-                        charY += 1;
+                    Key::Greater => {
+                        self.height += 1;
+                        None
                     }
-                },
-                Special(KeyCode::Left) => {
-                    if charX >= 1 {
-                        charX -= 1;
-                    }
-                },
-                Special(KeyCode::Right) => {
-                    if charX <= (conX - 1) {
-                        charX += 1;
-                    }
-                },
-                _ => {}
-            }
+                    _ => None
+                }
+            },
+            &Update(_) => {
+                let mut msg = String::new();
+                msg.push_str("Welcome to Colonize!\n");
+                msg.push_str(&*format!("Height: {}", self.height));
+                self.msg_window.flush_message_buffer();
+                self.msg_window.buffer_message(&*msg);
 
-            let offset_x = std::rand::thread_rng().gen_range(0, 3i32) - 1;
-            if (dogX + offset_x) > 0 && (dogX + offset_x) < (conX - 1) {
-                dogX += offset_x;
-            }
+                None
+            },
+            &Render(_) => {
+                let renderer = state.get_renderer();
 
-            let offset_y = std::rand::thread_rng().gen_range(0, 3i32) - 1;
-            if (dogY + offset_y) > 0 && (dogY + offset_y) < (conY - 1) {
-                dogY += offset_y;
-            }
-
-            render(&mut con, charX, charY, dogX, dogY);
-        }*/
+                renderer.before_render();
+                renderer.attach_window(&mut self.msg_window);
+                self.map.render(renderer, Bounds::new(0, 0, 78, 49), self.height);
+                renderer.render_frame();
 
                 None
             },

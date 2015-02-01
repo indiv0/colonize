@@ -1,3 +1,6 @@
+#![feature(core)]
+#![feature(collections)]
+
 extern crate "colonize-backend" as backend;
 extern crate event;
 extern crate gfx_voxel;

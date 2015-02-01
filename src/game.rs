@@ -1,18 +1,15 @@
 use std::cell::RefCell;
 
 use backend::Renderer;
-use event::{ Event, Events, MaxFps, Ups };
-use input;
+use event::{ Events, MaxFps, Ups };
 use quack::Set;
-use tcod::{ BackgroundFlag, Console, KeyCode };
-use tcod::Key::Special;
+use tcod::Console;
 use tcod_window::TcodWindow;
 use utility::Bounds;
-use window::WindowSettings;
 
 use gamestate::GameState;
 use menuscene::MenuScene;
-use scene::{BoxedScene, Scene};
+use scene::{ BoxedScene, Scene };
 
 pub struct Game<'a> {
     window: TcodWindow,

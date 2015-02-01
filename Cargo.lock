@@ -8,6 +8,7 @@ dependencies = [
  "piston3d-gfx_voxel 0.0.1 (git+https://github.com/PistonDevelopers/gfx_voxel)",
  "pistoncore-event 0.0.7 (git+https://github.com/PistonDevelopers/event)",
  "pistoncore-input 0.0.5 (git+https://github.com/PistonDevelopers/input)",
+ "pistoncore-window 0.0.5 (git+https://github.com/PistonDevelopers/window)",
  "quack 0.0.8 (git+https://github.com/PistonDevelopers/quack)",
  "tcod_window 0.0.1 (git+https://github.com/indiv0/tcod_window)",
 ]

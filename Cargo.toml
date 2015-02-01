@@ -23,6 +23,9 @@ git = "https://github.com/PistonDevelopers/event"
 [dependencies.pistoncore-input]
 git = "https://github.com/PistonDevelopers/input"
 
+[dependencies.pistoncore-window]
+git = "https://github.com/PistonDevelopers/window"
+
 [dependencies.piston3d-gfx_voxel]
 git = "https://github.com/PistonDevelopers/gfx_voxel"
 

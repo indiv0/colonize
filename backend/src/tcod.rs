@@ -114,11 +114,8 @@ impl RendererTrait<Window> for Renderer {
 }
 
 impl Renderer {
-    pub fn new(bounds: Bounds) -> Renderer {
-        let console = Console::init_root(bounds.max.x as i32,
-                                         bounds.max.y as i32,
-                                         "Colonize", false);
-        Renderer { console: console }
+    pub fn new() -> Renderer {
+        Renderer { console: Console::Root }
     }
 
     pub fn get_console(&self) -> Console {

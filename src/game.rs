@@ -4,7 +4,7 @@ use backend::Renderer;
 use event::{ Events, MaxFps, Ups };
 use quack::Set;
 use tcod_window::TcodWindow;
-use utility::Bounds;
+use window::WindowSettings;
 
 use gamestate::GameState;
 use menuscene::MenuScene;
@@ -18,14 +18,19 @@ pub struct Game<'a> {
 
 impl<'a> Game<'a> {
     pub fn new() -> Game<'a> {
-        let total_bounds = Bounds::new(0, 0, 99, 61);
-        let renderer = Renderer::new(total_bounds);
+        let window = TcodWindow::new(
+            WindowSettings {
+                title: "Colonize".to_string(),
+                size: [99, 61],
+                fullscreen: false,
+                exit_on_esc: true,
+                samples: 0,
+            }
+        );
 
         Game {
-            window: TcodWindow::new(renderer.get_console(),
-                                    "Colonize".to_string(),
-                                    true),
-            gamestate: GameState::new(renderer),
+            window: window,
+            gamestate: GameState::new(Renderer::new()),
             current_scene: MenuScene::new(),
         }
     }

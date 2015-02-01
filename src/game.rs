@@ -3,7 +3,6 @@ use std::cell::RefCell;
 use backend::Renderer;
 use event::{ Events, MaxFps, Ups };
 use quack::Set;
-use tcod::Console;
 use tcod_window::TcodWindow;
 use utility::Bounds;
 
@@ -23,7 +22,7 @@ impl<'a> Game<'a> {
         let renderer = Renderer::new(total_bounds);
 
         Game {
-            window: TcodWindow::new(Console::Root,
+            window: TcodWindow::new(renderer.get_console(),
                                     "Colonize".to_string(),
                                     true),
             gamestate: GameState::new(renderer),

@@ -69,7 +69,7 @@ impl Window {
         }
     }
 
-    pub fn get_console(&mut self) -> &mut Console {
+    fn get_console(&mut self) -> &mut Console {
         &mut self.console
     }
 }
@@ -119,5 +119,9 @@ impl Renderer {
                                          bounds.max.y as i32,
                                          "Colonize", false);
         Renderer { console: console }
+    }
+
+    pub fn get_console(&self) -> Console {
+        Console::Root
     }
 }

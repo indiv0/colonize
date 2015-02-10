@@ -6,25 +6,33 @@ use input::Button::Keyboard;
 use input::Input::Press;
 use utility::Bounds;
 
+use chunk;
 use gamestate::GameState;
-use map::Map;
+use world::World;
 use scene::{Scene, BoxedScene};
+
+const INITIAL_SIZE: i32 = 3;
 
 pub struct GameScene {
     msg_window: Window,
-    map: Map,
+    world: World,
     height: usize,
 }
 
 impl GameScene {
     pub fn new() -> BoxedScene {
-        let mut map = Map::new();
-        let chunk = map.generate_chunk();
-        map.add_chunk(0, 0, chunk);
+        let mut world = World::new();
+
+        for x in (-INITIAL_SIZE .. INITIAL_SIZE) {
+            for y in (-INITIAL_SIZE .. INITIAL_SIZE) {
+                let chunk = world.generate_chunk(x, y);
+                world.add_chunk(x, y, chunk);
+            }
+        }
 
         Box::new(GameScene {
             msg_window: Window::new(Bounds::new(0, 54, 99, 61)),
-            map: map,
+            world: world,
             height: 0,
         })
     }
@@ -36,11 +44,17 @@ impl Scene for GameScene {
             &Input(Press(Keyboard(key))) => {
                 match key {
                     Key::Less => {
-                        self.height -= 1;
+                        match self.height {
+                            x if x >= 1 => self.height -= 1,
+                            _ => {}
+                        }
                         None
                     }
                     Key::Greater => {
-                        self.height += 1;
+                        match self.height {
+                            x if (x + 1) < chunk::SIZE => self.height += 1,
+                            _ => {}
+                        }
                         None
                     }
                     _ => None
@@ -60,7 +74,7 @@ impl Scene for GameScene {
 
                 renderer.before_render();
                 renderer.attach_window(&mut self.msg_window);
-                self.map.render(renderer, Bounds::new(0, 0, 78, 49), self.height);
+                self.world.render(renderer, Bounds::new(0, 0, 78, 49), self.height);
                 renderer.render_frame();
 
                 None

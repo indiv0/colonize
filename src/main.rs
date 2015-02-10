@@ -1,5 +1,4 @@
 #![feature(core)]
-#![feature(collections)]
 
 extern crate "colonize-backend" as backend;
 extern crate event;
@@ -17,9 +16,9 @@ mod chunk;
 mod game;
 mod gamescene;
 mod gamestate;
-mod map;
 mod menuscene;
 mod scene;
+mod world;
 
 fn main() {
     let game = Game::new();

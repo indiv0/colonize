@@ -6,11 +6,12 @@ use gfx_voxel::array::Array;
 use noise::{ open_simplex2, Seed };
 use utility::{ Bounds, Point };
 
+use chunk;
 use chunk::Chunk;
 
 static SEED: u32 = 0;
 
-pub struct Map {
+pub struct World {
     chunks: HashMap<(i32, i32), Chunk>,
     seed: Seed,
 }
@@ -27,9 +28,9 @@ fn cast<T: NumCast, R: NumCast>(val: T) -> R {
     num::cast(val).unwrap()
 }
 
-impl Map {
-    pub fn new() -> Map {
-        Map {
+impl World {
+    pub fn new() -> World {
+        World {
             chunks: HashMap::new(),
             seed: Seed::new(SEED),
         }
@@ -39,9 +40,9 @@ impl Map {
         self.chunks.insert((x, z), c);
     }
 
-    pub fn generate_chunk(&self) -> Chunk {
+    pub fn generate_chunk(&self, pos_x: i32, pos_z: i32) -> Chunk {
         let height_map = array_16x16(|x, z| {
-            open_simplex2(&self.seed, &[cast::<_, f32>(x), cast::<_, f32>(z)])
+            open_simplex2(&self.seed, &[cast::<_, f32>(x as i32 + pos_x * chunk::SIZE as i32), cast::<_, f32>(z as i32 + pos_z * chunk::SIZE as i32)])
         });
 
         Chunk::generate(height_map)
@@ -49,8 +50,11 @@ impl Map {
 
     pub fn render(&self, renderer: &mut Renderer, bounds: Bounds, height: usize) {
         for (&(x, y), chunk) in self.chunks.iter() {
-            if bounds.contains(Point { x: x, y: y }) {
-                chunk.render(renderer, height);
+            let x_offset = x * chunk::SIZE as i32;
+            let z_offset = y * chunk::SIZE as i32;
+
+            if bounds.contains(Point { x: x_offset, y: z_offset }) {
+                chunk.render(renderer, x_offset, z_offset, height);
             }
         }
     }

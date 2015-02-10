@@ -34,7 +34,7 @@ impl<'a> Game<'a> {
     }
 
     pub fn run(mut self) {
-        let mut event_iter = Events::new(self.window).set(Ups(180)).set(MaxFps(10_000));
+        let event_iter = Events::new(self.window).set(Ups(180)).set(MaxFps(10_000));
 
         for ref e in event_iter {
             match self.current_scene.handle_event(e, &mut self.gamestate) {

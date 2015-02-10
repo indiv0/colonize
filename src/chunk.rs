@@ -2,7 +2,7 @@ use backend::{ Renderer, RendererTrait };
 use gfx_voxel::array::Array;
 use utility::Point;
 
-const SIZE: usize = 16;
+pub const SIZE: usize = 16;
 
 #[derive(Copy)]
 pub struct BlockState {
@@ -44,7 +44,7 @@ impl Chunk {
         }
     }
 
-    pub fn render(&self, renderer: &mut Renderer, height: usize) {
+    pub fn render(&self, renderer: &mut Renderer, x_offset: i32, z_offset: i32, height: usize) {
         for z in (0..SIZE) {
             for x in (0..SIZE) {
                 let display_char = match self.blocks[height][z][x].value {
@@ -52,7 +52,7 @@ impl Chunk {
                     1 => 177u8 as char,
                     _ => '?',
                 };
-                renderer.render_obj(Point { x: x as i32, y: z as i32 }, display_char);
+                renderer.render_obj(Point { x: x as i32 + x_offset, y: z as i32 + z_offset }, display_char);
             }
         }
     }

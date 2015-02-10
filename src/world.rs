@@ -48,10 +48,10 @@ impl World {
         Chunk::generate(height_map)
     }
 
-    pub fn render(&self, renderer: &mut Renderer, bounds: Bounds, height: usize) {
+    pub fn render(&self, renderer: &mut Renderer, bounds: Bounds, camera_pos: Point, height: usize) {
         for (&(x, y), chunk) in self.chunks.iter() {
-            let x_offset = x * chunk::SIZE as i32;
-            let z_offset = y * chunk::SIZE as i32;
+            let x_offset = x * chunk::SIZE as i32 + camera_pos.x;
+            let z_offset = y * chunk::SIZE as i32 + camera_pos.y;
 
             if bounds.contains(Point { x: x_offset, y: z_offset }) {
                 chunk.render(renderer, x_offset, z_offset, height);

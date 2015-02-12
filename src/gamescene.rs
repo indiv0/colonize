@@ -16,8 +16,7 @@ use utility::{ Bounds, Point };
 
 use gamestate::GameState;
 use scene::{ Scene, BoxedScene };
-use world::CHUNK_SIZE;
-use world::world::World;
+use world::{ World, CHUNK_SIZE };
 
 const INITIAL_SIZE: i32 = 3;
 

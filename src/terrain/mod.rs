@@ -1,4 +1,3 @@
-//pub use tile::Tile;
-//pub use tile::TileType;
+pub use self::tile::{ Tile, TileType };
 
-pub mod tile;
+mod tile;

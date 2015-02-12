@@ -65,10 +65,10 @@ impl Scene for GameScene {
                             _ => {}
                         }
                     },
-                    Key::Up => self.camera_pos.y += 1,
-                    Key::Down => self.camera_pos.y -= 1,
-                    Key::Left => self.camera_pos.x += 1,
-                    Key::Right => self.camera_pos.x -= 1,
+                    Key::Up => self.camera_pos.y -= 1,
+                    Key::Down => self.camera_pos.y += 1,
+                    Key::Left => self.camera_pos.x -= 1,
+                    Key::Right => self.camera_pos.x += 1,
                     _ => {}
                 }
             },

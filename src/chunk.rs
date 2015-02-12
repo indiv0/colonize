@@ -5,19 +5,20 @@ use utility::Point;
 pub const SIZE: usize = 16;
 
 #[derive(Copy)]
-pub struct BlockState {
-    pub value: u16
+pub enum TileType {
+    Air,
+    Wall,
+    OutOfBounds
 }
 
-pub const EMPTY_BLOCK: BlockState = BlockState { value: 0 };
+#[derive(Copy)]
+pub struct Tile {
+    pub tile_type: TileType
+}
 
 pub struct Chunk {
-    pub blocks: [[[BlockState; SIZE]; SIZE]; SIZE]
+    pub tiles: [[[Tile; SIZE]; SIZE]; SIZE]
 }
-
-pub const EMPTY_CHUNK: &'static Chunk = &Chunk {
-    blocks: [[[EMPTY_BLOCK; SIZE]; SIZE]; SIZE]
-};
 
 fn array_16x16x16<T, F>(mut f: F) -> [[[T; SIZE]; SIZE]; SIZE]
     where F: FnMut(usize, usize, usize) -> T
@@ -29,31 +30,26 @@ fn array_16x16x16<T, F>(mut f: F) -> [[[T; SIZE]; SIZE]; SIZE]
     )
 }
 
+impl Tile {
+    pub fn new(tile_type: TileType) -> Tile {
+        Tile {
+            tile_type: tile_type
+        }
+    }
+}
+
 impl Chunk {
     pub fn generate(height_map: [[f32; SIZE]; SIZE]) -> Chunk {
         Chunk {
-            blocks: array_16x16x16(|x, y, z| {
+            tiles: array_16x16x16(|x, y, z| {
                 let height = (height_map[x][z] * SIZE as f32) as usize;
-                BlockState {
-                    value: match height {
-                            h if h < y => 0,
-                            _ => 1,
+                Tile {
+                    tile_type: match height {
+                            h if h < y => TileType::Air,
+                            _ => TileType::Wall,
                         }
                 }
             }),
-        }
-    }
-
-    pub fn render(&self, renderer: &mut Renderer, x_offset: i32, z_offset: i32, height: usize) {
-        for z in (0..SIZE) {
-            for x in (0..SIZE) {
-                let display_char = match self.blocks[height][z][x].value {
-                    0 => ' ',
-                    1 => 177u8 as char,
-                    _ => '?',
-                };
-                renderer.render_obj(Point { x: x as i32 + x_offset, y: z as i32 + z_offset }, display_char);
-            }
         }
     }
 }

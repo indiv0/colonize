@@ -24,4 +24,12 @@ impl Bounds {
         point.y >= self.min.y &&
         point.y < self.max.y
     }
+
+    pub fn width(&self) -> i32 {
+        self.max.x - self.min.x
+    }
+
+    pub fn height(&self) -> i32 {
+        self.max.y - self.min.y
+    }
 }

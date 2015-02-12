@@ -6,12 +6,9 @@ use gfx_voxel::array::Array;
 use noise::{ open_simplex2, Seed };
 use utility::{ Bounds, Point };
 
-use chunk::{
-    self,
-    Chunk,
-    Tile,
-    TileType
-};
+use chunk::{ self, Chunk };
+//use terrain::{ Tile, TileType };
+use terrain::tile::{ Tile, TileType };
 
 static SEED: u32 = 0;
 

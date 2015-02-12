@@ -18,6 +18,7 @@ mod gamescene;
 mod gamestate;
 mod menuscene;
 mod scene;
+mod terrain;
 mod world;
 
 fn main() {

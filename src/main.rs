@@ -12,7 +12,6 @@ extern crate window;
 
 use game::Game;
 
-mod chunk;
 mod game;
 mod gamescene;
 mod gamestate;

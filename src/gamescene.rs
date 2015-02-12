@@ -1,15 +1,23 @@
-use backend::{ RendererTrait, Window, WindowTrait };
+use backend::{
+    RendererTrait,
+    Window,
+    WindowTrait
+};
 use event::Event;
-use event::Event::{ Input, Render, Update };
+use event::Event::{
+    Input,
+    Render,
+    Update
+};
 use input::keyboard::Key;
 use input::Button::Keyboard;
 use input::Input::Press;
 use utility::{ Bounds, Point };
 
-use chunk;
 use gamestate::GameState;
-use world::World;
-use scene::{Scene, BoxedScene};
+use scene::{ Scene, BoxedScene };
+use world::CHUNK_SIZE;
+use world::world::World;
 
 const INITIAL_SIZE: i32 = 3;
 
@@ -54,7 +62,7 @@ impl Scene for GameScene {
                     },
                     Key::Greater => {
                         match self.height {
-                            x if (x + 1) < chunk::SIZE => self.height += 1,
+                            x if (x + 1) < CHUNK_SIZE => self.height += 1,
                             _ => {}
                         }
                     },

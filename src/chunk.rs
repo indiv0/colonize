@@ -1,6 +1,4 @@
-use backend::{ Renderer, RendererTrait };
 use gfx_voxel::array::Array;
-use utility::Point;
 
 pub const SIZE: usize = 16;
 

@@ -6,7 +6,12 @@ use gfx_voxel::array::Array;
 use noise::{ open_simplex2, Seed };
 use utility::{ Bounds, Point };
 
-use chunk::{ self, Chunk, Tile, TileType };
+use chunk::{
+    self,
+    Chunk,
+    Tile,
+    TileType
+};
 
 static SEED: u32 = 0;
 
@@ -50,11 +55,11 @@ impl World {
     fn get_tile(&self, p: Point, height: usize) -> Tile {
         let chunk_x = p.x / chunk::SIZE as i32;
         let chunk_y = p.y / chunk::SIZE as i32;
-        let tx = ((p.x % chunk::SIZE as i32 + chunk::SIZE as i32) % chunk::SIZE) as usize;
-        let ty = ((p.y % chunk::SIZE as i32 + chunk::SIZE as i32) % chunk::SIZE) as usize;
+        let tx = ((p.x % chunk::SIZE as i32 + chunk::SIZE as i32) % chunk::SIZE as i32) as usize;
+        let ty = ((p.y % chunk::SIZE as i32 + chunk::SIZE as i32) % chunk::SIZE as i32) as usize;
 
         match self.chunks.get(&(chunk_x, chunk_y)) {
-            Some(chunk) => chunk.tiles[tx][ty][height],
+            Some(chunk) => chunk.tiles[height][tx][ty],
             None => Tile::new(TileType::OutOfBounds)
         }
     }
@@ -71,18 +76,9 @@ impl World {
                 let pos = Point { x: x, y: y };
                 let display_char = get_glyph(tile.tile_type);
 
-                renderer.render_obj(Point { x: x, y: y }, display_char);
-                /*let x_offset = x * chunk::SIZE as i32 + camera_pos.x;
-                let z_offset = y * chunk::SIZE as i32 + camera_pos.y;
-
-                if bounds.contains(Point { x: x_offset, y: z_offset }) {
-                    chunk.render(renderer, x_offset, z_offset, height);
-                }*/
+                renderer.render_obj(pos, display_char);
             }
         }
-
-        /*for (&(x, y), chunk) in self.chunks.iter() {
-        }*/
     }
 }
 

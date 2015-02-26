@@ -8,14 +8,14 @@ authors = [ "Nikita Pekin <contact@nikitapek.in>" ]
 
 name = "colonize"
 
+[dependencies]
+noise = "*"
+
 [dependencies.colonize-backend]
 path = "backend"
 
 [dependencies.colonize-utility]
 path = "utility"
-
-[dependencies.noise]
-git = "https://github.com/bjz/noise-rs"
 
 [dependencies.pistoncore-event]
 git = "https://github.com/PistonDevelopers/event"

@@ -100,7 +100,7 @@ impl RendererTrait<Window> for Renderer {
 
         for message in messages.iter() {
             window.print_message(0, line, TextAlign::Left,
-                &message[]);
+                &message);
             line += 1;
         }
 

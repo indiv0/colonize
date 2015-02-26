@@ -8,14 +8,14 @@ use gamestate::GameState;
 use menuscene::MenuScene;
 use scene::{ BoxedScene, Scene };
 
-pub struct Game<'a> {
+pub struct Game {
     window: TcodWindow,
     gamestate: GameState,
     current_scene: BoxedScene,
 }
 
-impl<'a> Game<'a> {
-    pub fn new() -> Game<'a> {
+impl Game {
+    pub fn new() -> Game {
         let window = TcodWindow::new(
             WindowSettings {
                 title: "Colonize".to_string(),

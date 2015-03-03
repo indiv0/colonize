@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use std::num::{ self, NumCast };
 
+use array::Array;
 use backend::{ Renderer, RendererTrait };
-use gfx_voxel::array::Array;
 use noise::{ open_simplex2, Seed };
 use utility::{ Bounds, Point };
 

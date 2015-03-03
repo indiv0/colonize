@@ -1,7 +1,7 @@
 [package]
 
 name = "colonize"
-version = "0.0.1"
+version = "0.0.2"
 authors = [ "Nikita Pekin <contact@nikitapek.in>" ]
 
 [[bin]]
@@ -10,27 +10,15 @@ name = "colonize"
 
 [dependencies]
 noise = "*"
+pistoncore-event = "*"
+pistoncore-input = "*"
+pistoncore-window = "*"
+array = "0.0.0"
+quack = "*"
+tcod_window = "0.0.3"
 
 [dependencies.colonize-backend]
 path = "backend"
 
 [dependencies.colonize-utility]
 path = "utility"
-
-[dependencies.pistoncore-event]
-git = "https://github.com/PistonDevelopers/event"
-
-[dependencies.pistoncore-input]
-git = "https://github.com/PistonDevelopers/input"
-
-[dependencies.pistoncore-window]
-git = "https://github.com/PistonDevelopers/window"
-
-[dependencies.piston3d-gfx_voxel]
-git = "https://github.com/PistonDevelopers/gfx_voxel"
-
-[dependencies.quack]
-git = "https://github.com/PistonDevelopers/quack"
-
-[dependencies.tcod_window]
-git = "https://github.com/indiv0/tcod_window"

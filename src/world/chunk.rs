@@ -1,4 +1,4 @@
-use gfx_voxel::array::Array;
+use array::Array;
 
 use terrain::{ Tile, TileType };
 use world::CHUNK_SIZE;

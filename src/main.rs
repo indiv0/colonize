@@ -1,8 +1,8 @@
 #![feature(core)]
 
+extern crate array;
 extern crate "colonize-backend" as backend;
 extern crate event;
-extern crate gfx_voxel;
 extern crate input;
 extern crate noise;
 extern crate quack;

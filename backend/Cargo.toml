@@ -9,8 +9,8 @@ authors = [
 
 description = "Includes all the backend-dependent parts of colonize"
 
-[dependencies.tcod]
-git = "https://github.com/tomassedovic/tcod-rs"
+[dependencies]
+tcod = "0.5.0"
 
 [dependencies.colonize-utility]
 path = "../utility"

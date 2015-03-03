@@ -9,12 +9,12 @@ authors = [ "Nikita Pekin <contact@nikitapek.in>" ]
 name = "colonize"
 
 [dependencies]
-noise = "*"
-pistoncore-event = "*"
-pistoncore-input = "*"
-pistoncore-window = "*"
+noise = "0.1.2"
+pistoncore-event = "0.0.10"
+pistoncore-input = "0.0.5"
+pistoncore-window = "0.0.12"
 array = "0.0.0"
-quack = "*"
+quack = "0.0.13"
 tcod_window = "0.0.3"
 
 [dependencies.colonize-backend]

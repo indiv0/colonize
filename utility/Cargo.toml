@@ -1,6 +1,6 @@
 [package]
 
-name = "colonize-utility"
+name = "colonize_utility"
 version = "0.0.1"
 authors = [
     "Nicholas Mazzuca <npmazzuca@gmail.com>",
@@ -8,3 +8,10 @@ authors = [
 ]
 
 description = "Utilities for general roguelike creation"
+
+[dependencies.clippy]
+optional = true
+version = "0.0.63"
+
+[features]
+nightly-testing = ["clippy"]

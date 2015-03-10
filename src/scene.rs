@@ -1,4 +1,4 @@
-use event::Event;
+use piston::input::Event;
 
 use gamestate::GameState;
 

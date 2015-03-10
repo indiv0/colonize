@@ -1,11 +1,12 @@
-#![feature(collections)]
+#![cfg_attr(feature = "nightly-testing", feature(plugin))]
+#![cfg_attr(feature = "clippy", plugin(clippy))]
 
-extern crate "colonize-utility" as utility;
+extern crate colonize_utility as utility;
 
-pub use tcod::{ Renderer, Window };
+pub use tcod::{ TcodRenderer, TcodWindow };
 
-pub use rendering::RendererTrait;
-pub use windowing::WindowTrait;
+pub use rendering::Renderer;
+pub use windowing::Window;
 
 mod tcod;
 

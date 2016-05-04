@@ -1,6 +1,6 @@
 [package]
 
-name = "colonize-backend"
+name = "colonize_backend"
 version = "0.0.1"
 authors = [
     "Nicholas Mazzuca <npmazzuca@gmail.com>",
@@ -10,7 +10,14 @@ authors = [
 description = "Includes all the backend-dependent parts of colonize"
 
 [dependencies]
-tcod = "0.5.0"
+tcod = "0.9.0"
 
-[dependencies.colonize-utility]
+[dependencies.clippy]
+optional = true
+version = "0.0.63"
+
+[dependencies.colonize_utility]
 path = "../utility"
+
+[features]
+nightly-testing = ["clippy"]

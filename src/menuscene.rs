@@ -1,9 +1,9 @@
-use backend::{RendererTrait, Window, WindowTrait};
-use event::Event;
-use event::Event::{Input, Render, Update};
-use input::keyboard::Key;
-use input::Button::Keyboard;
-use input::Input::Press;
+use backend::{Renderer, TcodWindow, Window};
+use piston::input::Event;
+use piston::input::Event::{Input, Render, Update};
+use piston::input::keyboard::Key;
+use piston::input::Button::Keyboard;
+use piston::input::Input::Press;
 use utility::Bounds;
 
 use gamescene::GameScene;
@@ -11,39 +11,40 @@ use gamestate::GameState;
 use scene::{Scene, BoxedScene};
 
 pub struct MenuScene {
-    msg_window: Window,
+    msg_window: TcodWindow,
 }
 
 impl MenuScene {
-    pub fn new() -> BoxedScene {
+    pub fn boxed_new() -> BoxedScene {
         Box::new(MenuScene {
-            msg_window: Window::new(Bounds::new(10, 54, 99, 61)),
+            // TODO: fix these hardcodings
+            msg_window: TcodWindow::new(Bounds::new(10, 54, 99, 61)),
         })
     }
 }
 
 impl Scene for MenuScene {
     fn handle_event(&mut self, e: &Event, state: &mut GameState) -> Option<BoxedScene> {
-        match e {
-            &Input(Press(Keyboard(key))) => {
+        match *e {
+            Input(Press(Keyboard(key))) => {
                 match key {
                     Key::S => {
-                        Some(GameScene::new())
+                        Some(GameScene::boxed_new())
                     }
                     _ => None
                 }
             },
-            &Update(_) => {
+            Update(_) => {
                 let mut msg = String::new();
-                msg.push_str("SINGLEPLAYER\n");
-                msg.push_str("OPTIONS\n");
-                msg.push_str("CREDITS");
+                msg.push_str("S)ingleplayer\n");
+                msg.push_str("O)ptions\n");
+                msg.push_str("C)redits");
                 self.msg_window.flush_message_buffer();
-                self.msg_window.buffer_message(msg.as_slice());
+                self.msg_window.buffer_message(&msg);
 
                 None
             },
-            &Render(_) => {
+            Render(_) => {
                 let renderer = state.get_renderer();
 
                 renderer.before_render();

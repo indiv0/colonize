@@ -1,0 +1,23 @@
+[package]
+
+name = "colonize_world"
+version = "0.0.1"
+authors = [
+    "Nikita Pekin <contact@nikitapek.in>",
+]
+
+[dependencies]
+array = "0.0.1"
+noise = "0.2.0"
+num = "*"
+rand = "0.3.14"
+
+[dependencies.colonize_utility]
+path = "../utility"
+
+[dependencies.clippy]
+optional = true
+version = "0.0.63"
+
+[features]
+nightly-testing = ["clippy"]

@@ -1,16 +1,16 @@
-use utility::Point;
-use windowing::WindowTrait;
+use utility::Point2;
+use windowing::Window;
 
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub enum TextAlign {
     Left,
     Center,
     Right,
 }
 
-pub trait RendererTrait<W: WindowTrait> {
+pub trait Renderer<W: Window> {
     fn before_render(&mut self);
-    fn render_obj(&mut self, position: Point, symbol: char);
+    fn render_obj(&mut self, position: Point2<i32>, symbol: char);
     fn render_frame(&mut self);
     fn attach_window(&mut self, window: &mut W);
 }

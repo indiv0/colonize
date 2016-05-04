@@ -1,46 +1,43 @@
-use backend::Renderer;
-use event::{ Events, MaxFps, Ups };
-use quack::Set;
-use tcod_window::TcodWindow;
-use window::WindowSettings;
+use backend::TcodRenderer;
+use piston::event_loop::{
+    EventLoop,
+    Events,
+    WindowEvents,
+};
+use piston::input::Input;
+use piston::window::Window;
 
+use config::Config;
 use gamestate::GameState;
 use menuscene::MenuScene;
 use scene::{ BoxedScene, Scene };
 
-pub struct Game {
-    window: TcodWindow,
+pub struct Game<W>
+    where W: Window<Event=Input>
+{
     gamestate: GameState,
     current_scene: BoxedScene,
+    events: WindowEvents,
+    window: W,
 }
 
-impl Game {
-    pub fn new() -> Game {
-        let window = TcodWindow::new(
-            WindowSettings {
-                title: "Colonize".to_string(),
-                size: [99, 61],
-                fullscreen: false,
-                exit_on_esc: true,
-                samples: 0,
-            }
-        );
-
+impl<W> Game<W>
+    where W: Window<Event=Input>
+{
+    pub fn new(config: Config, window: W, renderer: TcodRenderer) -> Game<W> {
         Game {
+            events: window.events().ups(config.ups).max_fps(config.max_fps),
+            gamestate: GameState::new(renderer),
+            current_scene: MenuScene::boxed_new(),
             window: window,
-            gamestate: GameState::new(Renderer::new()),
-            current_scene: MenuScene::new(),
         }
     }
 
-    pub fn run(mut self) {
-        let event_iter = Events::new(self.window).set(Ups(180)).set(MaxFps(10_000));
-
-        for ref e in event_iter {
-            match self.current_scene.handle_event(e, &mut self.gamestate) {
-                Some(scene) => self.current_scene = scene,
-                None => {}
-            };
+    pub fn run(&mut self) {
+        while let Some(e) = self.events.next(&mut self.window) {
+            if let Some(scene) = self.current_scene.handle_event(&e, &mut self.gamestate) {
+                self.current_scene = scene;
+            }
         }
     }
 }

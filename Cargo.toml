@@ -9,16 +9,26 @@ authors = [ "Nikita Pekin <contact@nikitapek.in>" ]
 name = "colonize"
 
 [dependencies]
-noise = "0.1.2"
-pistoncore-event = "0.0.10"
-pistoncore-input = "0.0.5"
-pistoncore-window = "0.0.12"
-array = "0.0.0"
-quack = "0.0.13"
-tcod_window = "0.0.3"
+tcod_window = "0.2.0"
+piston = "0.20.0"
 
-[dependencies.colonize-backend]
+[dependencies.clippy]
+optional = true
+version = "0.0.63"
+
+[dependencies.colonize_backend]
 path = "backend"
 
-[dependencies.colonize-utility]
+[dependencies.colonize_utility]
 path = "utility"
+
+[dependencies.colonize_world]
+path = "world"
+
+[features]
+nightly-testing = [
+    "colonize_backend/nightly-testing",
+    "colonize_utility/nightly-testing",
+    "colonize_world/nightly-testing",
+    "clippy",
+]

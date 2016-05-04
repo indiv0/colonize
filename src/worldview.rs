@@ -1,3 +1,5 @@
+use cgmath::Point2;
+
 use backend::{ TcodRenderer, Renderer };
 use utility::Bounds;
 use world::World;
@@ -15,21 +17,20 @@ pub fn draw_world(world: &World, renderer: &mut TcodRenderer, bounds: Bounds<i32
     // TODO: implement proper occlusion culling.
     for x in 0..bounds.width() {
         for z in 0..bounds.height() {
-            let tx = x + start_x;
-            let tz = z + start_z;
+            let tile_pos = Point2::new(x + start_x, z + start_z);
 
-            let tile = world.area.get_tile([tx, tz], *height);
+            let tile = world.area.get_tile(tile_pos, *height);
 
             // If the tile is see-through, we want to render the tile_type
             // underneath it, instead.
             let display_char = if !tile.tile_type.is_solid() && *height > 0 {
-                let tile = world.area.get_tile([tx, tz], height - 1);
+                let tile = world.area.get_tile(tile_pos, height - 1);
                 tile.tile_type.get_lower_glyph()
             } else {
                 tile.tile_type.get_glyph()
             };
 
-            let pos = [x, z];
+            let pos = Point2::new(x, z);
 
             renderer.render_obj(pos, display_char);
         }
@@ -42,5 +43,5 @@ pub fn draw_cursor(renderer: &mut TcodRenderer, bounds: Bounds<i32>) {
     let x = bounds.width() / 2;
     let y = bounds.height() / 2;
 
-    renderer.render_obj([x, y], 'C');
+    renderer.render_obj(Point2::new(x, y), 'C');
 }

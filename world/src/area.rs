@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use noise::{ Seed, open_simplex2 };
-use utility::Point2;
+use cgmath::Point2;
 
 use { CHUNK_SIZE, LOG2_OF_CHUNK_SIZE };
 use chunk::Chunk;
@@ -56,7 +56,7 @@ impl Area {
     }
 }
 
-fn scaled_open_simplex2(seed: &Seed, point: &Point2<f64>) -> f64 {
+fn scaled_open_simplex2(seed: &Seed, point: &[f64; 2]) -> f64 {
     open_simplex2(seed, &[point[0] / NOISE_SCALING_FACTOR, point[1] / NOISE_SCALING_FACTOR])
 }
 

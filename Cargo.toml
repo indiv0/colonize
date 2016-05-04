@@ -9,6 +9,7 @@ authors = [ "Nikita Pekin <contact@nikitapek.in>" ]
 name = "colonize"
 
 [dependencies]
+cgmath = "0.9.1"
 tcod_window = "0.2.0"
 piston = "0.20.0"
 

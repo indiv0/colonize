@@ -7,6 +7,7 @@ authors = [
 ]
 
 [dependencies]
+cgmath = "0.9.1"
 array = "0.0.1"
 noise = "0.2.0"
 num = "*"

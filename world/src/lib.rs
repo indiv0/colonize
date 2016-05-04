@@ -2,6 +2,7 @@
 #![cfg_attr(feature = "clippy", plugin(clippy))]
 
 extern crate array;
+extern crate cgmath;
 extern crate noise;
 extern crate num;
 extern crate rand;

@@ -3,6 +3,7 @@ extern crate tcod;
 use std::rc::Rc;
 use std::cell::RefCell;
 
+use cgmath::Point2;
 use self::tcod::console;
 use self::tcod::console::{
     BackgroundFlag,
@@ -13,7 +14,7 @@ use self::tcod::console::{
 };
 
 use rendering::{ Renderer, TextAlign };
-use utility::{ Bounds, Point2 };
+use utility::Bounds;
 use windowing::Window;
 
 pub struct TcodWindow {

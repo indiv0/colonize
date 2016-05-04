@@ -1,4 +1,5 @@
-use utility::Point2;
+use cgmath::Point2;
+
 use windowing::Window;
 
 #[derive(Clone, Copy)]

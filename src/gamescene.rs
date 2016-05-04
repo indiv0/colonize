@@ -3,6 +3,7 @@ use backend::{
     TcodWindow,
     Window
 };
+use cgmath::{EuclideanSpace, Point2};
 use piston::input::Event;
 use piston::input::Event::{
     Input as InputEvent,
@@ -14,7 +15,7 @@ use piston::input::Button::Keyboard;
 use piston::input::Input;
 use piston::input::Input::{Move, Press};
 use piston::input::Motion::MouseCursor;
-use utility::{ Bounds, Point2 };
+use utility::Bounds;
 
 use bindings::{Action, Bindings};
 use camera;
@@ -49,7 +50,7 @@ impl GameScene {
             msg_window: TcodWindow::new(Bounds::new(0, 54, 99, 61)),
             world: World::new(None, 3),
             camera: Camera::default(),
-            mouse_pos: [0.0, 0.0],
+            mouse_pos: Point2::origin(),
         })
     }
 
@@ -70,7 +71,7 @@ impl GameScene {
                 }
             },
             Move(MouseCursor(x, y)) => {
-                self.mouse_pos = [x, y];
+                self.mouse_pos = Point2::new(x, y);
                 None
             },
             _ => None,

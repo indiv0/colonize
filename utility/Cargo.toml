@@ -9,6 +9,9 @@ authors = [
 
 description = "Utilities for general roguelike creation"
 
+[dependencies]
+cgmath = "*"
+
 [dependencies.clippy]
 optional = true
 version = "0.0.63"

@@ -1,4 +1,4 @@
-use utility::Point2;
+use cgmath::{EuclideanSpace, Point2};
 use world::CHUNK_SIZE;
 
 use command::Command;
@@ -26,7 +26,7 @@ pub struct Camera {
 impl Camera {
     pub fn new() -> Self {
         Camera {
-            position: [0, 0],
+            position: Point2::origin(),
             height: 0,
         }
     }

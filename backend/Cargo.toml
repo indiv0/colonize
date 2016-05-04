@@ -10,6 +10,7 @@ authors = [
 description = "Includes all the backend-dependent parts of colonize"
 
 [dependencies]
+cgmath = "*"
 tcod = "0.9.0"
 
 [dependencies.clippy]

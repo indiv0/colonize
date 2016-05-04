@@ -2,6 +2,7 @@
 #![cfg_attr(feature = "clippy", plugin(clippy))]
 
 extern crate colonize_backend as backend;
+extern crate cgmath;
 extern crate piston;
 extern crate tcod_window;
 extern crate colonize_utility as utility;

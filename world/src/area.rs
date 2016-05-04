@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use noise::{ Seed, open_simplex2 };
-use cgmath::Point2;
+use cgmath::Point3;
 
 use { CHUNK_SIZE, LOG2_OF_CHUNK_SIZE };
 use chunk::Chunk;
@@ -44,13 +44,13 @@ impl Area {
         self.chunks.insert((x, z), c);
     }
 
-    pub fn get_tile(&self, p: Point2<i32>, height: usize) -> Tile {
-        let (chunk_x, chunk_z) = abs_pos_to_chunk_pos(&p);
-        let tx = ((p[0] % CHUNK_SIZE as i32 + CHUNK_SIZE as i32) % CHUNK_SIZE as i32) as usize;
-        let tz = ((p[1] % CHUNK_SIZE as i32 + CHUNK_SIZE as i32) % CHUNK_SIZE as i32) as usize;
+    pub fn get_tile(&self, p: Point3<i32>) -> Tile {
+        let chunk_pos = abs_pos_to_chunk_pos(&p);
+        let tile_pos = abs_pos_to_rel_chunk_pos(&p);
 
-        match self.chunks.get(&(chunk_x, chunk_z)) {
-            Some(chunk) => chunk.tiles[height][tx][tz],
+        // FIXME
+        match self.chunks.get(&(chunk_pos[0], chunk_pos[2])) {
+            Some(chunk) => chunk.tiles[tile_pos[1]][tile_pos[0]][tile_pos[2]],
             None => Tile::new(TileType::OutOfBounds)
         }
     }
@@ -60,6 +60,22 @@ fn scaled_open_simplex2(seed: &Seed, point: &[f64; 2]) -> f64 {
     open_simplex2(seed, &[point[0] / NOISE_SCALING_FACTOR, point[1] / NOISE_SCALING_FACTOR])
 }
 
-pub fn abs_pos_to_chunk_pos(p: &Point2<i32>) -> (i32, i32) {
-    (p[0] >> LOG2_OF_CHUNK_SIZE, p[1] >> LOG2_OF_CHUNK_SIZE)
+/// Takes an absolute coordinate and returns the origin coordinate of the chunk
+/// in which this coordinate is located.
+pub fn abs_pos_to_chunk_pos(p: &Point3<i32>) -> Point3<i32> {
+    Point3::new(
+        p[0] >> LOG2_OF_CHUNK_SIZE,
+        p[1] >> LOG2_OF_CHUNK_SIZE,
+        p[2] >> LOG2_OF_CHUNK_SIZE,
+    )
+}
+
+/// Takes an absolute coordinate and returns the position of the coordinate
+/// relative to the origin of the chunk in which the coordinate is located.
+pub fn abs_pos_to_rel_chunk_pos(p: &Point3<i32>) -> Point3<usize> {
+    Point3::new(
+        ((p[0] % CHUNK_SIZE as i32 + CHUNK_SIZE as i32) % CHUNK_SIZE as i32) as usize,
+        ((p[1] % CHUNK_SIZE as i32 + CHUNK_SIZE as i32) % CHUNK_SIZE as i32) as usize,
+        ((p[2] % CHUNK_SIZE as i32 + CHUNK_SIZE as i32) % CHUNK_SIZE as i32) as usize,
+    )
 }

@@ -17,11 +17,13 @@ pub const CHUNK_SIZE: usize = 16;
 pub const LOG2_OF_CHUNK_SIZE: u32 = 4;
 
 pub use self::area::abs_pos_to_chunk_pos;
+pub use self::direction::Direction;
 pub use self::world::World;
 pub use self::chunk::Chunk;
 
 mod area;
 mod chunk;
+mod direction;
 mod mapgen;
 mod terrain;
 mod world;

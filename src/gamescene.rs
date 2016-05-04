@@ -19,11 +19,11 @@ use utility::Bounds;
 
 use bindings::{Action, Bindings};
 use camera;
-use camera::{Camera, CameraAction, MoveCameraDirection};
+use camera::{Camera, CameraAction};
 use command::Command;
 use gamestate::GameState;
 use scene::{ Scene, BoxedScene };
-use world::{ World, abs_pos_to_chunk_pos };
+use world::{ Direction, World, abs_pos_to_chunk_pos };
 use worldview;
 
 pub struct GameScene {
@@ -38,12 +38,12 @@ pub struct GameScene {
 impl GameScene {
     pub fn boxed_new() -> BoxedScene {
         let bindings = Bindings::new()
-            .add_binding(Key::Down, Action::Camera(CameraAction::Move(MoveCameraDirection::Backward)))
-            .add_binding(Key::Less, Action::Camera(CameraAction::Move(MoveCameraDirection::Down)))
-            .add_binding(Key::Up, Action::Camera(CameraAction::Move(MoveCameraDirection::Forward)))
-            .add_binding(Key::Left, Action::Camera(CameraAction::Move(MoveCameraDirection::Left)))
-            .add_binding(Key::Right, Action::Camera(CameraAction::Move(MoveCameraDirection::Right)))
-            .add_binding(Key::Greater, Action::Camera(CameraAction::Move(MoveCameraDirection::Up)));
+            .add_binding(Key::Down, Action::Camera(CameraAction::Move(Direction::South)))
+            .add_binding(Key::Less, Action::Camera(CameraAction::Move(Direction::Down)))
+            .add_binding(Key::Up, Action::Camera(CameraAction::Move(Direction::North)))
+            .add_binding(Key::Left, Action::Camera(CameraAction::Move(Direction::West)))
+            .add_binding(Key::Right, Action::Camera(CameraAction::Move(Direction::East)))
+            .add_binding(Key::Greater, Action::Camera(CameraAction::Move(Direction::Up)));
 
         Box::new(GameScene {
             bindings: bindings,
@@ -92,7 +92,6 @@ impl Scene for GameScene {
             Update(_) => {
                 let mut msg = String::new();
                 msg.push_str("Welcome to Colonize!\n");
-                msg.push_str(&*format!("Height: {}\n", self.camera.get_height()));
                 msg.push_str(&*format!("Mouse Cursor: {:?}\n", self.mouse_pos));
                 msg.push_str(&*format!("Camera: {:?}\n", self.camera.get_position()));
                 msg.push_str(&*format!("Chunk: {:?}", abs_pos_to_chunk_pos(self.camera.get_position())));

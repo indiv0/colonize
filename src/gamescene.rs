@@ -26,6 +26,8 @@ use scene::{ Scene, BoxedScene };
 use world::{ Direction, World, abs_pos_to_chunk_pos };
 use worldview;
 
+const INITIAL_SIZE: u32 = 3;
+
 pub struct GameScene {
     // TODO: replace this with a trait object
     bindings: Bindings,
@@ -48,7 +50,7 @@ impl GameScene {
         Box::new(GameScene {
             bindings: bindings,
             msg_window: TcodWindow::new(Bounds::new(0, 54, 99, 61)),
-            world: World::new(None, 3),
+            world: World::new(None, INITIAL_SIZE),
             camera: Camera::default(),
             mouse_pos: Point2::origin(),
         })

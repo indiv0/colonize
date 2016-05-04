@@ -11,7 +11,7 @@ use mapgen;
 const NOISE_SCALING_FACTOR: f64 = 64.0;
 
 pub struct Area {
-    chunks: HashMap<(i32, i32), Chunk>,
+    chunks: HashMap<Point3<i32>, Chunk>,
 }
 
 impl Area {
@@ -26,12 +26,22 @@ impl Area {
 
         for z in -initial_size..initial_size {
             for x in -initial_size..initial_size {
-                mapgen::generate_chunk(
+                // Since the height map is 2D, along the X and Y axes, we only
+                // generate it once per column.
+                // This reduces the number of calls to `generate_height_map`
+                // from `initial_size^3` to `initial_size^2`.
+                let mut pos = Point3::new(x, 0, z);
+                let height_map = mapgen::generate_height_map(
                     &seed,
-                    x,
-                    z,
-                    scaled_open_simplex2,
-                    |p, c| { chunks.insert(p, c); });
+                    &pos,
+                    scaled_open_simplex2);
+                for y in -initial_size..initial_size {
+                    pos.y = y;
+                    mapgen::generate_chunk(
+                        pos,
+                        height_map,
+                        |p, c| { chunks.insert(p, c); });
+                }
             }
         }
 
@@ -40,8 +50,8 @@ impl Area {
         }
     }
 
-    pub fn add_chunk(&mut self, x: i32, z: i32, c: Chunk) {
-        self.chunks.insert((x, z), c);
+    pub fn add_chunk(&mut self, p: Point3<i32>, c: Chunk) {
+        self.chunks.insert(p, c);
     }
 
     pub fn get_tile(&self, p: Point3<i32>) -> Tile {
@@ -49,7 +59,7 @@ impl Area {
         let tile_pos = abs_pos_to_rel_chunk_pos(&p);
 
         // FIXME
-        match self.chunks.get(&(chunk_pos[0], chunk_pos[2])) {
+        match self.chunks.get(&chunk_pos) {
             Some(chunk) => chunk.tiles[tile_pos[1]][tile_pos[0]][tile_pos[2]],
             None => Tile::new(TileType::OutOfBounds)
         }

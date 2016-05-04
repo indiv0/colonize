@@ -1,6 +1,7 @@
 use array::Array;
+use cgmath::Point3;
 
-use CHUNK_SIZE;
+use {CHUNK_SIZE, HEIGHT_MAP_MULTIPLIER};
 use terrain::{ Tile, TileType };
 
 pub type ChunkArray<T> = [T; CHUNK_SIZE];
@@ -23,15 +24,16 @@ pub struct Chunk {
 }
 
 impl Chunk {
-    pub fn generate(height_map: ChunkArray2d<f64>) -> Chunk {
+    pub fn generate(pos: Point3<i32>, height_map: ChunkArray2d<f64>) -> Chunk {
+        let chunk_y = (pos.y * CHUNK_SIZE as i32) as f64;
+
         Chunk {
             tiles: array_16x16x16(|x, y, z| {
-                // TODO: fix this multiplier here for when I implement 3D chunk
-                // generation.
-                let height = (height_map[x][z] * CHUNK_SIZE as f64) as usize;
+                let map_height = height_map[x][z] * HEIGHT_MAP_MULTIPLIER;
+                let tile_y = chunk_y + y as f64;
                 Tile {
-                    tile_type: match height {
-                            h if h < y => TileType::Air,
+                    tile_type: match map_height {
+                            h if h < tile_y => TileType::Air,
                             _ => TileType::Wall,
                         }
                 }

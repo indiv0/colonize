@@ -15,6 +15,8 @@ pub const CHUNK_SIZE: usize = 16;
 // This should always be the log base 2 of `CHUNK_SIZE`.
 // TODO: find a way to generate this at runtime.
 pub const LOG2_OF_CHUNK_SIZE: u32 = 4;
+// The multiplier by which the generated height maps are multiplied.
+pub const HEIGHT_MAP_MULTIPLIER: f64 = 32.0;
 
 pub use self::area::abs_pos_to_chunk_pos;
 pub use self::direction::Direction;

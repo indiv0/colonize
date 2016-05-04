@@ -1,4 +1,5 @@
 use array::Array;
+use cgmath::Point3;
 use noise::{ GenFn2, Seed };
 use num;
 use num::{ Float, NumCast };
@@ -6,24 +7,26 @@ use num::{ Float, NumCast };
 use CHUNK_SIZE;
 use chunk::Chunk;
 
-pub fn generate_chunk<T, F, G>(seed: &Seed, pos_x: i32, pos_z: i32, rng: F, mut set_chunk: G)
+pub fn generate_chunk<F>(pos: Point3<i32>, height_map: [[f64; CHUNK_SIZE]; CHUNK_SIZE], mut set_chunk: F)
+    where F: FnMut(Point3<i32>, Chunk),
+{
+    set_chunk(pos, Chunk::generate(pos, height_map));
+}
+
+/// Generates a 2D height map at the specified location.
+pub fn generate_height_map<T, F>(seed: &Seed, pos: &Point3<i32>, rng: F) -> [[T; CHUNK_SIZE]; CHUNK_SIZE]
     where T: Float + NumCast,
           F: GenFn2<T>,
-          G: FnMut((i32, i32), Chunk),
 {
     let get_random_height = |x, z| {
         let loc = [
-            cast(x as i32 + pos_x * CHUNK_SIZE as i32),
-            cast(z as i32 + pos_z * CHUNK_SIZE as i32),
+            cast(x as i32 + pos.x * CHUNK_SIZE as i32),
+            cast(z as i32 + pos.z * CHUNK_SIZE as i32),
         ];
         let value: f64 = cast(rng(seed, &loc));
         cast(clamp(value * 0.5 + 0.5, 0.0, 1.0))
     };
-    let height_map = array_16x16(get_random_height);
-
-    let chunk = Chunk::generate(height_map);
-
-    set_chunk((pos_x, pos_z), chunk);
+    array_16x16(get_random_height)
 }
 
 fn array_16x16<T, F>(mut f: F) -> [[T; CHUNK_SIZE]; CHUNK_SIZE]

@@ -45,7 +45,7 @@ impl Area {
     }
 
     pub fn get_tile(&self, p: Point2<i32>, height: usize) -> Tile {
-        let (chunk_x, chunk_z) = abs_pos_to_chunk_pos(p);
+        let (chunk_x, chunk_z) = abs_pos_to_chunk_pos(&p);
         let tx = ((p[0] % CHUNK_SIZE as i32 + CHUNK_SIZE as i32) % CHUNK_SIZE as i32) as usize;
         let tz = ((p[1] % CHUNK_SIZE as i32 + CHUNK_SIZE as i32) % CHUNK_SIZE as i32) as usize;
 
@@ -60,6 +60,6 @@ fn scaled_open_simplex2(seed: &Seed, point: &Point2<f64>) -> f64 {
     open_simplex2(seed, &[point[0] / NOISE_SCALING_FACTOR, point[1] / NOISE_SCALING_FACTOR])
 }
 
-pub fn abs_pos_to_chunk_pos(p: Point2<i32>) -> (i32, i32) {
+pub fn abs_pos_to_chunk_pos(p: &Point2<i32>) -> (i32, i32) {
     (p[0] >> LOG2_OF_CHUNK_SIZE, p[1] >> LOG2_OF_CHUNK_SIZE)
 }

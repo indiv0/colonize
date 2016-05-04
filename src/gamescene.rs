@@ -5,39 +5,76 @@ use backend::{
 };
 use piston::input::Event;
 use piston::input::Event::{
-    Input,
+    Input as InputEvent,
     Render,
     Update
 };
 use piston::input::keyboard::Key;
 use piston::input::Button::Keyboard;
+use piston::input::Input;
 use piston::input::Input::{Move, Press};
 use piston::input::Motion::MouseCursor;
 use utility::{ Bounds, Point2 };
 
+use bindings::{Action, Bindings};
+use camera;
+use camera::{Camera, CameraAction, MoveCameraDirection};
+use command::Command;
 use gamestate::GameState;
 use scene::{ Scene, BoxedScene };
-use world::{ World, CHUNK_SIZE, abs_pos_to_chunk_pos };
+use world::{ World, abs_pos_to_chunk_pos };
 use worldview;
 
 pub struct GameScene {
     // TODO: replace this with a trait object
+    bindings: Bindings,
     msg_window: TcodWindow,
     world: World,
-    height: usize,
-    camera_pos: Point2<i32>,
+    camera: Camera,
     mouse_pos: Point2<f64>,
 }
 
 impl GameScene {
     pub fn boxed_new() -> BoxedScene {
+        let bindings = Bindings::new()
+            .add_binding(Key::Down, Action::Camera(CameraAction::Move(MoveCameraDirection::Backward)))
+            .add_binding(Key::Less, Action::Camera(CameraAction::Move(MoveCameraDirection::Down)))
+            .add_binding(Key::Up, Action::Camera(CameraAction::Move(MoveCameraDirection::Forward)))
+            .add_binding(Key::Left, Action::Camera(CameraAction::Move(MoveCameraDirection::Left)))
+            .add_binding(Key::Right, Action::Camera(CameraAction::Move(MoveCameraDirection::Right)))
+            .add_binding(Key::Greater, Action::Camera(CameraAction::Move(MoveCameraDirection::Up)));
+
         Box::new(GameScene {
+            bindings: bindings,
             msg_window: TcodWindow::new(Bounds::new(0, 54, 99, 61)),
             world: World::new(None, 3),
-            height: 0,
-            camera_pos: [0, 0],
+            camera: Camera::default(),
             mouse_pos: [0.0, 0.0],
         })
+    }
+
+    fn get_command_from_input<'a>(&'a mut self, input: &Input) -> Option<Command> {
+        match *input {
+            Press(Keyboard(key)) => {
+                match self.bindings.get_action_from_binding(&key) {
+                    Some(action) => {
+                        match *action {
+                            Action::Camera(ref action) => {
+                                match *action {
+                                    CameraAction::Move(ref direction) => Some(camera::new_move_camera_command(direction, &mut self.camera)),
+                                }
+                            },
+                        }
+                    }
+                    _ => None,
+                }
+            },
+            Move(MouseCursor(x, y)) => {
+                self.mouse_pos = [x, y];
+                None
+            },
+            _ => None,
+        }
     }
 }
 
@@ -45,37 +82,19 @@ impl Scene for GameScene {
     fn handle_event(&mut self, e: &Event, state: &mut GameState) -> Option<BoxedScene> {
         let maybe_scene = None;
         match *e {
-            Input(Press(Keyboard(key))) => {
-                match key {
-                    Key::Less => {
-                        match self.height {
-                            x if x >= 1 => self.height -= 1,
-                            _ => {}
-                        }
-                    },
-                    Key::Greater => {
-                        match self.height {
-                            x if (x + 1) < CHUNK_SIZE => self.height += 1,
-                            _ => {}
-                        }
-                    },
-                    Key::Up => self.camera_pos[1] -= 1,
-                    Key::Down => self.camera_pos[1] += 1,
-                    Key::Left => self.camera_pos[0] -= 1,
-                    Key::Right => self.camera_pos[0] += 1,
-                    _ => {}
+            InputEvent(ref input) => {
+                let command = self.get_command_from_input(input);
+                if let Some(mut command) = command {
+                    command();
                 }
-            },
-            Input(Move(MouseCursor(x, y))) => {
-                self.mouse_pos = [x, y];
             },
             Update(_) => {
                 let mut msg = String::new();
                 msg.push_str("Welcome to Colonize!\n");
-                msg.push_str(&*format!("Height: {}\n", self.height));
+                msg.push_str(&*format!("Height: {}\n", self.camera.get_height()));
                 msg.push_str(&*format!("Mouse Cursor: {:?}\n", self.mouse_pos));
-                msg.push_str(&*format!("Camera: {:?}\n", self.camera_pos));
-                msg.push_str(&*format!("Chunk: {:?}", abs_pos_to_chunk_pos(self.camera_pos)));
+                msg.push_str(&*format!("Camera: {:?}\n", self.camera.get_position()));
+                msg.push_str(&*format!("Chunk: {:?}", abs_pos_to_chunk_pos(self.camera.get_position())));
                 self.msg_window.flush_message_buffer();
                 self.msg_window.buffer_message(&*msg);
             },
@@ -85,7 +104,7 @@ impl Scene for GameScene {
                 renderer.before_render();
                 renderer.attach_window(&mut self.msg_window);
                 // TODO: refactor these magic numbers.
-                worldview::draw_world(&self.world, renderer, Bounds::new(0, 0, 54, 49), self.camera_pos, self.height);
+                worldview::draw_world(&self.world, renderer, Bounds::new(0, 0, 54, 49), &self.camera);
                 renderer.render_frame();
             },
             _ => {}

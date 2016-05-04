@@ -7,6 +7,9 @@ extern crate tcod_window;
 extern crate colonize_utility as utility;
 extern crate colonize_world as world;
 
+mod bindings;
+mod camera;
+mod command;
 mod config;
 mod game;
 mod gamescene;

@@ -25,17 +25,14 @@ pub struct Chunk {
 
 impl Chunk {
     pub fn generate(pos: Point3<i32>, height_map: ChunkArray2d<f64>) -> Chunk {
-        let chunk_y = (pos.y * CHUNK_SIZE as i32) as f64;
+        let chunk_y = pos.y * CHUNK_SIZE as i32;
 
         Chunk {
             tiles: array_16x16x16(|x, y, z| {
                 let map_height = height_map[x][z] * HEIGHT_MAP_MULTIPLIER;
-                let tile_y = chunk_y + y as f64;
+                let tile_y = chunk_y + y as i32;
                 Tile {
-                    tile_type: match map_height {
-                            h if h < tile_y => TileType::Air,
-                            _ => TileType::Wall,
-                        }
+                    tile_type: TileType::get_from_elevation(tile_y, map_height as i32),
                 }
             }),
         }

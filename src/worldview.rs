@@ -1,4 +1,5 @@
 use cgmath::{Point2, Point3};
+use tcod::Color;
 
 use backend::{Renderer, TcodRenderer};
 use utility::Bounds;
@@ -31,7 +32,7 @@ pub fn draw_cursor(renderer: &mut TcodRenderer, bounds: Bounds<i32>) {
     let x = bounds.width() / 2;
     let y = bounds.height() / 2;
 
-    renderer.render_obj(Point2::new(x, y), 'C');
+    renderer.render_obj(Point2::new(x, y), '@', None);
 }
 
 /// Drawable representation of a single cell.
@@ -64,22 +65,43 @@ impl<'a> CellDrawable<'a> {
 
         // If the tile is see-through, we want to render the tile_type
         // underneath it, instead.
-        let display_char = if tile.tile_type.is_solid() {
-            get_glyph(&tile.tile_type)
+        let (display_char, color) = if tile.tile_type.is_solid() {
+            (
+                get_glyph(&tile.tile_type),
+                get_color(&tile.tile_type),
+            )
         } else {
             let tile = self.world.area.get_tile(&(self.pos + Direction::Down.to_vector()));
-            get_lower_glyph(&tile.tile_type)
+            (
+                get_lower_glyph(&tile.tile_type),
+                get_color(&tile.tile_type),
+            )
         };
 
-        renderer.render_obj(offset, display_char);
+        renderer.render_obj(offset, display_char, color);
+    }
+}
+
+fn get_color(tile_type: &TileType) -> Option<Color> {
+    use tcod::colors::*;
+
+    match *tile_type {
+        TileType::Air | TileType::OutOfBounds => None,
+        TileType::Grass => Some(GREEN),
+        TileType::Sand => Some(YELLOW),
+        TileType::Soil => Some(DARKER_SEPIA),
+        TileType::Wall => Some(DARK_GREY),
+        TileType::Water => Some(BLUE),
     }
 }
 
 fn get_glyph(tile_type: &TileType) -> char {
     match *tile_type {
         TileType::Air => ' ',
+        TileType::Grass | TileType::Sand | TileType::Soil => 178u8 as char,
         TileType::OutOfBounds => '?',
         TileType::Wall => 177u8 as char,
+        TileType::Water => '=',
     }
 }
 
@@ -88,7 +110,9 @@ fn get_glyph(tile_type: &TileType) -> char {
 fn get_lower_glyph(tile_type: &TileType) -> char {
     match *tile_type {
         TileType::Air => ' ',
+        TileType::Grass | TileType::Sand | TileType::Soil => ',',
         TileType::OutOfBounds => '?',
         TileType::Wall => '.',
+        TileType::Water => '~',
     }
 }

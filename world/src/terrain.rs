@@ -1,17 +1,52 @@
 use self::TileType::*;
 
+const WATER_LINE: i32 = 14;
+const SOIL_DEPTH: i32 = 3;
+
 #[derive(Clone, Copy)]
 pub enum TileType {
     Air,
+    Grass,
     OutOfBounds,
+    Sand,
+    Soil,
     Wall,
+    Water,
 }
 
 impl TileType {
     pub fn is_solid(&self) -> bool {
         match *self {
-            Wall => true,
-            _ => false,
+            Grass | Sand | Soil | Wall | Water => true,
+            Air | OutOfBounds => false,
+        }
+    }
+
+    /// Returns the TileType for a tile at a specific elevation, provided the
+    /// height_map specifies a `height` at this location.
+    pub fn get_from_elevation(elevation: i32, height: i32) -> Self {
+        match elevation {
+            _ if elevation > height => {
+                match elevation {
+                    _ if elevation > WATER_LINE => TileType::Air,
+                    _ => TileType::Water,
+                }
+            }
+            _ => match elevation {
+                _ if elevation > WATER_LINE => {
+                    match elevation {
+                        _ if elevation > height - 1 => TileType::Grass,
+                        _ if elevation > height - SOIL_DEPTH => TileType::Soil,
+                        _ => TileType::Wall,
+                    }
+                },
+                _ => {
+                    match elevation {
+                        _ if elevation > height - SOIL_DEPTH => TileType::Sand,
+                        _ => TileType::Wall,
+                    }
+                }
+            }
         }
     }
 }

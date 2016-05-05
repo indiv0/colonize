@@ -4,7 +4,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 
 use cgmath::Point2;
-use self::tcod::console;
+use self::tcod::{Color, console};
 use self::tcod::console::{
     BackgroundFlag,
     Console,
@@ -97,9 +97,15 @@ impl Renderer<TcodWindow> for TcodRenderer {
         self.console.borrow_mut().clear();
     }
 
-    fn render_obj(&mut self, position: Point2<i32>, symbol: char) {
+    fn render_obj(&mut self, position: Point2<i32>, symbol: char, color: Option<Color>) {
         self.console.borrow_mut().put_char(position[0], position[1],
             symbol, BackgroundFlag::Set);
+        if let Some(color) = color {
+            self.console.borrow_mut().set_char_foreground(
+                position[0],
+                position[1],
+                color);
+        }
     }
 
     fn render_frame(&mut self) {

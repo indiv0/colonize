@@ -116,7 +116,7 @@ impl Renderer<TcodWindow> for TcodRenderer {
                 &message);
         }
 
-        let console: Box<Console> = Box::new(*window.get_console());
+        let console = Box::new(*window.get_console()) as Box<Console>;
 
         console::blit(
             &console,

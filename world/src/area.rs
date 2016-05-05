@@ -9,15 +9,19 @@ use terrain::{ Tile, TileType };
 use mapgen;
 
 const NOISE_SCALING_FACTOR: f64 = 64.0;
+const NOISE_GENERATOR: fn(&Seed, &[f64; 2]) -> f64 = scaled_open_simplex2;
 
 pub struct Area {
     chunks: HashMap<Point3<i32>, Chunk>,
+    seed: Seed,
 }
 
 impl Area {
     pub fn new(rng_seed: u32, initial_size: u32) -> Self {
-        let seed = Seed::new(rng_seed);
-        let mut chunks = HashMap::new();
+        let mut area = Area {
+            chunks: HashMap::new(),
+            seed: Seed::new(rng_seed),
+        };
 
         // We take a u32 and convert to an i32 internally because we generate
         // around (0, 0). but we also want to only accept valid input.
@@ -32,36 +36,37 @@ impl Area {
                 // from `initial_size^3` to `initial_size^2`.
                 let mut pos = Point3::new(x, 0, z);
                 let height_map = mapgen::generate_height_map(
-                    &seed,
+                    &area.seed,
                     &pos,
-                    scaled_open_simplex2);
+                    NOISE_GENERATOR);
                 for y in -initial_size..initial_size {
                     pos.y = y;
                     mapgen::generate_chunk(
                         pos,
                         height_map,
-                        |p, c| { chunks.insert(p, c); });
+                        |p, c| { area.add_chunk(p, c); });
                 }
             }
         }
 
-        Area {
-            chunks: chunks,
-        }
+        area
     }
 
     pub fn add_chunk(&mut self, p: Point3<i32>, c: Chunk) {
         self.chunks.insert(p, c);
     }
 
-    pub fn get_tile(&self, p: Point3<i32>) -> Tile {
-        let chunk_pos = abs_pos_to_chunk_pos(&p);
-        let tile_pos = abs_pos_to_rel_chunk_pos(&p);
+    pub fn get_chunk(&self, p: Point3<i32>) -> Option<&Chunk> {
+        self.chunks.get(&p)
+    }
 
-        // FIXME
-        match self.chunks.get(&chunk_pos) {
+    pub fn get_tile(&self, p: &Point3<i32>) -> Tile {
+        let chunk_pos = abs_pos_to_chunk_pos(p);
+        let tile_pos = abs_pos_to_rel_chunk_pos(p);
+
+        match self.get_chunk(chunk_pos) {
             Some(chunk) => chunk.tiles[tile_pos[1]][tile_pos[0]][tile_pos[2]],
-            None => Tile::new(TileType::OutOfBounds)
+            None => Tile::new(TileType::OutOfBounds),
         }
     }
 }

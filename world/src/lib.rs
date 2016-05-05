@@ -19,9 +19,10 @@ pub const LOG2_OF_CHUNK_SIZE: u32 = 4;
 pub const HEIGHT_MAP_MULTIPLIER: f64 = 32.0;
 
 pub use self::area::abs_pos_to_chunk_pos;
-pub use self::direction::Direction;
-pub use self::world::World;
 pub use self::chunk::Chunk;
+pub use self::direction::Direction;
+pub use self::terrain::TileType;
+pub use self::world::World;
 
 mod area;
 mod chunk;

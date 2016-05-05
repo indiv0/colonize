@@ -12,6 +12,7 @@ mod bindings;
 mod camera;
 mod command;
 mod config;
+mod drawable;
 mod game;
 mod gamescene;
 mod gamestate;

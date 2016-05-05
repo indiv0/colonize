@@ -14,24 +14,6 @@ impl TileType {
             _ => false,
         }
     }
-
-    pub fn get_glyph(&self) -> char {
-        match *self {
-            Air => ' ',
-            OutOfBounds => '?',
-            Wall => 177u8 as char,
-        }
-    }
-
-    /// Returns the glyph for a tile which is a level lower than the rendered
-    /// level.
-    pub fn get_lower_glyph(&self) -> char {
-        match *self {
-            Air => ' ',
-            OutOfBounds => '?',
-            Wall => '.',
-        }
-    }
 }
 
 #[derive(Clone, Copy)]

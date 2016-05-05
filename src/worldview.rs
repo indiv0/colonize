@@ -1,10 +1,11 @@
 use cgmath::{Point2, Point3};
 
-use backend::{ TcodRenderer, Renderer };
+use backend::{Renderer, TcodRenderer};
 use utility::Bounds;
-use world::{Direction, World};
+use world::{Direction, TileType, World};
 
 use camera::Camera;
+use drawable::Drawable;
 
 // TODO: replace `TcodRenderer` with `Renderer`
 pub fn draw_world(world: &World, renderer: &mut TcodRenderer, bounds: Bounds<i32>, camera: &Camera) {
@@ -16,22 +17,10 @@ pub fn draw_world(world: &World, renderer: &mut TcodRenderer, bounds: Bounds<i32
     // TODO: implement proper occlusion culling.
     for x in 0..bounds.width() {
         for z in 0..bounds.height() {
-            let tile_pos = Point3::new(x + start_x, camera_pos.y, z + start_z);
-
-            let tile = world.area.get_tile(tile_pos);
-
-            // If the tile is see-through, we want to render the tile_type
-            // underneath it, instead.
-            let display_char = if tile.tile_type.is_solid() {
-                tile.tile_type.get_glyph()
-            } else {
-                let tile = world.area.get_tile(tile_pos + Direction::Down.to_vector());
-                tile.tile_type.get_lower_glyph()
-            };
-
-            let pos = Point2::new(x, z);
-
-            renderer.render_obj(pos, display_char);
+            let screen_pos = Point2::new(x, z);
+            let pos = Point3::new(x + start_x, camera_pos.y, z + start_z);
+            let cell_drawable = CellDrawable::new(pos, world);
+            cell_drawable.draw(renderer, screen_pos);
         }
     }
 
@@ -43,4 +32,63 @@ pub fn draw_cursor(renderer: &mut TcodRenderer, bounds: Bounds<i32>) {
     let y = bounds.height() / 2;
 
     renderer.render_obj(Point2::new(x, y), 'C');
+}
+
+/// Drawable representation of a single cell.
+pub struct CellDrawable<'a> {
+    pub pos: Point3<i32>,
+    // TODO: find a way to avoid borrowing the world here.
+    pub world: &'a World,
+}
+
+impl<'a> Drawable for CellDrawable<'a> {
+    fn draw(&self, renderer: &mut TcodRenderer, offset: Point2<i32>) {
+        self.draw_cell(renderer, offset);
+    }
+}
+
+impl<'a> CellDrawable<'a> {
+    pub fn new(pos: Point3<i32>, world: &'a World) -> Self {
+        CellDrawable {
+            pos: pos,
+            world: world,
+        }
+    }
+
+    fn draw_cell(&self, renderer: &mut TcodRenderer, offset: Point2<i32>) {
+        self.draw_terrain(renderer, offset);
+    }
+
+    fn draw_terrain(&self, renderer: &mut TcodRenderer, offset: Point2<i32>) {
+        let tile = self.world.area.get_tile(&self.pos);
+
+        // If the tile is see-through, we want to render the tile_type
+        // underneath it, instead.
+        let display_char = if tile.tile_type.is_solid() {
+            get_glyph(&tile.tile_type)
+        } else {
+            let tile = self.world.area.get_tile(&(self.pos + Direction::Down.to_vector()));
+            get_lower_glyph(&tile.tile_type)
+        };
+
+        renderer.render_obj(offset, display_char);
+    }
+}
+
+fn get_glyph(tile_type: &TileType) -> char {
+    match *tile_type {
+        TileType::Air => ' ',
+        TileType::OutOfBounds => '?',
+        TileType::Wall => 177u8 as char,
+    }
+}
+
+/// Returns the glyph for a tile which is a level lower than the rendered
+/// level.
+fn get_lower_glyph(tile_type: &TileType) -> char {
+    match *tile_type {
+        TileType::Air => ' ',
+        TileType::OutOfBounds => '?',
+        TileType::Wall => '.',
+    }
 }

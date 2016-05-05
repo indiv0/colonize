@@ -4,7 +4,7 @@ A Dwarf-Fortress/Rogue-like game written in Rust.
 
 ## Prerequisites
 
-* [rust](https://rust-lang.org)
+* [rust](https://www.rust-lang.org)
 * [libtcod](http://roguecentral.org/doryen/libtcod/)
 
 ## Compiling

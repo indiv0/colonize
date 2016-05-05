@@ -1,5 +1,7 @@
+extern crate tcod;
+
 use cgmath::{Point2, Point3};
-use tcod::Color;
+use self::tcod::Color;
 
 use backend::{Renderer, TcodRenderer};
 use utility::Bounds;
@@ -83,7 +85,7 @@ impl<'a> CellDrawable<'a> {
 }
 
 fn get_color(tile_type: &TileType) -> Option<Color> {
-    use tcod::colors::*;
+    use self::tcod::colors::*;
 
     match *tile_type {
         TileType::Air | TileType::OutOfBounds => None,

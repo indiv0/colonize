@@ -4,7 +4,6 @@
 extern crate colonize_backend as backend;
 extern crate cgmath;
 extern crate piston;
-extern crate tcod;
 extern crate tcod_window;
 extern crate colonize_utility as utility;
 extern crate colonize_world as world;

@@ -1,4 +1,5 @@
-#![cfg_attr(feature = "nightly-testing", feature(plugin))]
+#![cfg_attr(feature = "nightly", feature(custom_derive, plugin))]
+#![cfg_attr(feature = "nightly", plugin(serde_macros))]
 #![cfg_attr(feature = "clippy", plugin(clippy))]
 
 extern crate array;
@@ -8,6 +9,7 @@ extern crate num;
 extern crate rand;
 extern crate colonize_utility as utility;
 
+// TODO: refactor these values to be configurable.
 // CHUNK_SIZE needs to be a power of two.
 // TODO: possibly find a way to make `CHUNK_SIZE` configurable at runtime.
 // TODO: possibly find a way to assert that `CHUNK_SIZE` is a power of two.

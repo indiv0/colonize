@@ -2,19 +2,16 @@
 
 name = "colonize_utility"
 version = "0.0.1"
-authors = [
-    "Nicholas Mazzuca <npmazzuca@gmail.com>",
-    "Nikita Pekin <contact@nikitapek.in>"
-]
+authors = ["Nikita Pekin <contact@nikitapek.in>"]
 
 description = "Utilities for general roguelike creation"
 
 [dependencies]
-cgmath = "*"
+cgmath = "0.9.1"
 
 [dependencies.clippy]
 optional = true
-version = "0.0.63"
+version = "0.0.66"
 
 [features]
 nightly-testing = ["clippy"]

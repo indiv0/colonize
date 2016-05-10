@@ -24,6 +24,7 @@ pub fn generate_height_map<T, F>(seed: &Seed, pos: &Point3<i32>, rng: F) -> [[T;
             cast(z as i32 + pos.z * CHUNK_SIZE as i32),
         ];
         let value: f64 = cast(rng(seed, &loc));
+        // TODO: refactor these values to be configurable.
         cast(clamp(value * 0.5 + 0.5, 0.0, 1.0))
     };
     array_16x16(get_random_height)

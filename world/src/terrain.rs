@@ -1,9 +1,10 @@
 use self::TileType::*;
 
+// TODO: refactor these values to be configurable.
 const WATER_LINE: i32 = 14;
 const SOIL_DEPTH: i32 = 3;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Eq, Hash, PartialEq)]
 pub enum TileType {
     Air,
     Grass,

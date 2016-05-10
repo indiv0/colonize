@@ -8,7 +8,8 @@ use chunk::Chunk;
 use terrain::{ Tile, TileType };
 use mapgen;
 
-const NOISE_SCALING_FACTOR: f64 = 64.0;
+// TODO: refactor these values to be configurable.
+const NOISE_SCALING_FACTOR: f64 = 1.0 / 64.0;
 const NOISE_GENERATOR: fn(&Seed, &[f64; 2]) -> f64 = scaled_open_simplex2;
 
 pub struct Area {
@@ -72,7 +73,7 @@ impl Area {
 }
 
 fn scaled_open_simplex2(seed: &Seed, point: &[f64; 2]) -> f64 {
-    open_simplex2(seed, &[point[0] / NOISE_SCALING_FACTOR, point[1] / NOISE_SCALING_FACTOR])
+    open_simplex2(seed, &[point[0] * NOISE_SCALING_FACTOR, point[1] * NOISE_SCALING_FACTOR])
 }
 
 /// Takes an absolute coordinate and returns the origin coordinate of the chunk

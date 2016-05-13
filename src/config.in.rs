@@ -13,8 +13,8 @@ create_config! {
     language: String, "en_CA".to_owned(), "Localization language";
     asset_path: String, "./assets/".to_owned(), "Directory in which game assets are located";
     font_file: String, "NotoSans/NotoSans-Regular.ttf".to_owned(), "Path to the main font file, relative to the fonts directory.";
-    window_height: u32, 61, "Height of the window";
-    window_width: u32, 99, "Width of the window";
+    window_height: u32, 800, "Height of the window";
+    window_width: u32, 800, "Width of the window";
     ups: u64, 180,
         "Number of updates per second.\nThis is the fixed update rate on average over time. If the event loop lags, it will try to catch up";
     max_fps: u64, 10_000,

@@ -1,11 +1,11 @@
 [package]
 
-name = "colonize_world"
+name = "rgframework"
 version = "0.0.1"
-authors = [
-    "Nikita Pekin <contact@nikitapek.in>",
-]
+authors = ["Nikita Pekin <contact@nikitapek.in>"]
 build = "build.rs"
+
+description = "A Rust game framework built upon Piston"
 
 [build-dependencies.serde_codegen]
 optional = true
@@ -16,15 +16,10 @@ optional = true
 version = "*"
 
 [dependencies]
-cgmath = "0.9.1"
-array = "0.0.1"
-noise = "0.2.0"
-num = "0.1.32"
-rand = "0.3.14"
+piston = "0.22.1"
+piston2d-graphics = "0.16.0"
+rustc-serialize = "0.3"
 serde = "0.7.4"
-
-[dependencies.colonize_utility]
-path = "../utility"
 
 [dependencies.clippy]
 optional = true
@@ -47,3 +42,4 @@ with-syntex = [
     "serde_codegen",
     "syntex"
 ]
+

@@ -1,23 +1,23 @@
 use cgmath::{ElementWise, EuclideanSpace, Point3, Vector3};
-
-use command::Command;
+use rgframework::Command;
 use world::Direction;
 
-/// The speed at which the camera moves along the three axes.
-const MOVEMENT_SPEED: Vector3<i32> = Vector3 { x: 1, y: 1, z: 1 };
-
+#[derive(Clone, Deserialize, Serialize)]
 pub enum CameraAction {
     Move(Direction),
 }
 
 pub struct Camera {
+    /// The speed at which the camera moves along the three axes.
+    movement_speed: Vector3<i32>,
     position: Point3<i32>,
 }
 
 impl Camera {
-    pub fn new() -> Self {
+    pub fn new(movement_speed: Vector3<i32>, position: Point3<i32>) -> Self {
         Camera {
-            position: Point3::origin(),
+            movement_speed: movement_speed,
+            position: position,
         }
     }
 
@@ -26,13 +26,16 @@ impl Camera {
     }
 
     pub fn move_in_direction(&mut self, direction: &Direction) {
-        self.position += direction.to_vector().mul_element_wise(MOVEMENT_SPEED);
+        self.position += direction.to_vector().mul_element_wise(self.movement_speed);
     }
 }
 
 impl Default for Camera {
     fn default() -> Self {
-        Camera::new()
+        Camera {
+            movement_speed: Vector3::new(1, 1, 1),
+            position: Point3::origin(),
+        }
     }
 }
 

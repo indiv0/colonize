@@ -2,35 +2,69 @@
 
 name = "colonize"
 version = "0.0.2"
-authors = [ "Nikita Pekin <contact@nikitapek.in>" ]
+authors = ["Nikita Pekin <contact@nikitapek.in>"]
+build = "build.rs"
 
 [[bin]]
 
 name = "colonize"
 
+[build-dependencies.serde_codegen]
+optional = true
+version = "*"
+
+[build-dependencies.syntex]
+optional = true
+version = "*"
+
 [dependencies]
 cgmath = "0.9.1"
-tcod = "0.9.0"
-tcod_window = "0.2.0"
-piston = "0.20.0"
+fps_counter = "0.2.0"
+piston = "0.22.1"
+piston2d-glium_graphics = "0.25.0"
+piston2d-graphics = "0.16.0"
+piston2d-opengl_graphics = "0.29.0"
+serde = "0.7.4"
+serde_json = "0.7.0"
+shader_version = "0.2.1"
+time = "0.1.35"
 
 [dependencies.clippy]
 optional = true
-version = "0.0.63"
-
-[dependencies.colonize_backend]
-path = "backend"
+version = "0.0.66"
 
 [dependencies.colonize_utility]
 path = "utility"
 
 [dependencies.colonize_world]
+default-features = false
 path = "world"
 
+[dependencies.rgframework]
+default-features = false
+path = "framework"
+
+[dependencies.serde_macros]
+optional = true
+version = "0.7.4"
+
 [features]
+default = ["with-syntex"]
+nightly = [
+    "colonize_world/nightly",
+    "rgframework/nightly",
+    "serde_macros",
+]
 nightly-testing = [
-    "colonize_backend/nightly-testing",
     "colonize_utility/nightly-testing",
     "colonize_world/nightly-testing",
     "clippy",
+    "nightly",
+    "rgframework/nightly-testing",
+]
+with-syntex = [
+    "colonize_world/with-syntex",
+    "rgframework/with-syntex",
+    "serde_codegen",
+    "syntex"
 ]

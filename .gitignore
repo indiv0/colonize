@@ -14,3 +14,6 @@
 backend/Cargo.lock
 utility/Cargo.lock
 world/Cargo.lock
+
+# Colonize
+colonize.json

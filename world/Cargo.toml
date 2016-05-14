@@ -28,7 +28,7 @@ path = "../utility"
 
 [dependencies.clippy]
 optional = true
-version = "0.0.66"
+version = "0.0"
 
 [dependencies.serde_macros]
 optional = true

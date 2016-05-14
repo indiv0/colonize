@@ -31,7 +31,7 @@ time = "0.1.35"
 
 [dependencies.clippy]
 optional = true
-version = "0.0.66"
+version = "0.0"
 
 [dependencies.colonize_utility]
 path = "utility"

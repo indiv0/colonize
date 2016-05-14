@@ -11,7 +11,7 @@ cgmath = "0.9.1"
 
 [dependencies.clippy]
 optional = true
-version = "0.0.66"
+version = "0.0"
 
 [features]
 nightly-testing = ["clippy"]

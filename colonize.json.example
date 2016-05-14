@@ -6,6 +6,7 @@
     "window_width": 800,
     "ups": 180,
     "max_fps": 10000,
+    "exit_on_esc": true,
     "fullscreen": false,
     "vsync": false,
     "initial_world_size": 3,

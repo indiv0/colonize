@@ -3,7 +3,7 @@ name = "colonize"
 version = "0.0.2"
 dependencies = [
  "cgmath 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "clippy 0.0.66 (registry+https://github.com/rust-lang/crates.io-index)",
+ "clippy 0.0.67 (registry+https://github.com/rust-lang/crates.io-index)",
  "colonize_utility 0.0.1",
  "colonize_world 0.0.1",
  "fps_counter 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -108,7 +108,7 @@ dependencies = [
 
 [[package]]
 name = "clippy"
-version = "0.0.66"
+version = "0.0.67"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "quine-mc_cluskey 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -134,7 +134,7 @@ name = "colonize_utility"
 version = "0.0.1"
 dependencies = [
  "cgmath 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "clippy 0.0.66 (registry+https://github.com/rust-lang/crates.io-index)",
+ "clippy 0.0.67 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -143,7 +143,7 @@ version = "0.0.1"
 dependencies = [
  "array 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "cgmath 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "clippy 0.0.66 (registry+https://github.com/rust-lang/crates.io-index)",
+ "clippy 0.0.67 (registry+https://github.com/rust-lang/crates.io-index)",
  "colonize_utility 0.0.1",
  "noise 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "num 0.1.32 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -833,7 +833,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "rgframework"
 version = "0.0.1"
 dependencies = [
- "clippy 0.0.66 (registry+https://github.com/rust-lang/crates.io-index)",
+ "clippy 0.0.67 (registry+https://github.com/rust-lang/crates.io-index)",
  "piston 0.22.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "piston2d-graphics 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustc-serialize 0.3.19 (registry+https://github.com/rust-lang/crates.io-index)",

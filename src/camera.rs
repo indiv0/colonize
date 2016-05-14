@@ -2,10 +2,11 @@ use cgmath::{ElementWise, EuclideanSpace, Point3, Vector3};
 use rgframework::Command;
 use world::Direction;
 
-#[derive(Clone, Deserialize, Serialize)]
-pub enum CameraAction {
-    Move(Direction),
-}
+#[cfg(feature = "nightly")]
+include!("camera.in.rs");
+
+#[cfg(feature = "with-syntex")]
+include!(concat!(env!("OUT_DIR"), "/camera.rs"));
 
 pub struct Camera {
     /// The speed at which the camera moves along the three axes.

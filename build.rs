@@ -10,7 +10,10 @@ mod inner {
         let out_dir = env::var_os("OUT_DIR").unwrap();
 
         for &(src, dst) in &[
+            ("src/action.in.rs", "action.rs"),
+            ("src/camera.in.rs", "camera.rs"),
             ("src/config.in.rs", "config.rs"),
+            ("src/localization.in.rs", "localization.rs"),
         ] {
             let src = Path::new(src);
             let dst = Path::new(&out_dir).join(dst);

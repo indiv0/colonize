@@ -59,12 +59,8 @@ const OPENGL_VERSION: OpenGL = OpenGL::V3_2;
 
 fn main() {
     // Load the configuration from its JSON file, falling back to the default
-    // configuration in the event of an error..
-    let config_file: PathBuf = CONFIG_PATH.into();
-    let config = match read_file_to_json(config_file.as_ref()).ok() {
-        Some(json) => Config::from_json(&json),
-        _ => Config::default(),
-    };
+    // configuration in the event of an error.
+    let config: Config = deserialize_from_file_or_default(&CONFIG_PATH.into());
 
     // Define the asset path.
     let asset_path: PathBuf = (&config.asset_path).into();
@@ -74,10 +70,7 @@ fn main() {
     let mut localization_file = asset_path.join(LOCALIZATION_DIR)
         .join(&config.language);
     localization_file.set_extension(LOCALIZATION_FILE_EXTENSION);
-    let localization = match read_file_to_json(&localization_file).ok() {
-        Some(json) => Localization::from_json(&json),
-        _ => Localization::default(),
-    };
+    let localization: Localization = deserialize_from_file_or_default(&localization_file);
 
     // Initialize the window and graphics backend.
     let window: Window = make_window(&config, &localization);
@@ -96,11 +89,20 @@ fn main() {
     game.run(&mut gl, &mut glyph_cache);
 }
 
-fn read_file_to_json(path: &Path) -> ColonizeResult<String> {
+fn deserialize_from_file_or_default<T>(path: &PathBuf) -> T
+    where T: Default + serde::de::Deserialize,
+{
+    match read_file_to_string(path){
+        Ok(json) => serde_json::from_str(&json).ok().unwrap_or_default(),
+        Err(_) => T::default(),
+    }
+}
+
+fn read_file_to_string(path: &Path) -> ColonizeResult<String> {
     let mut file = try!(File::open(&path));
-    let mut json = String::new();
-    try!(file.read_to_string(&mut json));
-    Ok(json)
+    let mut file_str = String::new();
+    try!(file.read_to_string(&mut file_str));
+    Ok(file_str)
 }
 
 fn make_window<W>(config: &Config, localization: &Localization) -> W

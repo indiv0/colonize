@@ -2,6 +2,8 @@
 pub struct Localization {
     /// Colonize - Window title
     pub colonize_window_title: String,
+    /// Debug - Render Info
+    pub debug_render_info: String,
     /// GameScene - Welcome text
     pub gamescene_welcome_text: String,
     /// GameScene - Debug - Cursor
@@ -29,6 +31,7 @@ pub struct Localization {
 #[derive(Deserialize, Serialize)]
 struct ParsedLocalization {
     colonize_window_title: Option<String>,
+    debug_render_info: Option<String>,
     gamescene_welcome_text: Option<String>,
     gamescene_debug_cursor: Option<String>,
     gamescene_debug_camera: Option<String>,

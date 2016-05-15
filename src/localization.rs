@@ -8,6 +8,7 @@ create_type_parsing_impls! {
     Localization,
     ParsedLocalization,
     colonize_window_title, "Colonize".to_owned();
+    debug_render_info, "Render Info".to_owned();
     gamescene_welcome_text, "Welcome to Colonize!".to_owned();
     gamescene_debug_cursor, "Mouse Cursor".to_owned();
     gamescene_debug_camera, "Camera".to_owned();

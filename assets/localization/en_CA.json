@@ -1,5 +1,6 @@
 {
     "colonize_window_title": "Colonize",
+    "debug_render_info": "Render Info",
     "gamescene_welcome_text": "Welcome to Colonize!",
     "gamescene_debug_cursor": "Mouse Cursor",
     "gamescene_debug_camera": "Camera",

@@ -29,6 +29,7 @@ pub struct Game<B, E, G, W>
           G: Graphics<Texture=B::Texture>,
           W: AdvancedWindow + Window,
 {
+    config: Rc<Config>,
     localization: Rc<Localization>,
     fps_counter: fps_counter::FPSCounter,
     scene_manager: SceneManager<B, E, G>,
@@ -52,15 +53,16 @@ impl<B, E, G, W> Game<B, E, G, W>
 
         let events = window.events().ups(config.ups).max_fps(config.max_fps);
 
-        Self::new_internal(events, localization, scene_manager, window)
+        Self::new_internal(events, config, localization, scene_manager, window)
     }
 
-    fn new_internal(events: WindowEvents, localization: Rc<Localization>, scene_manager: SceneManager<B, E, G>, window: W) -> Self {
+    fn new_internal(events: WindowEvents, config: Rc<Config>, localization: Rc<Localization>, scene_manager: SceneManager<B, E, G>, window: W) -> Self {
         Game {
             events: events,
             fps_counter: fps_counter::FPSCounter::new(),
             scene_manager: scene_manager,
             window: window,
+            config: config,
             localization: localization,
         }
     }
@@ -84,15 +86,25 @@ impl<W> Game<GlBackend, Event<W::Event>, GlGraphics, W>
                     let end_time = time::precise_time_ns();
 
                     let fps = self.fps_counter.tick();
-                    let title = format!(
+                    let fps_info = format!(
                         "{}: {:.2}{unit_millisecond} @ {} {unit_fps}",
-                        self.localization.colonize_window_title,
+                        self.localization.debug_render_info,
                         (end_time - start_time) as f64 / 1e6,
                         fps,
                         unit_millisecond=self.localization.util_unit_millisecond,
                         unit_fps=self.localization.util_unit_fps,
                     );
-                    self.window.set_title(title);
+
+                    gl.draw(args.viewport(), |c, gl| {
+                        use graphics::{Text, Transformed};
+
+                        Text::new(self.config.font_size).draw(
+                            &fps_info,
+                            glyph_cache,
+                            &c.draw_state,
+                            c.transform.trans(10.0, 25.0),
+                            gl);
+                    });
                 },
                 _ => {
                     self.scene_manager.handle_event(&e);

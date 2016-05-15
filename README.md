@@ -18,6 +18,8 @@ A Dwarf-Fortress/Rimworld-like game written in Rust.
 
 ***See the [changelog] for what's new in the most recent release.***
 
+![colonize-screenshot](https://i.imgur.com/YI68SsY.jpg "Colonize - Game scene")
+
 # Table of Contents
 
 * [Running Precompiled Binaries](#running-precompiled-binaries)

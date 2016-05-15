@@ -1,0 +1,10 @@
+[clog]
+repository = "https://github.com/indiv0/colonize"
+outfile = "CHANGELOG.md"
+from-latest-tag = true
+
+[sections]
+Performance = ["perf"]
+Improvements = ["impr", "im", "imp"]
+Documentation = ["docs"]
+Examples = ["examples"]

@@ -39,6 +39,9 @@ matrix:
             - gcc-multilib
             # freetype library
             - libfreetype6-dev:i386
+    - os: osx
+      rust: stable
+      env: TARGET=x86_84-apple-darwin
     - os: linux
       rust: stable
       env: TARGET=x86_64-unknown-linux-gnu
@@ -52,6 +55,9 @@ matrix:
       addons:
         apt:
           packages: *i686_unknown_linux_gnu
+    - os: osx
+      rust: beta
+      env: TARGET=x86_84-apple-darwin
     - os: linux
       rust: beta
       env: TARGET=x86_64-unknown-linux-gnu
@@ -65,6 +71,9 @@ matrix:
       addons:
         apt:
           packages: *i686_unknown_linux_gnu
+    - os: osx
+      rust: nightly
+      env: TARGET=x86_84-apple-darwin
     - os: linux
       rust: nightly
       env: TARGET=x86_64-unknown-linux-gnu

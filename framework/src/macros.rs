@@ -2,7 +2,7 @@
 macro_rules! create_type_parsing_impls {
     ($type_name:ident,
      $parsed_type_name:ident,
-     $($i:ident: $ty:ty, $def:expr);+ $(;)*) => (
+     $($i:ident, $def:expr);+ $(;)*) => (
         impl $type_name {
             fn fill_from_parsed(mut self, parsed: $parsed_type_name) -> $type_name {
             $(

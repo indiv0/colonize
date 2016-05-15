@@ -42,6 +42,12 @@ matrix:
     - os: linux
       rust: stable
       env: TARGET=x86_64-unknown-linux-gnu
+    - os: linux
+      rust: stable
+      env: TARGET=x86_64-unknown-linux-musl
+      # needed to install musl-tools
+      sudo: true
+      dist: trusty
     # beta channel
     - os: osx
       rust: beta
@@ -55,6 +61,12 @@ matrix:
     - os: linux
       rust: beta
       env: TARGET=x86_64-unknown-linux-gnu
+    - os: linux
+      rust: beta
+      env: TARGET=x86_64-unknown-linux-musl
+      # needed to install musl-tools
+      sudo: true
+      dist: trusty
     # nightly channel
     - os: osx
       rust: nightly
@@ -68,6 +80,12 @@ matrix:
     - os: linux
       rust: nightly
       env: TARGET=x86_64-unknown-linux-gnu
+    - os: linux
+      rust: nightly
+      env: TARGET=x86_64-unknown-linux-musl
+      # needed to install musl-tools
+      sudo: true
+      dist: trusty
 
 before_install:
   - |

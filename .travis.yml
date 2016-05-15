@@ -1,9 +1,134 @@
+sudo: false
 language: rust
-os:
-    - linux
-    - osx
+cache: cargo
+
+env:
+  global:
+    # this will be part of the release tarball
+    - PROJECT_NAME=colonize
+    - RUST_BACKTRACE=1
+    # override the default '--features unstable' used for the nightly branch
+    - TRAVIS_CARGO_NIGHTLY_FEATURE="nightly-testing"
+    # encrypted Github token for doc upload
+    - secure: "OtcCEFBniy4i89KaFKEOct+JsTQF3W3+6SYWlcB4FEvljRwwpAMWzpqoHQhfNLPQiX07Da+IlKrhM5wt2PPF80dEzyIxiK6Y/fJFgd0peAkbKYwqrgoS80WoqSHYBR8STb+X6JlhxxX+/pma+ILBBFQ6UH01KEHGISlHq4ARw58="
+# the following are necessary for `travis-cargo coveralls --no-sudo`
+addons:
+  apt:
+    packages:
+      - libcurl4-openssl-dev
+      - libelf-dev
+      - libdw-dev
+      - binutils-dev # optional: only required for the --verify flag of coveralls
+
+matrix:
+  fast_finish: true
+  allow_failures:
+    - rust: nightly
+  include:
+    # stable channel
+    - os: osx
+      rust: stable
+      env: TARGET=i686-apple-darwin
+    - os: linux
+      rust: stable
+      env: TARGET=i686-unknown-linux-gnu
+      addons:
+        apt:
+          packages: &i686_unknown_linux_gnu
+            # Cross compiler and cross compiled C libraries
+            - gcc-multilib
+            # freetype library
+            - libfreetype6-dev:i386
+    - os: linux
+      rust: stable
+      env: TARGET=x86_64-unknown-linux-gnu
+    # beta channel
+    - os: osx
+      rust: beta
+      env: TARGET=i686-apple-darwin
+    - os: linux
+      rust: beta
+      env: TARGET=i686-unknown-linux-gnu
+      addons:
+        apt:
+          packages: *i686_unknown_linux_gnu
+    - os: linux
+      rust: beta
+      env: TARGET=x86_64-unknown-linux-gnu
+    # nightly channel
+    - os: osx
+      rust: nightly
+      env: TARGET=i686-apple-darwin
+    - os: linux
+      rust: nightly
+      env: TARGET=i686-unknown-linux-gnu
+      addons:
+        apt:
+          packages: *i686_unknown_linux_gnu
+    - os: linux
+      rust: nightly
+      env: TARGET=x86_64-unknown-linux-gnu
+
+before_install:
+  - |
+      export PATH="$PATH:$HOME/.cargo/bin"
+      if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+        brew update &&
+        brew install freetype
+      fi
+
 install:
-    - sudo apt-get update
-    - sudo apt-get install gcc g++ make upx electric-fence libsdl1.2-dev mercurial
+  - bash ci/install.sh
+
+before_script:
+  # load travis-cargo
+  - |
+      pip install 'travis-cargo<0.2' --user &&
+      if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+        export PATH=$HOME/.local/bin/:$PATH
+      else
+        export PATH=$HOME/Library/Python/2.7/bin:$PATH
+      fi
+
+# the main build
 script:
-    - cargo build -v
+  - bash ci/script.sh
+
+after_success:
+  # upload the documentation from the build with stable (automatically only
+  # actually runs from the master branch, not individual PRs)
+  - travis-cargo --only stable doc-upload
+  # measure code coverage and upload to coveralls.io (the verify argument
+  # mitigates kcov crashes due to malformed debuginfo, at the cost of some
+  # speed. <https://github.com/huonw/travis-cargo/issues/12>)
+  - travis-cargo coveralls --no-sudo --verify
+
+before_deploy:
+  - bash ci/before_deploy.sh
+
+deploy:
+  provider: releases
+  api_key:
+    # secure Github token for release upload
+    secure: "OtcCEFBniy4i89KaFKEOct+JsTQF3W3+6SYWlcB4FEvljRwwpAMWzpqoHQhfNLPQiX07Da+IlKrhM5wt2PPF80dEzyIxiK6Y/fJFgd0peAkbKYwqrgoS80WoqSHYBR8STb+X6JlhxxX+/pma+ILBBFQ6UH01KEHGISlHq4ARw58="
+  file_glob: true
+  file: ${PROJECT_NAME}-${TRAVIS_TAG}-${TARGET}.*
+  # don't delete the artifacts from previous phases
+  skip_cleanup: true
+  on:
+    # channel to use to produce the release artifacts
+    condition: $TRAVIS_RUST_VERSION = stable
+    tags: true
+
+branches:
+  only:
+    - master
+    - auto
+    # Ruby regex to match tags. Required to Travis won't trigger deploys when a
+    # new tag is pushed. This regex matches semantic versions like
+    # v1.2.3-rc4+2016.02.22
+    - /^v\d+\.\d+\.\d+.*$/
+
+notifications:
+  email:
+    on_success: never

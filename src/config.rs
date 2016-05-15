@@ -18,19 +18,19 @@ include!(concat!(env!("OUT_DIR"), "/config.rs"));
 create_type_parsing_impls! {
     Config,
     ParsedConfig,
-    language: String, "en_CA".to_owned();
-    asset_path: String, "./assets/".to_owned();
-    font_file: String, "NotoSans/NotoSans-Regular.ttf".to_owned();
-    window_height: u32, 800;
-    window_width: u32, 800;
-    ups: u64, 180;
-    max_fps: u64, 10_000;
-    exit_on_esc: bool, true;
-    fullscreen: bool, false;
-    vsync: bool, false;
-    initial_world_size: u32, 3;
-    font_size: u32, 16;
-    game_scene_key_bindings: BindingsHashMap<RustcSerializeWrapper<Key>, Action>, BindingsHashMap::new()
+    language, "en_CA".to_owned();
+    asset_path, "./assets/".to_owned();
+    font_file, "NotoSans/NotoSans-Regular.ttf".to_owned();
+    window_height, 800;
+    window_width, 800;
+    ups, 180;
+    max_fps, 10_000;
+    exit_on_esc, true;
+    fullscreen, false;
+    vsync, false;
+    initial_world_size, 3;
+    font_size, 16;
+    game_scene_key_bindings, BindingsHashMap::new()
             .add_binding(RustcSerializeWrapper::new(Key::Down), Action::Camera(CameraAction::Move(Direction::South)))
             .add_binding(RustcSerializeWrapper::new(Key::Comma), Action::Camera(CameraAction::Move(Direction::Down)))
             .add_binding(RustcSerializeWrapper::new(Key::Up), Action::Camera(CameraAction::Move(Direction::North)))

@@ -30,7 +30,7 @@ mod textures;
 use std::error;
 use std::fs::File;
 use std::io::Read;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use glium_graphics::GliumWindow as Window;
 use opengl_graphics::GlGraphics;
@@ -60,7 +60,10 @@ const OPENGL_VERSION: OpenGL = OpenGL::V3_2;
 fn main() {
     // Load the configuration from its JSON file, falling back to the default
     // configuration in the event of an error.
-    let config: Config = deserialize_from_file_or_default(&CONFIG_PATH.into());
+    let config = match read_file_to_string(&CONFIG_PATH.into()) {
+        Ok(json) => Config::from_json(&json),
+        Err(_) => Config::default(),
+    };
 
     // Define the asset path.
     let asset_path: PathBuf = (&config.asset_path).into();
@@ -70,7 +73,10 @@ fn main() {
     let mut localization_file = asset_path.join(LOCALIZATION_DIR)
         .join(&config.language);
     localization_file.set_extension(LOCALIZATION_FILE_EXTENSION);
-    let localization: Localization = deserialize_from_file_or_default(&localization_file);
+    let localization = match read_file_to_string(&localization_file) {
+        Ok(json) => Localization::from_json(&json),
+        Err(_) => Localization::default(),
+    };
 
     // Initialize the window and graphics backend.
     let window: Window = make_window(&config, &localization);
@@ -89,16 +95,7 @@ fn main() {
     game.run(&mut gl, &mut glyph_cache);
 }
 
-fn deserialize_from_file_or_default<T>(path: &PathBuf) -> T
-    where T: Default + serde::de::Deserialize,
-{
-    match read_file_to_string(path){
-        Ok(json) => serde_json::from_str(&json).ok().unwrap_or_default(),
-        Err(_) => T::default(),
-    }
-}
-
-fn read_file_to_string(path: &Path) -> ColonizeResult<String> {
+fn read_file_to_string(path: &PathBuf) -> ColonizeResult<String> {
     let mut file = try!(File::open(&path));
     let mut file_str = String::new();
     try!(file.read_to_string(&mut file_str));

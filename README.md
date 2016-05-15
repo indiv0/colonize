@@ -25,6 +25,7 @@ A Dwarf-Fortress/Rimworld-like game written in Rust.
 * [Running Precompiled Binaries](#running-precompiled-binaries)
 * [Compiling & Running From Source](#compiling-and-running-from-source)
 * [Configuration](#configuration)
+* [Contributing](#contributing)
 
 ## Running Precompiled Binaries
 
@@ -76,6 +77,15 @@ the root of this repo as [`colonize.json.example`][colonize-json-example].
 
 In the future, the capability to define the config directory might be added.
 
+## Contributing
+
+Contributions are always welcome!
+If you have an idea for something to add (code, documentation, tests, examples,
+etc.) fell free to give it a shot.
+
+Please read [CONTRIBUTING.md][contributing] before you start contributing.
+
 [changelog]: https://github.com/indiv0/colonize/blob/master/CHANGELOG.md
 [colonize-json-example]: https://github.com/indiv0/colonize/blob/master/colonize.json.example "Example configuration"
+[contributing]: https://github.com/indiv0/colonize/blob/master/CONTRIBUTING.md "Contribution guide"
 [latest-release]: https://github.com/indiv0/colonize/releases/latest "Latest release"

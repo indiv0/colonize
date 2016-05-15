@@ -28,16 +28,16 @@ pub struct Localization {
 
 #[derive(Deserialize, Serialize)]
 struct ParsedLocalization {
-    pub colonize_window_title: Option<String>,
-    pub gamescene_welcome_text: Option<String>,
-    pub gamescene_debug_cursor: Option<String>,
-    pub gamescene_debug_camera: Option<String>,
-    pub gamescene_debug_chunk: Option<String>,
-    pub internal_failed_to_build_window: Option<String>,
-    pub internal_failed_to_load_font: Option<String>,
-    pub menuscene_singleplayer: Option<String>,
-    pub menuscene_options: Option<String>,
-    pub menuscene_credits: Option<String>,
-    pub util_unit_millisecond: Option<String>,
-    pub util_unit_fps: Option<String>,
+    colonize_window_title: Option<String>,
+    gamescene_welcome_text: Option<String>,
+    gamescene_debug_cursor: Option<String>,
+    gamescene_debug_camera: Option<String>,
+    gamescene_debug_chunk: Option<String>,
+    internal_failed_to_build_window: Option<String>,
+    internal_failed_to_load_font: Option<String>,
+    menuscene_singleplayer: Option<String>,
+    menuscene_options: Option<String>,
+    menuscene_credits: Option<String>,
+    util_unit_millisecond: Option<String>,
+    util_unit_fps: Option<String>,
 }

@@ -16,6 +16,8 @@
 
 A Dwarf-Fortress/Rimworld-like game written in Rust.
 
+***See the [changelog] for what's new in the most recent release.***
+
 # Table of Contents
 
 * [Running Precompiled Binaries](#running-precompiled-binaries)
@@ -72,5 +74,6 @@ the root of this repo as [`colonize.json.example`][colonize-json-example].
 
 In the future, the capability to define the config directory might be added.
 
+[changelog]: https://github.com/indiv0/colonize/blob/master/CHANGELOG.md
 [colonize-json-example]: https://github.com/indiv0/colonize/blob/master/colonize.json.example "Example configuration"
 [latest-release]: https://github.com/indiv0/colonize/releases/latest "Latest release"

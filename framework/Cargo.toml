@@ -9,11 +9,11 @@ description = "A Rust game framework built upon Piston"
 
 [build-dependencies.serde_codegen]
 optional = true
-version = "*"
+version = "0.7.5"
 
 [build-dependencies.syntex]
 optional = true
-version = "*"
+version = "0.32.0"
 
 [dependencies]
 piston = "0.22.1"
@@ -27,7 +27,7 @@ version = "0.0"
 
 [dependencies.serde_macros]
 optional = true
-version = "0.7.4"
+version = "0.7.5"
 
 [features]
 default = ["with-syntex"]

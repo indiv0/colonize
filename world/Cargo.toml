@@ -9,11 +9,11 @@ build = "build.rs"
 
 [build-dependencies.serde_codegen]
 optional = true
-version = "*"
+version = "0.7.5"
 
 [build-dependencies.syntex]
 optional = true
-version = "*"
+version = "0.32.0"
 
 [dependencies]
 cgmath = "0.9.1"
@@ -32,7 +32,7 @@ version = "0.0"
 
 [dependencies.serde_macros]
 optional = true
-version = "0.7.4"
+version = "0.7.5"
 
 [features]
 default = ["with-syntex"]

@@ -3,6 +3,7 @@
 name = "colonize"
 version = "0.1.0"
 authors = ["Nikita Pekin <contact@nikitapek.in>"]
+license = "MIT/Apache-2.0"
 build = "build.rs"
 
 [[bin]]

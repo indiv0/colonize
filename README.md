@@ -9,6 +9,7 @@
         <td colspan="2">
             <a href="https://indiv0.github.io/colonize/colonize" title="API Docs"><img src="https://img.shields.io/badge/API-docs-blue.svg" alt="api-docs-badge"></img></a>
             <a href="https://crates.io/crates/colonize" title="Crates.io"><img src="https://img.shields.io/crates/v/colonize.svg" alt="crates-io"></img></a>
+            <a href="#License" title="License: MIT/Apache-2.0"><img src="https://img.shields.io/crates/l/colonize.svg" alt="license-badge"></img></a>
             <a href="https://coveralls.io/github/indiv0/colonize?branch=master" title="Coverage Status"><img src="https://coveralls.io/repos/github/indiv0/colonize/badge.svg?branch=master" alt="coveralls-badge"></img></a>
         </td>
     </tr>
@@ -16,11 +17,17 @@
 
 A Dwarf-Fortress/Rimworld-like game written in Rust.
 
+***See the [changelog] for what's new in the most recent release.***
+
+![colonize-screenshot](https://i.imgur.com/YI68SsY.jpg "Colonize - Game scene")
+
 # Table of Contents
 
 * [Running Precompiled Binaries](#running-precompiled-binaries)
 * [Compiling & Running From Source](#compiling-and-running-from-source)
 * [Configuration](#configuration)
+* [Contributing](#contributing)
+* [License](#license)
 
 ## Running Precompiled Binaries
 
@@ -72,5 +79,30 @@ the root of this repo as [`colonize.json.example`][colonize-json-example].
 
 In the future, the capability to define the config directory might be added.
 
+## Contributing
+
+Contributions are always welcome!
+If you have an idea for something to add (code, documentation, tests, examples,
+etc.) fell free to give it a shot.
+
+Please read [CONTRIBUTING.md][contributing] before you start contributing.
+
+## License
+
+Colonize is distributed under the terms of both the MIT license and the Apache
+License (Version 2.0).
+
+See [LICENSE-APACHE][license-apache], and [LICENSE-MIT][license-mit] for details.
+
+## Credits
+
+The list of contributors to this project can be found at
+[CONTRIBUTORS.md][contributors].
+
+[changelog]: https://github.com/indiv0/colonize/blob/master/CHANGELOG.md
 [colonize-json-example]: https://github.com/indiv0/colonize/blob/master/colonize.json.example "Example configuration"
+[contributing]: https://github.com/indiv0/colonize/blob/master/CONTRIBUTING.md "Contribution guide"
+[contributors]: https://github.com/indiv0/colonize/blob/master/CONTRIBUTORS.md "List of contributors"
 [latest-release]: https://github.com/indiv0/colonize/releases/latest "Latest release"
+[license-apache]: https://github.com/indiv0/colonize/blob/master/LICENSE-APACHE "Apache-2.0 License"
+[license-mit]: https://github.com/indiv0/colonize/blob/master/LICENSE-MIT "MIT License"

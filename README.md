@@ -85,7 +85,13 @@ etc.) fell free to give it a shot.
 
 Please read [CONTRIBUTING.md][contributing] before you start contributing.
 
+## Credits
+
+The list of contributors to this project can be found at
+[CONTRIBUTORS.md][contributors].
+
 [changelog]: https://github.com/indiv0/colonize/blob/master/CHANGELOG.md
 [colonize-json-example]: https://github.com/indiv0/colonize/blob/master/colonize.json.example "Example configuration"
 [contributing]: https://github.com/indiv0/colonize/blob/master/CONTRIBUTING.md "Contribution guide"
+[contributors]: https://github.com/indiv0/colonize/blob/master/CONTRIBUTORS.md "List of contributors"
 [latest-release]: https://github.com/indiv0/colonize/releases/latest "Latest release"

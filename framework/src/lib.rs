@@ -24,6 +24,7 @@ pub use util::RustcSerializeWrapper;
 pub mod backend;
 mod bindings;
 pub mod draw;
+mod macros;
 mod scene;
 mod scene_manager;
 mod util;

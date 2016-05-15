@@ -3,6 +3,7 @@
 name = "rgframework"
 version = "0.0.1"
 authors = ["Nikita Pekin <contact@nikitapek.in>"]
+license = "MIT/Apache-2.0"
 build = "build.rs"
 
 description = "A Rust game framework built upon Piston"

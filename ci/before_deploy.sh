@@ -17,6 +17,10 @@ mk_tarball() {
     # NOTE All Cargo build artifacts will be under the 'target/$TARGET/{debug,release}'
     cp target/$TARGET/release/colonize $td
 
+    # Copy project assets to the "staging" directory
+    cp -R assets/ $td
+    cp colonize.json.example $td
+
     pushd $td
 
     # release tarball will look like 'rust-everywhere-v1.2.3-x86_64-unknown-linux-gnu.tar.gz'

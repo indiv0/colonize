@@ -8,8 +8,7 @@
     <tr>
         <td colspan="2">
             <a href="https://indiv0.github.io/colonize/colonize" title="API Docs"><img src="https://img.shields.io/badge/API-docs-blue.svg" alt="api-docs-badge"></img></a>
-            <a href="https://crates.io/crates/colonize" title="Crates.io"><img src="https://img.shields.io/crates/v/colonize.svg" alt="crates-io"></img></a>
-            <a href="#License" title="License: MIT/Apache-2.0"><img src="https://img.shields.io/crates/l/colonize.svg" alt="license-badge"></img></a>
+            <img src="https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg" alt=license"></img>
             <a href="https://coveralls.io/github/indiv0/colonize?branch=master" title="Coverage Status"><img src="https://coveralls.io/repos/github/indiv0/colonize/badge.svg?branch=master" alt="coveralls-badge"></img></a>
         </td>
     </tr>

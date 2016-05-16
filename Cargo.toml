@@ -4,7 +4,7 @@ name = "colonize"
 version = "0.1.0"
 authors = ["Nikita Pekin <contact@nikitapek.in>"]
 description = "A Dwarf Fortress/Rimworld-like game written in Rust"
-respository = "https://github.com/indiv0/colonize"
+repository = "https://github.com/indiv0/colonize"
 readme = "README.md"
 keywords = [
     "colonize",

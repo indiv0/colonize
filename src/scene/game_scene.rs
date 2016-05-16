@@ -31,6 +31,7 @@ use localization::Localization;
 use scene::MenuScene;
 use textures::TextureType;
 
+const CAMERA_INITIAL_POSITION: Point3<i32> = Point3 { x: 0, y: 15, z: 1};
 const CAMERA_MOVEMENT_SPEED: Vector3<i32> = Vector3 { x: 1, y: 1, z: 1 };
 const CURSOR_COLOR: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
 const CURSOR_SIZE: f64 = 16.0;
@@ -77,7 +78,7 @@ impl<B> GameScene<B>
             world: World::new(None, config.initial_world_size),
             config: config,
             bounds: bounds,
-            camera: Camera::new(CAMERA_MOVEMENT_SPEED, Point3::origin()),
+            camera: Camera::new(CAMERA_MOVEMENT_SPEED, CAMERA_INITIAL_POSITION),
             cursor: cursor,
             textures: textures,
         }

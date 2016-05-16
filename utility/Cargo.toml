@@ -4,7 +4,7 @@ name = "colonize_utility"
 version = "0.0.1"
 authors = ["Nikita Pekin <contact@nikitapek.in>"]
 description = "A utility library built for the game Colonize"
-respository = "https://github.com/indiv0/colonize"
+repository = "https://github.com/indiv0/colonize"
 keywords = [
     "game",
     "colonize",

@@ -158,7 +158,7 @@ cargo run --no-default-features --features nightly
 ## Configuration
 
 Currently, the `Config` struct holds all the configurable values for Colonize.
-The struct is generated at compile time via a macro.
+This struct and further information on its usage can be found [here][config.in.rs].
 
 When running Colonize, the game first attempts to load the configuration from a
 `colonize.json` file in the game's directory. If no such file is found, it falls
@@ -189,6 +189,7 @@ The list of contributors to this project can be found at
 
 [changelog]: https://github.com/indiv0/colonize/blob/master/CHANGELOG.md
 [colonize-json-example]: https://github.com/indiv0/colonize/blob/master/colonize.json.example "Example configuration"
+[config.in.rs]: https://github.com/indiv0/colonize/blob/master/src/config.in.rs "config.in.rs"
 [contributing]: https://github.com/indiv0/colonize/blob/master/CONTRIBUTING.md "Contribution guide"
 [contributors]: https://github.com/indiv0/colonize/blob/master/CONTRIBUTORS.md "List of contributors"
 [latest-release]: https://github.com/indiv0/colonize/releases/latest "Latest release"

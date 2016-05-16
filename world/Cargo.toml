@@ -2,8 +2,14 @@
 
 name = "colonize_world"
 version = "0.0.1"
-authors = [
-    "Nikita Pekin <contact@nikitapek.in>",
+authors = ["Nikita Pekin <contact@nikitapek.in>"]
+description = "A library for representing the internal game state for Colonize"
+respository = "https://github.com/indiv0/colonize"
+keywords = [
+    "game",
+    "state",
+    "library",
+    "colonize",
 ]
 license = "MIT/Apache-2.0"
 build = "build.rs"

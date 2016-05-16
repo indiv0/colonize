@@ -80,20 +80,6 @@ A quick overview of the platforms and their status can be found below:
         <td>64-bit MinGW (Windows 7+)</td>
     </tr>
     <tr>
-        <td>i686-pc-windows-msvc</td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td>32-bit MSVC (Windows 7+)</td>
-    </tr>
-    <tr>
-        <td>x86_64-pc-windows-msvc</td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td>64-bit MSVC (Windows 7+)</td>
-    </tr>
-    <tr>
         <td>i686-apple-darwin</td>
         <td></td>
         <td>(currently broken)</td>

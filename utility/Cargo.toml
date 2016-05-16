@@ -13,8 +13,6 @@ keywords = [
 ]
 license = "MIT/Apache-2.0"
 
-description = "Utilities for general roguelike creation"
-
 [dependencies]
 cgmath = "0.9.1"
 

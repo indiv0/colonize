@@ -4,7 +4,7 @@ name = "rgframework"
 version = "0.0.1"
 authors = ["Nikita Pekin <contact@nikitapek.in>"]
 description = "A game development framework built around Piston"
-respository = "https://github.com/indiv0/colonize"
+repository = "https://github.com/indiv0/colonize"
 keywords = [
     "game",
     "development",

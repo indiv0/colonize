@@ -3,10 +3,19 @@
 name = "rgframework"
 version = "0.0.1"
 authors = ["Nikita Pekin <contact@nikitapek.in>"]
+description = "A game development framework built around Piston"
+respository = "https://github.com/indiv0/colonize"
+keywords = [
+    "game",
+    "development",
+    "framework",
+    "piston",
+    "opengl",
+    "glium",
+    "glutin",
+]
 license = "MIT/Apache-2.0"
 build = "build.rs"
-
-description = "A Rust game framework built upon Piston"
 
 [build-dependencies.serde_codegen]
 optional = true

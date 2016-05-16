@@ -3,6 +3,14 @@
 name = "colonize_utility"
 version = "0.0.1"
 authors = ["Nikita Pekin <contact@nikitapek.in>"]
+description = "A utility library built for the game Colonize"
+respository = "https://github.com/indiv0/colonize"
+keywords = [
+    "game",
+    "colonize",
+    "utility",
+    "library",
+]
 license = "MIT/Apache-2.0"
 
 description = "Utilities for general roguelike creation"

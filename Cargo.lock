@@ -1,16 +1,16 @@
 [root]
 name = "colonize"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "cgmath 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "clippy 0.0.67 (registry+https://github.com/rust-lang/crates.io-index)",
+ "clippy 0.0.68 (registry+https://github.com/rust-lang/crates.io-index)",
  "colonize_utility 0.0.1",
  "colonize_world 0.0.1",
  "fps_counter 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "glium 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "image 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "piston 0.22.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "piston2d-glium_graphics 0.25.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "piston2d-graphics 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "piston2d-opengl_graphics 0.29.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rgframework 0.0.1",
  "serde 0.7.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_codegen 0.7.5 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -113,7 +113,7 @@ dependencies = [
 
 [[package]]
 name = "clippy"
-version = "0.0.67"
+version = "0.0.68"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "quine-mc_cluskey 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -139,7 +139,7 @@ name = "colonize_utility"
 version = "0.0.1"
 dependencies = [
  "cgmath 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "clippy 0.0.67 (registry+https://github.com/rust-lang/crates.io-index)",
+ "clippy 0.0.68 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -148,7 +148,7 @@ version = "0.0.1"
 dependencies = [
  "array 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "cgmath 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "clippy 0.0.67 (registry+https://github.com/rust-lang/crates.io-index)",
+ "clippy 0.0.68 (registry+https://github.com/rust-lang/crates.io-index)",
  "colonize_utility 0.0.1",
  "noise 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "num 0.1.32 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -271,11 +271,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "fnv"
-version = "1.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-
-[[package]]
 name = "fps_counter"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -368,8 +363,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "backtrace 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "gl_generator 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "glutin 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 0.1.16 (registry+https://github.com/rust-lang/crates.io-index)",
  "smallvec 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "glium_text"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "freetype-sys 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "glium 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.2.11 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -450,11 +456,6 @@ dependencies = [
  "winapi 0.2.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "winapi-build 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
-
-[[package]]
-name = "khronos_api"
-version = "0.0.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "khronos_api"
@@ -701,22 +702,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "piston2d-opengl_graphics"
-version = "0.29.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "fnv 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "freetype-rs 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "gl 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "image 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "khronos_api 0.0.8 (registry+https://github.com/rust-lang/crates.io-index)",
- "piston-shaders_graphics2d 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "piston-texture 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "piston2d-graphics 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "shader_version 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
 name = "pistoncore-event_loop"
 version = "0.22.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -838,9 +823,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "rgframework"
 version = "0.0.1"
 dependencies = [
- "clippy 0.0.67 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cgmath 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "clippy 0.0.68 (registry+https://github.com/rust-lang/crates.io-index)",
+ "glium 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "glium_text 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "image 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "piston 0.22.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "piston2d-graphics 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustc-serialize 0.3.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 0.7.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_codegen 0.7.5 (registry+https://github.com/rust-lang/crates.io-index)",

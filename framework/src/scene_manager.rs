@@ -1,20 +1,17 @@
+use glium::Surface;
 use piston::input::GenericEvent;
 
-use backend::{Backend, Graphics};
 use scene::{BoxedScene, SceneCommand};
 
-pub struct SceneManager<B, E, G>
-    where B: Backend,
-          E: GenericEvent,
-          G: Graphics<Texture=B::Texture>,
+pub struct SceneManager<E, S>
+    where E: GenericEvent,
 {
-    scene_stack: Vec<BoxedScene<B, E, G>>,
+    scene_stack: Vec<BoxedScene<E, S>>,
 }
 
-impl<B, E, G> SceneManager<B, E, G>
-    where B: Backend,
-          E: GenericEvent,
-          G: Graphics<Texture=B::Texture>,
+impl<E, S> SceneManager<E, S>
+    where E: GenericEvent,
+          S: Surface,
 {
     pub fn new() -> Self {
         SceneManager::default()
@@ -24,16 +21,16 @@ impl<B, E, G> SceneManager<B, E, G>
         self.scene_stack.len()
     }
 
-    pub fn set_scene(&mut self, scene: BoxedScene<B, E, G>) {
+    pub fn set_scene(&mut self, scene: BoxedScene<E, S>) {
         self.scene_stack.pop();
         self.scene_stack.push(scene);
     }
 
-    pub fn push_scene(&mut self, scene: BoxedScene<B, E, G>) {
+    pub fn push_scene(&mut self, scene: BoxedScene<E, S>) {
         self.scene_stack.push(scene);
     }
 
-    pub fn pop_scene(&mut self) -> Option<BoxedScene<B, E, G>> {
+    pub fn pop_scene(&mut self) -> Option<BoxedScene<E, S>> {
         self.scene_stack.pop()
     }
 
@@ -49,7 +46,7 @@ impl<B, E, G> SceneManager<B, E, G>
         }
     }
 
-    pub fn handle_scene_command(&mut self, command: Option<SceneCommand<B, E, G>>) {
+    pub fn handle_scene_command(&mut self, command: Option<SceneCommand<E, S>>) {
         if let Some(command) = command {
             match command {
                 SceneCommand::SetScene(scene) => {
@@ -69,10 +66,8 @@ impl<B, E, G> SceneManager<B, E, G>
     }
 }
 
-impl<B, E, G> Default for SceneManager<B, E, G>
-    where B: Backend,
-          E: GenericEvent,
-          G: Graphics<Texture=B::Texture>,
+impl<E, S> Default for SceneManager<E, S>
+    where E: GenericEvent,
 {
     fn default() -> Self {
         SceneManager {

@@ -7,6 +7,8 @@
     "gamescene_debug_chunk": "Chunk",
     "internal_failed_to_build_window": "Failed to build window",
     "internal_failed_to_load_font": "Failed to load font",
+    "internal_failed_to_load_image": "Failed to load image",
+    "internal_failed_to_load_texture": "Failed to load texture",
     "menuscene_singleplayer": "S)ingleplayer",
     "menuscene_options": "O)ptions",
     "menuscene_credits": "C)redits",

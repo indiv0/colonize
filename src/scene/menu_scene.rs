@@ -1,81 +1,64 @@
-use std::collections::HashMap;
 use std::rc::Rc;
 
+use cgmath::Vector2;
+use glium::Surface;
+use glium::backend::Facade;
 use piston::input::{GenericEvent, PressEvent};
 use piston::input::keyboard::Key;
 use piston::input::Button::Keyboard;
 use rgframework::{BoxedScene, Scene, SceneCommand};
-use rgframework::backend::{Backend, Graphics};
-use rgframework::backend::graphics::Context;
+use rgframework::backend::graphics::RenderContext;
+use rgframework::color;
+use rgframework::color::Color;
 
-use config::Config;
-use localization::Localization;
-use scene::GameScene;
-use textures::TextureType;
+use scene::{GameScene, SceneContext};
 
-pub struct MenuScene<B>
-    where B:Backend,
+const BACKGROUND_COLOR: Color = color::WHITE;
+const TEXT_COLOR: Color = color::BLACK;
+
+pub struct MenuScene<F>
+    where F: Facade
 {
-    config: Rc<Config>,
-    localization: Rc<Localization>,
-    textures: Rc<HashMap<TextureType, B::Texture>>,
+    context: Rc<SceneContext<F>>,
 }
 
-impl<B> MenuScene<B>
-    where B: Backend,
+impl<F> MenuScene<F>
+    where F: Facade,
 {
-    pub fn new(config: Rc<Config>, localization: Rc<Localization>, textures: Rc<HashMap<TextureType, B::Texture>>) -> Self {
+    pub fn new(context: Rc<SceneContext<F>>) -> Self {
         MenuScene {
-            config: config,
-            localization: localization,
-            textures: textures,
+            context: context,
         }
     }
 }
 
-impl<B, E, G> Scene<B, E, G> for MenuScene<B>
-    where B: Backend + 'static,
-          E: GenericEvent,
-          G: Graphics<Texture=B::Texture>,
+impl<E, F, S> Scene<E, S> for MenuScene<F>
+    where E: GenericEvent,
+          F: Facade + 'static,
+          S: Surface,
 {
-    fn to_box(self) -> BoxedScene<B, E, G> {
+    fn to_box(self) -> BoxedScene<E, S> {
         Box::new(self)
     }
 
-    fn render(&mut self, context: &Context, graphics: &mut G, glyph_cache: &mut B::CharacterCache) {
-        use graphics::{clear, color, Transformed};
-        use graphics::text::Text;
+    fn render(&mut self, surface: &mut S, context: &RenderContext) {
+        surface.clear_color(BACKGROUND_COLOR.r, BACKGROUND_COLOR.g, BACKGROUND_COLOR.b, BACKGROUND_COLOR.a);
 
-        clear(color::WHITE, graphics);
-
-        Text::new(self.config.font_size).draw(
-            &self.localization.menuscene_singleplayer,
-            glyph_cache,
-            &context.draw_state,
-            context.transform.trans(10.0, 100.0),
-            graphics);
-
-        Text::new(self.config.font_size).draw(
-            &self.localization.menuscene_options,
-            glyph_cache,
-            &context.draw_state,
-            context.transform.trans(10.0, 150.0),
-            graphics);
-
-        Text::new(self.config.font_size).draw(
-            &self.localization.menuscene_credits,
-            glyph_cache,
-            &context.draw_state,
-            context.transform.trans(10.0, 200.0),
-            graphics);
+        for &(ref text_str, pos) in &[
+            (&self.context.localization.menuscene_singleplayer, Vector2::new(10.0, 100.0)),
+            (&self.context.localization.menuscene_options, Vector2::new(10.0, 150.0)),
+            (&self.context.localization.menuscene_credits, Vector2::new(10.0, 200.0)),
+        ] {
+            self.context.text_renderer.borrow_mut().draw(&context.context, surface, text_str, pos, TEXT_COLOR);
+        }
     }
 
-    fn handle_event(&mut self, e: &E) -> Option<SceneCommand<B, E, G>> {
+    fn handle_event(&mut self, e: &E) -> Option<SceneCommand<E, S>> {
         let mut maybe_scene = None;
 
         e.press(|button_type| {
             if let Keyboard(Key::S) = button_type {
-                maybe_scene = Some(SceneCommand::SetScene(GameScene::new(self.config.clone(), self.localization.clone(), self.textures.clone()).to_box()));
+                maybe_scene = Some(SceneCommand::SetScene(GameScene::new(self.context.clone()).to_box()));
             }
         });
 

@@ -1,2 +1,7 @@
-pub use graphics::{Context, Graphics, ImageSize};
-pub use graphics::character::CharacterCache;
+use std::rc::Rc;
+
+use glium::backend::Context;
+
+pub struct RenderContext {
+    pub context: Rc<Context>,
+}

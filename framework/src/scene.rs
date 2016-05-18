@@ -1,27 +1,25 @@
+use glium::Surface;
 use piston::input::GenericEvent;
 
-use backend::{Backend, Graphics};
-use backend::graphics::Context;
+use backend::graphics::RenderContext;
 
-pub type BoxedScene<B, E, G>
-        where B: Backend,
-              E: GenericEvent,
-              G: Graphics<Texture=B::Texture>
-    = Box<Scene<B, E, G> + 'static>;
+pub type BoxedScene<E, S>
+        where E: GenericEvent,
+              S: Surface
+    = Box<Scene<E, S> + 'static>;
 
-pub enum SceneCommand<B, E, G> {
-    SetScene(BoxedScene<B, E, G>),
-    PushScene(BoxedScene<B, E, G>),
+pub enum SceneCommand<E, S> {
+    SetScene(BoxedScene<E, S>),
+    PushScene(BoxedScene<E, S>),
     PopScene,
     Clear,
 }
 
-pub trait Scene<B, E, G>
-    where B: Backend,
-          E: GenericEvent,
-          G: Graphics<Texture=B::Texture>,
+pub trait Scene<E, S>
+    where E: GenericEvent,
+          S: Surface,
 {
-    fn to_box(self) -> BoxedScene<B, E, G>;
-    fn render(&mut self, context: &Context, graphics: &mut G, glyph_cache: &mut B::CharacterCache);
-    fn handle_event(&mut self, e: &E) -> Option<SceneCommand<B, E, G>>;
+    fn to_box(self) -> BoxedScene<E, S>;
+    fn render(&mut self, surface: &mut S, context: &RenderContext);
+    fn handle_event(&mut self, e: &E) -> Option<SceneCommand<E, S>>;
 }

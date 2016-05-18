@@ -16,6 +16,12 @@ pub struct Localization {
     pub internal_failed_to_build_window: String,
     /// Internal - Failed to load font message
     pub internal_failed_to_load_font: String,
+    /// Internal - Failed to load image message
+    pub internal_failed_to_load_image: String,
+    /// Internal - Failed to load texture message
+    pub internal_failed_to_load_texture: String,
+    /// Internal - Failed to open file message
+    pub internal_failed_to_open_file: String,
     /// MenuScene - Menu option - Singleplayer
     pub menuscene_singleplayer: String,
     /// MenuScene - Menu option - Options
@@ -38,6 +44,9 @@ struct ParsedLocalization {
     gamescene_debug_chunk: Option<String>,
     internal_failed_to_build_window: Option<String>,
     internal_failed_to_load_font: Option<String>,
+    internal_failed_to_load_image: Option<String>,
+    internal_failed_to_load_texture: Option<String>,
+    internal_failed_to_open_file: Option<String>,
     menuscene_singleplayer: Option<String>,
     menuscene_options: Option<String>,
     menuscene_credits: Option<String>,

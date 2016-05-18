@@ -12,6 +12,7 @@
 /target/
 
 backend/Cargo.lock
+framework/Cargo.lock
 utility/Cargo.lock
 world/Cargo.lock
 

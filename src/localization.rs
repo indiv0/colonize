@@ -15,6 +15,9 @@ create_type_parsing_impls! {
     gamescene_debug_chunk, "Chunk".to_owned();
     internal_failed_to_build_window, "Failed to build window".to_owned();
     internal_failed_to_load_font, "Failed to load font".to_owned();
+    internal_failed_to_load_image, "Failed to load image".to_owned();
+    internal_failed_to_load_texture, "Failed to load texture".to_owned();
+    internal_failed_to_open_file, "Failed to open file".to_owned();
     menuscene_singleplayer, "S)ingleplayer".to_owned();
     menuscene_options, "O)ptions".to_owned();
     menuscene_credits, "C)redits".to_owned();

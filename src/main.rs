@@ -5,9 +5,9 @@
 
 extern crate cgmath;
 extern crate fps_counter;
+#[macro_use]
+extern crate glium;
 extern crate glium_graphics;
-extern crate graphics;
-extern crate opengl_graphics;
 extern crate piston;
 #[macro_use]
 extern crate rgframework;
@@ -19,32 +19,33 @@ extern crate colonize_utility as utility;
 extern crate colonize_world as world;
 
 mod action;
-mod backend;
 mod camera;
 mod config;
 mod game;
 mod localization;
 mod scene;
-mod textures;
+mod tile;
 
 use std::error;
 use std::fs::File;
 use std::io::Read;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+use std::rc::Rc;
 
 use glium_graphics::GliumWindow as Window;
-use opengl_graphics::GlGraphics;
-use opengl_graphics::glyph_cache::GlyphCache;
 use piston::window::{
     BuildFromWindowSettings,
     Size,
     WindowSettings,
 };
+use rgframework::backend::graphics::RenderContext;
+use rgframework::rendering::{Renderer, TextRenderer};
+use rgframework::manager::Manager;
 use shader_version::OpenGL;
 
 use config::Config;
-use localization::Localization;
 use game::Game;
+use localization::Localization;
 
 type ColonizeError = Box<error::Error>;
 type ColonizeResult<T> = std::result::Result<T, ColonizeError>;
@@ -60,7 +61,7 @@ const OPENGL_VERSION: OpenGL = OpenGL::V3_2;
 fn main() {
     // Load the configuration from its JSON file, falling back to the default
     // configuration in the event of an error.
-    let config = match read_file_to_string(&CONFIG_PATH.into()) {
+    let config = match read_file_to_string(Path::new(CONFIG_PATH)) {
         Ok(json) => Config::from_json(&json),
         Err(_) => Config::default(),
     };
@@ -77,25 +78,47 @@ fn main() {
         Ok(json) => Localization::from_json(&json),
         Err(_) => Localization::default(),
     };
+    let localization = Rc::new(localization);
 
     // Initialize the window and graphics backend.
     let window: Window = make_window(&config, &localization);
-    let mut gl = GlGraphics::new(OPENGL_VERSION);
 
-    // Initialize the glyph cache.
-    let mut glyph_cache = GlyphCache::new(&asset_path.join(FONT_DIR).join(&config.font_file))
-        .expect(&localization.internal_failed_to_load_font);
+    // TODO: change this to a debug statement.
+    let hidpi_factor = window.window.borrow_mut().window.hidpi_factor();
+    println!("HIDPI: {}", hidpi_factor);
 
-    // Load all required textures.
+    // Initialize the font rendering system.
+    let text_renderer = {
+        let font_path = asset_path.join(FONT_DIR).join(&config.font_file);
+        TextRenderer::new(&window.context, &font_path, config.font_size)
+    };
+
+    // Create the texture manager.
     let textures_path = asset_path.join(TEXTURES_DIR);
-    let textures = textures::load_textures_opengl(&textures_path);
+    let texture_manager = Manager::new(window.context.clone(), textures_path);
+
+    // Create the RenderContext.
+    let mut render_context = RenderContext {
+        context: window.context.clone(),
+    };
+
+    // Initialize the `Sprite` renderer.
+    let sprite_renderer = Renderer::new(window.context.clone());
 
     // Construct the `Game` object and run the game.
-    let mut game = Game::new(config, localization, window, textures);
-    game.run(&mut gl, &mut glyph_cache);
+    let mut game = Game::new(
+        config,
+        localization,
+        window.context.clone(),
+        window,
+        sprite_renderer,
+        texture_manager,
+        text_renderer
+    );
+    game.run(&mut render_context);
 }
 
-fn read_file_to_string(path: &PathBuf) -> ColonizeResult<String> {
+fn read_file_to_string(path: &Path) -> ColonizeResult<String> {
     let mut file = try!(File::open(&path));
     let mut file_str = String::new();
     try!(file.read_to_string(&mut file_str));

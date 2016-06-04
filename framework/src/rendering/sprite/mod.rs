@@ -40,11 +40,11 @@ impl ShaderType for Shader {
 pub struct Sprite {
     pub color_multiply: Color,
     pub transform: Transform,
-    texture: TextureRef,
+    pub mesh: Mesh<Vertex>,
+    pub texture: TextureRef,
     width: f32,
     height: f32,
     rectangle: Rectangle,
-    mesh: Mesh<Vertex>,
 }
 
 impl Sprite {
@@ -113,15 +113,15 @@ impl Sprite {
             )
         }
 
-        let verticies = vec![
+        let vertices = vec![
             vertex!([0.0, height] [x, y]),
             vertex!([0.0, 0.0] [x, y + h]),
             vertex!([width, 0.0] [x + w, y + h]),
             vertex!([width, height] [x + w, y]),
         ];
         let mut mesh = Mesh::new();
-        mesh.push(
-            verticies,
+        mesh.push_faces(
+            vertices,
             vec![[0, 1, 2], [0, 2, 3]],
         );
         mesh
@@ -139,7 +139,6 @@ impl<F, S> Renderable<F, S, Shader> for Sprite
           S: Surface,
 {
     fn draw(&self, renderer: &Renderer<F, Shader>, surface: &mut S, parent: &Matrix4<f32>) {
-        //let rectangle = self.rectangle();
         let uniforms = uniform! {
             color_multiply: self.color_multiply.as_array(),
             matrix: conv::array4x4(parent * self.transform.matrix()),

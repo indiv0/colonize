@@ -20,7 +20,7 @@ use rgframework::backend::graphics::RenderContext;
 use rgframework::color;
 use rgframework::color::Color;
 use rgframework::rectangle::Rectangle;
-use rgframework::rendering::{sprite, Renderable, Renderer, Sprite};
+use rgframework::rendering::{sprite, Batch, Renderable, Renderer, Sprite};
 use rgframework::texture::Texture;
 use utility::Bounds;
 use world;
@@ -116,6 +116,8 @@ impl<E, F, S> Scene<E, S> for GameScene<F>
             0.0, 0.0, 0.0, 1.0,
         );
 
+        //let mut sprites = Vec::new();
+
         for x in 0..self.bounds.width() {
             for z in 0..self.bounds.height() {
                 let screen_pos = Point2::new(x, z);
@@ -123,8 +125,21 @@ impl<E, F, S> Scene<E, S> for GameScene<F>
 
                 let cell_drawable = CellDrawable::new(pos, screen_pos, &self.world, self.texture.clone());
                 cell_drawable.draw(&self.context.sprite_renderer, surface, &self.camera.matrix());
+                /*
+                if let Some(sprite) = cell_drawable.sprite() {
+                    sprites.push(sprite);
+                }
+                */
             }
         }
+
+        /*
+        &self.context.sprite_renderer.render(
+            surface,
+            &sprites.iter().collect::<Vec<_>>(),
+            &self.camera.matrix()
+        );
+        */
 
         self.cursor.draw(&self.context.sprite_renderer, surface, &matrix);
 
@@ -277,17 +292,7 @@ impl<'a> CellDrawable<'a> {
         }
     }
 
-    fn draw_cell<F, S>(&self, renderer: &Renderer<F, sprite::Shader>, surface: &mut S, parent: &Matrix4<f32>)
-        where F: Facade,
-              S: Surface,
-    {
-        self.draw_terrain(renderer, surface, parent);
-    }
-
-    fn draw_terrain<F, S>(&self, renderer: &Renderer<F, sprite::Shader>, surface: &mut S, parent: &Matrix4<f32>)
-        where F: Facade,
-              S: Surface,
-    {
+    fn sprite(&self) -> Option<Sprite> {
         use cgmath::ElementWise;
         use tile::GetOffset;
 
@@ -303,7 +308,7 @@ impl<'a> CellDrawable<'a> {
 
         // If the tile is see-through, don't render it.
         if !tile.tile_type.is_solid() {
-            return;
+            return None;
         }
 
         // Get the texture offset.
@@ -334,7 +339,25 @@ impl<'a> CellDrawable<'a> {
             .position((x + y).extend(0).cast()) // TODO: get rid of this extend
             .offset(offset.mul_element_wise(TILE_SIZE));
         */
+        Some(sprite)
+    }
 
-        sprite.draw(renderer, surface, parent);
+    fn draw_cell<F, S>(&self, renderer: &Renderer<F, sprite::Shader>, surface: &mut S, parent: &Matrix4<f32>)
+        where F: Facade,
+              S: Surface,
+    {
+        self.draw_terrain(renderer, surface, parent);
+    }
+
+    fn draw_terrain<F, S>(&self, renderer: &Renderer<F, sprite::Shader>, surface: &mut S, parent: &Matrix4<f32>)
+        where F: Facade,
+              S: Surface,
+    {
+        use cgmath::ElementWise;
+        use tile::GetOffset;
+
+        if let Some(sprite) = self.sprite() {
+            sprite.draw(renderer, surface, parent);
+        }
     }
 }

@@ -53,6 +53,13 @@ impl<F, T> Renderer<F, T>
         ).unwrap();
     }
 
+    pub fn render<R, S>(&self, surface: &mut S, renderable: &R, parent: &Matrix4<f32>)
+        where R: Renderable<F, S, T>,
+              S: Surface,
+    {
+        renderable.draw(self, surface, parent)
+    }
+
     fn build_params() -> DrawParameters<'static> {
         DrawParameters {
             blend: Blend::alpha_blending(),

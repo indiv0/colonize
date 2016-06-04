@@ -16,7 +16,19 @@ impl<T> Mesh<T>
         Self::default()
     }
 
-    pub fn push(&mut self, vertices: Vec<T>, faces: Vec<[u16; 3]>) {
+    pub fn push(&mut self, vertices: Vec<T>, indices: Vec<u16>) {
+        assert!(self.vertices.len() + vertices.len() < u16::MAX as usize);
+        let offset = self.vertices.len() as u16;
+        for v in vertices.into_iter() {
+            self.vertices.push(v);
+        }
+
+        for i in indices.into_iter() {
+            self.indices.push(i + offset);
+        }
+    }
+
+    pub fn push_faces(&mut self, vertices: Vec<T>, faces: Vec<[u16; 3]>) {
         assert!(self.vertices.len() + vertices.len() < u16::MAX as usize);
         let offset = self.vertices.len() as u16;
         for v in vertices.into_iter() {

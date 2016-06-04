@@ -6,10 +6,9 @@ use glium::backend::Facade;
 use glium::index::PrimitiveType;
 use glium::uniforms::Uniforms;
 
-use rendering::mesh::{Mesh, VertexType};
+use rendering::mesh;
+use rendering::mesh::{Either, Mesh, VertexType};
 use rendering::shader::ShaderType;
-
-const INDEX_TYPE: PrimitiveType = PrimitiveType::TrianglesList;
 
 pub struct Renderer<F, T>
     where F: Facade,
@@ -41,12 +40,16 @@ impl<F, T> Renderer<F, T>
               U: Uniforms,
               V: VertexType,
     {
-        let vertices = VertexBuffer::new(&self.facade, &mesh.vertices).unwrap();
-        let indices = IndexBuffer::new(&self.facade, INDEX_TYPE, &mesh.indices).unwrap();
+        use glium::index::IndicesSource;
+
+        let indices: IndicesSource = match mesh.indices {
+            Either::Left(ref x) => x.into(),
+            Either::Right(ref x) => x.into(),
+        };
 
         surface.draw(
-            &vertices,
-            &indices,
+            &mesh.vertices,
+            indices,
             &self.program,
             uniforms,
             &self.params,

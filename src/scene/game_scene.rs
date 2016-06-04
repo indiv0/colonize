@@ -116,7 +116,7 @@ impl<E, F, S> Scene<E, S> for GameScene<F>
             0.0, 0.0, 0.0, 1.0,
         );
 
-        //let mut sprites = Vec::new();
+        let mut sprites = Vec::new();
 
         for x in 0..self.bounds.width() {
             for z in 0..self.bounds.height() {
@@ -124,22 +124,24 @@ impl<E, F, S> Scene<E, S> for GameScene<F>
                 let pos = Point3::new(x + start_x, camera_pos.y, z + start_z);
 
                 let cell_drawable = CellDrawable::new(pos, screen_pos, &self.world, self.texture.clone());
-                cell_drawable.draw(&self.context.sprite_renderer, surface, &self.camera.matrix());
-                /*
-                if let Some(sprite) = cell_drawable.sprite() {
+                //cell_drawable.draw(&self.context.sprite_renderer, surface, &self.camera.matrix());
+
+                if let Some(sprite) = cell_drawable.sprite(
+                    &self.context.sprite_renderer.facade,
+                    (-screen_pos.x, -screen_pos.y),
+                ) {
                     sprites.push(sprite);
                 }
-                */
             }
         }
 
-        /*
-        &self.context.sprite_renderer.render(
-            surface,
-            &sprites.iter().collect::<Vec<_>>(),
-            &self.camera.matrix()
-        );
-        */
+        if sprites.len() > 0 {
+            &self.context.sprite_renderer.render(
+                surface,
+                &sprites.iter().collect::<Vec<_>>(),
+                &self.camera.matrix()
+            );
+        }
 
         self.cursor.draw(&self.context.sprite_renderer, surface, &matrix);
 
@@ -250,6 +252,7 @@ impl<F, S> Renderable<F, S, sprite::Shader> for Cursor
             TILE_SIZE as i32,
         );
         let mut sprite = Sprite::with_rect(
+            &renderer.facade,
             self.texture.clone(),
             rectangle,
             TILE_SIZE,
@@ -292,7 +295,9 @@ impl<'a> CellDrawable<'a> {
         }
     }
 
-    fn sprite(&self) -> Option<Sprite> {
+    fn sprite<'f, F>(&self, facade: &'f F, (i, j): (i32, i32)) -> Option<Sprite<'f, F>>
+        where F: Facade,
+    {
         use cgmath::ElementWise;
         use tile::GetOffset;
 
@@ -316,7 +321,6 @@ impl<'a> CellDrawable<'a> {
 
         let size: Vector2<i32> = (Vector2::new(DISPLAY_SIZE, DISPLAY_SIZE).add_element_wise(MARGIN)).cast();
 
-        let (i, j) = (-self.screen_pos.x, -self.screen_pos.y);
         let (a, b) = (size.x / 2, size.y / 4);
         let x = Vector2::new(a, b) * i;
         let y = Vector2::new(a, -b) * -j;
@@ -329,6 +333,7 @@ impl<'a> CellDrawable<'a> {
             TILE_SIZE as i32,
         );
         let mut sprite = Sprite::with_rect(
+            facade,
             self.texture.clone(),
             rectangle,
             TILE_SIZE,
@@ -356,7 +361,10 @@ impl<'a> CellDrawable<'a> {
         use cgmath::ElementWise;
         use tile::GetOffset;
 
-        if let Some(sprite) = self.sprite() {
+        if let Some(sprite) = self.sprite(
+            &renderer.facade,
+            (-self.screen_pos.x, -self.screen_pos.y),
+        ) {
             sprite.draw(renderer, surface, parent);
         }
     }

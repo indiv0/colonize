@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use cgmath::{conv, Matrix4};
+use cgmath::{conv, Matrix4, Vector4};
 use glium::backend::Facade;
 use glium::Surface;
 
@@ -37,7 +37,9 @@ impl ShaderType for Shader {
     }
 }
 
-pub struct Sprite {
+pub struct Sprite<'f, F>
+    where F: Facade + 'f,
+{
     pub color_multiply: Color,
     pub transform: Transform,
     pub mesh: Mesh<Vertex>,
@@ -45,10 +47,14 @@ pub struct Sprite {
     width: f32,
     height: f32,
     rectangle: Rectangle,
+    facade: &'f F,
 }
 
-impl Sprite {
+impl<'f, F> Sprite<'f, F>
+    where F: Facade,
+{
     pub fn new(
+        facade: &'f F,
         texture: Rc<Texture>,
         width: u32,
         height: u32,
@@ -59,10 +65,11 @@ impl Sprite {
             texture.width as i32,
             texture.height as i32,
         );
-        Sprite::with_rect(texture, rectangle, width, height)
+        Sprite::with_rect(facade, texture, rectangle, width, height)
     }
 
     pub fn with_rect(
+        facade: &'f F,
         texture: Rc<Texture>,
         rectangle: Rectangle,
         width: u32,
@@ -75,8 +82,9 @@ impl Sprite {
             texture: TextureRef(texture),
             width: width,
             height: height,
-            mesh: Self::build_mesh(width, height, &rectangle),
+            mesh: Self::build_mesh(facade, width, height, &rectangle),
             rectangle: rectangle,
+            facade: facade,
         }
     }
 
@@ -84,21 +92,61 @@ impl Sprite {
         self.width = width;
         self.height = height;
 
-        self.mesh = Self::build_mesh(self.width, self.height, &self.rectangle);
+        self.mesh = Self::build_mesh(
+            self.facade,
+            self.width,
+            self.height,
+            &self.rectangle,
+        );
     }
 
     /// Change the texture atlas rectangle.
     pub fn rectangle(&mut self, rectangle: Rectangle) {
         self.rectangle = rectangle;
 
-        self.mesh = Self::build_mesh(self.width, self.height, &self.rectangle);
+        self.mesh = Self::build_mesh(
+            self.facade,
+            self.width,
+            self.height,
+            &self.rectangle,
+        );
+    }
+
+    pub fn vertices(&self) -> Vec<Vertex> {
+        let x = self.rectangle.x;
+        let y = self.rectangle.y;
+        let w = self.rectangle.width;
+        let h = self.rectangle.height;
+
+        macro_rules! vertex {
+            ([$a:expr, $b:expr] [$c:expr, $d:expr]) => (
+                Vertex {
+                    position: (self.transform.matrix()
+                               * Vector4::new($a, $b, 0.0, 1.0))
+                        .truncate()
+                        .truncate()
+                        .into(),
+                    tex_coord: [$c as f32, $d as f32], // TODO: consider making the sprite tex_coord type i32
+                }
+            )
+        }
+
+        vec![
+            vertex!([0.0, self.height] [x, y]),
+            vertex!([0.0, 0.0] [x, y + h]),
+            vertex!([self.width, 0.0] [x + w, y + h]),
+            vertex!([self.width, self.height] [x + w, y]),
+        ]
     }
 
     fn build_mesh(
+        facade: &F,
         width: f32,
         height: f32,
         rectangle: &Rectangle,
-    ) -> Mesh<Vertex> {
+    ) -> Mesh<Vertex>
+        where F: Facade,
+    {
         let x = rectangle.x;
         let y = rectangle.y;
         let w = rectangle.width;
@@ -119,22 +167,20 @@ impl Sprite {
             vertex!([width, 0.0] [x + w, y + h]),
             vertex!([width, height] [x + w, y]),
         ];
-        let mut mesh = Mesh::new();
-        mesh.push_faces(
-            vertices,
-            vec![[0, 1, 2], [0, 2, 3]],
-        );
-        mesh
+
+        Mesh::with_indices(facade, &vertices, &[0, 1, 2, 2, 3, 0])
     }
 }
 
-impl ToMesh<Vertex> for Sprite {
+impl<'f, F> ToMesh<Vertex> for Sprite<'f, F>
+    where F: Facade,
+{
     fn mesh(self) -> Mesh<Vertex> {
         self.mesh
     }
 }
 
-impl<F, S> Renderable<F, S, Shader> for Sprite
+impl<'f, F, S> Renderable<F, S, Shader> for Sprite<'f, F>
     where F: Facade,
           S: Surface,
 {

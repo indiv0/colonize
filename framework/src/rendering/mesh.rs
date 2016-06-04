@@ -1,55 +1,57 @@
 use std::u16;
 
+use glium;
+use glium::backend::Facade;
+use glium::index::{NoIndices, PrimitiveType};
+
+pub use glium::VertexBuffer;
 pub use glium::Vertex as VertexType;
 
+/// Vertex index data type.
+pub type Index = u16;
+/// A list of indices loaded in the GPU's memory.
+pub type IndexBuffer = glium::IndexBuffer<Index>;
+
+pub const INDEX_TYPE: PrimitiveType = PrimitiveType::TrianglesList;
+
+// TODO: rename this enum.
+pub enum Either<L, R> {
+    Left(L),
+    Right(R),
+}
+
+/// Mesh type, containing a vertex buffer and an index buffer.
 pub struct Mesh<T>
     where T: VertexType,
 {
-    pub vertices: Vec<T>,
-    pub indices: Vec<u16>,
+    pub vertices: VertexBuffer<T>,
+    // Using `Result` here is a bit of a hack to allow use to use one of two
+    // types for the index storage.
+    pub indices: Either<IndexBuffer, NoIndices>,
 }
 
 impl<T> Mesh<T>
     where T: VertexType,
 {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn push(&mut self, vertices: Vec<T>, indices: Vec<u16>) {
-        assert!(self.vertices.len() + vertices.len() < u16::MAX as usize);
-        let offset = self.vertices.len() as u16;
-        for v in vertices.into_iter() {
-            self.vertices.push(v);
-        }
-
-        for i in indices.into_iter() {
-            self.indices.push(i + offset);
-        }
-    }
-
-    pub fn push_faces(&mut self, vertices: Vec<T>, faces: Vec<[u16; 3]>) {
-        assert!(self.vertices.len() + vertices.len() < u16::MAX as usize);
-        let offset = self.vertices.len() as u16;
-        for v in vertices.into_iter() {
-            self.vertices.push(v);
-        }
-
-        for face in faces.into_iter() {
-            for i in face.into_iter() {
-                self.indices.push(i + offset);
-            }
-        }
-    }
-}
-
-impl<T> Default for Mesh<T>
-    where T: VertexType,
-{
-    fn default() -> Self {
+    pub fn new<F>(facade: &F, vertices: &[T]) -> Self
+        where F: Facade,
+    {
         Mesh {
-            vertices: Vec::new(),
-            indices: Vec::new(),
+            vertices: VertexBuffer::new(facade, vertices).unwrap(),
+            indices: Either::Right(NoIndices(INDEX_TYPE)),
+        }
+    }
+
+    pub fn with_indices<F>(
+        facade: &F,
+        vertices: &[T],
+        indices: &[Index],
+    ) -> Self
+        where F: Facade,
+    {
+        Mesh {
+            vertices: VertexBuffer::new(facade, vertices).unwrap(),
+            indices: Either::Left(IndexBuffer::new(facade, INDEX_TYPE, indices).unwrap()),
         }
     }
 }

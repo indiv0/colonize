@@ -9,11 +9,13 @@ use glium::backend::Facade;
 use glium::texture::{RawImage2d, Texture2dDataSource};
 use glium::uniforms::{AsUniformValue, UniformValue};
 
+use id::Id;
 use manager::Resource;
 
 pub type TextureData = glium::texture::CompressedSrgbTexture2d;
 
 pub struct Texture {
+    pub id: Id,
     pub height: u32,
     pub width: u32,
     pub data: TextureData,
@@ -24,22 +26,36 @@ impl Texture {
         where F: Facade,
               T: Texture2dDataSource<'a>,
     {
+        Self::with_id(facade, source, Id::new())
+    }
+
+    pub fn with_id<'a, F, T>(facade: &F, source: T, id: Id) -> Self
+        where F: Facade,
+              T: Texture2dDataSource<'a>,
+    {
         let texture = TextureData::new(facade, source).unwrap();
         Texture {
+            id: id,
             width: texture.get_width(),
             height: texture.get_height().unwrap(),
             data: texture,
         }
     }
 
-    pub fn from_image<F>(facade: &F, image: &DynamicImage) -> Texture
+    pub fn from_image<F>(facade: &F, image: &DynamicImage) -> Self
         where F: Facade,
     {
-        Texture::new(facade, RawImage2d::from_raw_rgba_reversed(
+        Self::new(facade, RawImage2d::from_raw_rgba_reversed(
                 image.raw_pixels(),
                 image.dimensions(),
             )
         )
+    }
+}
+
+impl PartialEq<Texture> for Texture {
+    fn eq(&self, other: &Texture) -> bool {
+        self.id == other.id
     }
 }
 

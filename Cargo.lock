@@ -829,11 +829,13 @@ dependencies = [
  "glium_text 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "image 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "piston 0.22.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand 0.3.14 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustc-serialize 0.3.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 0.7.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_codegen 0.7.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_macros 0.7.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "syntex 0.32.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "time 0.1.35 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

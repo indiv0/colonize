@@ -9,7 +9,9 @@ extern crate cgmath;
 extern crate glium;
 extern crate image;
 extern crate piston;
+extern crate rand;
 extern crate serde;
+extern crate time;
 
 pub use bindings::{
     BindingsBTreeMap,
@@ -19,6 +21,7 @@ pub use bindings::{
     Command,
     UnwrapBindings,
 };
+pub use id::Id;
 pub use scene::{BoxedScene, Scene, SceneCommand};
 pub use scene_manager::SceneManager;
 pub use util::RustcSerializeWrapper;
@@ -26,6 +29,7 @@ pub use util::RustcSerializeWrapper;
 pub mod backend;
 mod bindings;
 pub mod color;
+pub mod id;
 mod macros;
 pub mod manager;
 pub mod rectangle;

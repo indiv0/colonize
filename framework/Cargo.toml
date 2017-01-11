@@ -19,17 +19,17 @@ build = "build.rs"
 
 [build-dependencies.serde_codegen]
 optional = true
-version = "0.7.5"
+version = "0.8.9"
 
 [build-dependencies.syntex]
 optional = true
-version = "0.32.0"
+version = "0.54.0"
 
 [dependencies]
-piston = "0.22.1"
-piston2d-graphics = "0.16.0"
-rustc-serialize = "0.3"
-serde = "0.7.4"
+piston = "0.27.0"
+piston2d-graphics = "0.19.0"
+rustc-serialize = "0.3.22"
+serde = "0.8.21"
 
 [dependencies.clippy]
 optional = true
@@ -37,7 +37,7 @@ version = "0.0"
 
 [dependencies.serde_macros]
 optional = true
-version = "0.7.5"
+version = "0.8.9"
 
 [features]
 default = ["with-syntex"]

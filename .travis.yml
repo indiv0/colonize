@@ -110,7 +110,7 @@ deploy:
   provider: releases
   api_key:
     # secure Github token for release upload
-    secure: "OtcCEFBniy4i89KaFKEOct+JsTQF3W3+6SYWlcB4FEvljRwwpAMWzpqoHQhfNLPQiX07Da+IlKrhM5wt2PPF80dEzyIxiK6Y/fJFgd0peAkbKYwqrgoS80WoqSHYBR8STb+X6JlhxxX+/pma+ILBBFQ6UH01KEHGISlHq4ARw58="
+    secure: "GYMxoVSW+/8JCDgfC+YD8Yl1j5BVyKmCZ8d8gqCoz6XP0xfR3p42U8Dkh8qZexDESVHFUQpemsilOw/wWTN47fP4x/OcQLzyU1L9jH2GtfjKVw/HxMOUU1W8URVikTdlvpHvwAskwB9YMsy9tnigzJNKqr9iXxISiXZr9fiKmeE="
   file_glob: true
   file: ${PROJECT_NAME}-${TRAVIS_TAG}-${TARGET}.*
   # don't delete the artifacts from previous phases

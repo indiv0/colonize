@@ -16,11 +16,11 @@ build = "build.rs"
 
 [build-dependencies.serde_codegen]
 optional = true
-version = "0.7.5"
+version = "0.8.9"
 
 [build-dependencies.syntex]
 optional = true
-version = "0.32.0"
+version = "0.54.0"
 
 [dependencies]
 cgmath = "0.9.1"
@@ -28,7 +28,7 @@ array = "0.0.1"
 noise = "0.2.0"
 num = "0.1.32"
 rand = "0.3.14"
-serde = "0.7.4"
+serde = "0.8.21"
 
 [dependencies.colonize_utility]
 path = "../utility"
@@ -39,7 +39,7 @@ version = "0.0"
 
 [dependencies.serde_macros]
 optional = true
-version = "0.7.5"
+version = "0.8.9"
 
 [features]
 default = ["with-syntex"]

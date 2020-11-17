@@ -17,6 +17,11 @@ A Dwarf-Fortress/Rimworld-like game written in Rust.
 
 * [rust](https://www.rust-lang.org)
 
+### Enable Fast Compiles (Optional)
+
+For fast iterative compiles, follow the [instructions in the Bevy book](https://bevyengine.org/learn/book/getting-started/setup/#enable-fast-compiles-optional)
+on how to setup fast compiles.
+
 ### Compiling
 
 Compiling on Rustc stable:

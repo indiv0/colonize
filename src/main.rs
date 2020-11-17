@@ -6,7 +6,42 @@ fn main() {
     App::build()
         .add_plugins(DefaultPlugins)
         .add_plugin(HelloPlugin)
+        .add_startup_system(setup.system())
         .run();
+}
+
+// Setup a simple 3D scene.
+fn setup(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    // Add entities to the world.
+    commands
+        // Plane
+        .spawn(PbrComponents {
+            mesh: meshes.add(Mesh::from(shape::Plane { size: 10.0 })),
+            material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
+            ..Default::default()
+        })
+        // Cube
+        .spawn(PbrComponents {
+            mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+            material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
+            transform: Transform::from_translation(Vec3::new(0.0, 1.0, 0.0)),
+            ..Default::default()
+        })
+        // Light
+        .spawn(LightComponents {
+            transform: Transform::from_translation(Vec3::new(4.0, 8.0, 4.0)),
+            ..Default::default()
+        })
+        // Camera
+        .spawn(Camera3dComponents {
+            transform: Transform::from_translation(Vec3::new(-3.0, 5.0, 8.0))
+                .looking_at(Vec3::default(), Vec3::unit_y()),
+            ..Default::default()
+        });
 }
 
 struct Person;

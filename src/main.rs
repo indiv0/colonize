@@ -21,6 +21,7 @@ fn main() {
             .add_plugin(InteractablePickingPlugin)
             .add_plugin(DebugPickingPlugin)
             .add_startup_system(setup.system())
+            .add_system(toggle_cursor.system())
             .run();
     }
     #[cfg(target_arch = "wasm32")]
@@ -33,6 +34,7 @@ fn main() {
             .add_plugin(InteractablePickingPlugin)
             .add_plugin(DebugPickingPlugin)
             .add_startup_system(setup.system())
+            .add_system(toggle_cursor.system())
             .run();
     }
 }
@@ -108,5 +110,14 @@ impl Plugin for HelloPlugin {
         app.add_resource(GreetTimer(Timer::from_seconds(2.0, true)))
             .add_startup_system(add_people.system())
             .add_system(greet_people.system());
+    }
+}
+
+/// Toggles the cursor's visibility and lock mode when the space bar is pressed.
+fn toggle_cursor(input: Res<Input<KeyCode>>, mut windows: ResMut<Windows>) {
+    let window = windows.get_primary_mut().unwrap();
+    if input.just_pressed(KeyCode::Space) {
+        window.set_cursor_lock_mode(!window.cursor_locked());
+        window.set_cursor_visibility(!window.cursor_visible());
     }
 }

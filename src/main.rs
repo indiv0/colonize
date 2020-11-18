@@ -2,7 +2,11 @@ extern crate bevy;
 #[cfg(target_arch = "wasm32")]
 extern crate bevy_webgl2;
 
+mod camera;
+
 use bevy::prelude::*;
+
+use camera::{CameraMovement, CameraMovementPlugin};
 
 fn main() {
     #[cfg(not(target_arch = "wasm32"))]
@@ -10,6 +14,7 @@ fn main() {
         App::build()
             .add_plugins(DefaultPlugins)
             .add_plugin(HelloPlugin)
+            .add_plugin(CameraMovementPlugin)
             .add_startup_system(setup.system())
             .run();
     }
@@ -18,6 +23,7 @@ fn main() {
         App::build()
             .add_plugins(bevy_webgl2::DefaultPlugins)
             .add_plugin(HelloPlugin)
+            .add_plugin(CameraMovementPlugin)
             .add_startup_system(setup.system())
             .run();
     }
@@ -54,7 +60,8 @@ fn setup(
             transform: Transform::from_translation(Vec3::new(-3.0, 5.0, 8.0))
                 .looking_at(Vec3::default(), Vec3::unit_y()),
             ..Default::default()
-        });
+        })
+        .with(CameraMovement::default());
 }
 
 struct Person;

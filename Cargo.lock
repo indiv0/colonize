@@ -489,6 +489,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_mod_picking"
+version = "0.2.0"
+source = "git+https://github.com/indiv0/bevy_mod_picking#5c560958a6293949d0767232227f861a93b9a806"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
 name = "bevy_pbr"
 version = "0.3.0"
 source = "git+https://github.com/bevyengine/bevy?rev=7628f4a64e#7628f4a64e6f3eacfc4aad3bb6b3d54309722682"
@@ -959,6 +967,7 @@ name = "colonize"
 version = "0.2.0"
 dependencies = [
  "bevy",
+ "bevy_mod_picking",
  "bevy_webgl2",
 ]
 

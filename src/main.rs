@@ -1,10 +1,12 @@
 extern crate bevy;
+extern crate bevy_mod_picking;
 #[cfg(target_arch = "wasm32")]
 extern crate bevy_webgl2;
 
 mod camera;
 
 use bevy::prelude::*;
+use bevy_mod_picking::*;
 
 use camera::{CameraMovement, CameraMovementPlugin};
 
@@ -15,6 +17,9 @@ fn main() {
             .add_plugins(DefaultPlugins)
             .add_plugin(HelloPlugin)
             .add_plugin(CameraMovementPlugin)
+            .add_plugin(PickingPlugin)
+            .add_plugin(InteractablePickingPlugin)
+            .add_plugin(DebugPickingPlugin)
             .add_startup_system(setup.system())
             .run();
     }
@@ -24,6 +29,9 @@ fn main() {
             .add_plugins(bevy_webgl2::DefaultPlugins)
             .add_plugin(HelloPlugin)
             .add_plugin(CameraMovementPlugin)
+            .add_plugin(PickingPlugin)
+            .add_plugin(InteractablePickingPlugin)
+            .add_plugin(DebugPickingPlugin)
             .add_startup_system(setup.system())
             .run();
     }
@@ -50,6 +58,10 @@ fn setup(
             transform: Transform::from_translation(Vec3::new(0.0, 1.0, 0.0)),
             ..Default::default()
         })
+        .with(PickableMesh::default())
+        .with(InteractableMesh::default())
+        .with(HighlightablePickMesh::default())
+        .with(SelectablePickMesh::default())
         // Light
         .spawn(LightBundle {
             transform: Transform::from_translation(Vec3::new(4.0, 8.0, 4.0)),
@@ -61,7 +73,8 @@ fn setup(
                 .looking_at(Vec3::default(), Vec3::unit_y()),
             ..Default::default()
         })
-        .with(CameraMovement::default());
+        .with(CameraMovement::default())
+        .with(PickSource::default());
 }
 
 struct Person;

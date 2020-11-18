@@ -8,7 +8,7 @@ mod camera;
 use bevy::prelude::*;
 use bevy_mod_picking::*;
 
-use camera::{CameraMovement, CameraMovementPlugin};
+use camera::fps::{CameraState, CameraMovementPlugin};
 
 fn main() {
     #[cfg(not(target_arch = "wasm32"))]
@@ -75,7 +75,7 @@ fn setup(
                 .looking_at(Vec3::default(), Vec3::unit_y()),
             ..Default::default()
         })
-        .with(CameraMovement::default())
+        .with(CameraState::default())
         .with(PickSource::default());
 }
 
@@ -118,6 +118,5 @@ fn toggle_cursor(input: Res<Input<KeyCode>>, mut windows: ResMut<Windows>) {
     let window = windows.get_primary_mut().unwrap();
     if input.just_pressed(KeyCode::Space) {
         window.set_cursor_lock_mode(!window.cursor_locked());
-        window.set_cursor_visibility(!window.cursor_visible());
     }
 }

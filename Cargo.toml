@@ -16,4 +16,27 @@ keywords = [
 license = "GPL-3.0-or-later"
 
 [dependencies]
-bevy = "0.3.0"
+bevy = { git = "https://github.com/bevyengine/bevy", rev = "7628f4a64e", default-features = false }
+bevy_webgl2 = { git = "https://github.com/mrk-its/bevy_webgl2", optional = true }
+
+[features]
+default = [
+    "bevy/bevy_audio",
+    "bevy/bevy_dynamic_plugin",
+    "bevy/bevy_gilrs",
+    "bevy/bevy_gltf",
+    "bevy/bevy_wgpu",
+    "bevy/bevy_winit",
+    "bevy/render",
+    "bevy/png",
+    "bevy/hdr",
+    "bevy/mp3",
+    "bevy/x11"
+]
+wasm = [
+    "bevy/bevy_gltf",
+    "bevy/bevy_winit",
+    "bevy/render",
+    "bevy/png",
+    "bevy_webgl2"
+]

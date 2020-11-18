@@ -24,10 +24,27 @@ on how to setup fast compiles.
 
 ### Compiling
 
-Compiling on Rustc stable:
-
+Build & run:
 ```sh
-cargo build
+cargo run --release
+```
+
+### Compiling for WASM
+
+Setup:
+```
+rustup target add wasm32-unknown-unknown
+cargo install wasm-bindgen-cli
+```
+
+Build & run:
+```
+cargo build --release --target wasm32-unknown-unknown --no-default-features --features wasm
+wasm-bindgen --out-dir target --target web target/wasm32-unknown-unknown/release/colonize.wasm
+```
+Serve project dir to browser. i.e.
+```
+python3 -m http.server
 ```
 
 ## Contributing

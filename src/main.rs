@@ -1,43 +1,56 @@
 extern crate bevy;
+#[cfg(target_arch = "wasm32")]
+extern crate bevy_webgl2;
 
 use bevy::prelude::*;
 
 fn main() {
-    App::build()
-        .add_plugins(DefaultPlugins)
-        .add_plugin(HelloPlugin)
-        .add_startup_system(setup.system())
-        .run();
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        App::build()
+            .add_plugins(DefaultPlugins)
+            .add_plugin(HelloPlugin)
+            .add_startup_system(setup.system())
+            .run();
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        App::build()
+            .add_plugins(bevy_webgl2::DefaultPlugins)
+            .add_plugin(HelloPlugin)
+            .add_startup_system(setup.system())
+            .run();
+    }
 }
 
 // Setup a simple 3D scene.
 fn setup(
-    mut commands: Commands,
+    commands: &mut Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     // Add entities to the world.
     commands
         // Plane
-        .spawn(PbrComponents {
+        .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Plane { size: 10.0 })),
             material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
             ..Default::default()
         })
         // Cube
-        .spawn(PbrComponents {
+        .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
             material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
             transform: Transform::from_translation(Vec3::new(0.0, 1.0, 0.0)),
             ..Default::default()
         })
         // Light
-        .spawn(LightComponents {
+        .spawn(LightBundle {
             transform: Transform::from_translation(Vec3::new(4.0, 8.0, 4.0)),
             ..Default::default()
         })
         // Camera
-        .spawn(Camera3dComponents {
+        .spawn(Camera3dBundle {
             transform: Transform::from_translation(Vec3::new(-3.0, 5.0, 8.0))
                 .looking_at(Vec3::default(), Vec3::unit_y()),
             ..Default::default()
@@ -47,7 +60,7 @@ fn setup(
 struct Person;
 struct Name(String);
 
-fn add_people(mut commands: Commands) {
+fn add_people(commands: &mut Commands) {
     commands
         .spawn((Person, Name("Elaina Proctor".to_string())))
         .spawn((Person, Name("Renzo Hume".to_string())))

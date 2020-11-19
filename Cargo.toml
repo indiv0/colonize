@@ -19,6 +19,9 @@ license = "GPL-3.0-or-later"
 bevy = { git = "https://github.com/bevyengine/bevy", rev = "7628f4a64e", default-features = false }
 bevy_mod_picking = { git = "https://github.com/indiv0/bevy_mod_picking" }
 bevy_webgl2 = { git = "https://github.com/mrk-its/bevy_webgl2", optional = true }
+nalgebra = "0.22.1"
+rand = "0.7.3"
+tessellation = { git = "https://github.com/indiv0/tessellation" }
 
 [features]
 default = [

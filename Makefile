@@ -16,7 +16,13 @@ wasm_debug:
 serve:
 	python3 -m http.server
 
-deploy:
+deploy_debug: wasm_debug
+	aws s3 cp index.html s3://dev.colonize.rs/index.html
+	aws s3 cp target/colonize.js s3://dev.colonize.rs/target/colonize.js
+	aws s3 cp target/colonize_bg.wasm s3://dev.colonize.rs/target/colonize_bg.wasm
+	aws s3 cp target/colonize_bg_opt.wasm s3://dev.colonize.rs/target/colonize_bg_opt.wasm
+
+deploy: wasm_release
 	aws s3 cp index.html s3://colonize.rs/index.html
 	aws s3 cp target/colonize.js s3://colonize.rs/target/colonize.js
 	aws s3 cp target/colonize_bg_opt.wasm s3://colonize.rs/target/colonize_bg_opt.wasm

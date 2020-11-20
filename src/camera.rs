@@ -180,7 +180,7 @@ pub(crate) mod fps {
         for (camera, mut transform) in query.iter_mut() {
             let axis_backward = movement_direction(&keyboard_input, KeyCode::S, KeyCode::W);
             let axis_right = movement_direction(&keyboard_input, KeyCode::D, KeyCode::A);
-            let axis_up = movement_direction(&keyboard_input, KeyCode::LShift, KeyCode::LControl);
+            let axis_up = movement_direction(&keyboard_input, KeyCode::Q, KeyCode::E);
 
             let forward_vector = forward_vector(&transform.rotation).normalize();
             let strafe_vector = strafe_vector(forward_vector);

@@ -16,7 +16,7 @@ keywords = [
 license = "GPL-3.0-or-later"
 
 [dependencies]
-bevy = { git = "https://github.com/bevyengine/bevy", rev = "7628f4a64e", default-features = false }
+bevy = { git = "https://github.com/bevyengine/bevy", rev = "4fecb899aaa33cf2ebc42ac94a32d4b5336c6e93", default-features = false }
 bevy_mod_picking = { git = "https://github.com/indiv0/bevy_mod_picking" }
 bevy_webgl2 = { git = "https://github.com/mrk-its/bevy_webgl2", optional = true }
 nalgebra = "0.22.1"
@@ -44,6 +44,13 @@ wasm = [
     "bevy/png",
     "bevy_webgl2"
 ]
+
+[profile.dev]
+opt-level = 3
+
+# Optimize all dependencies for size while keeping the top crate unoptimized and debugger friendly.
+[profile.dev.package."*"]
+opt-level = "z"
 
 [profile.release]
 lto = true

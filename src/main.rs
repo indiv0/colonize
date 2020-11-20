@@ -145,12 +145,17 @@ pub(crate) fn meshify_chunk(_chunk: &Chunk) -> Mesh {
     }
     normals.iter_mut().for_each(|n| *n = vec3_normalize(*n));
     let positions = triangles.vertices;
+    // Generate some zeroed-out (i.e. not correct) UVs to resolve an issue
+    // where the WASM doesn't load on Chrome but works on Firefox.
+    let uvs = vec![[0.; 2]; positions.len()];
 
     let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
     mesh.set_indices(Some(indices));
     assert_eq!(positions.len(), normals.len(), "Must have same vertex count ({}) as normal count ({}) in this mesh", positions.len(), normals.len());
+    assert_eq!(positions.len(), uvs.len(), "Must have same vertex count ({}) as uv count ({}) in this mesh", positions.len(), uvs.len());
     mesh.set_attribute(Mesh::ATTRIBUTE_POSITION, positions);
     mesh.set_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
+    mesh.set_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
     mesh
 }
 

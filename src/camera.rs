@@ -70,15 +70,15 @@ pub(crate) mod rts {
         let mut translation = Vec2::zero();
         let mut rotation_move = Vec2::default();
 
-        let axis_horizontal = movement_direction(&keyboard_input, KeyCode::Down, KeyCode::Up);
-        let axis_vertical = movement_direction(&keyboard_input, KeyCode::Left, KeyCode::Right);
+        let axis_horizontal = movement_direction(&keyboard_input, &[KeyCode::Down, KeyCode::Numpad2], &[KeyCode::Up, KeyCode::Numpad8]);
+        let axis_vertical = movement_direction(&keyboard_input, &[KeyCode::Left, KeyCode::Numpad4], &[KeyCode::Right, KeyCode::Numpad6]);
        
         if axis_horizontal != 0.0 || axis_vertical != 0.0 {
             rotation_move.x += axis_vertical;
             rotation_move.y += axis_horizontal;
         } else {
-            let axis_forward = movement_direction(&keyboard_input, KeyCode::W, KeyCode::S);
-            let axis_left = movement_direction(&keyboard_input, KeyCode::A, KeyCode::D);
+            let axis_forward = movement_direction(&keyboard_input, &[KeyCode::W], &[KeyCode::S]);
+            let axis_left = movement_direction(&keyboard_input, &[KeyCode::A], &[KeyCode::D]);
 
             translation.x += axis_left;
             translation.y += axis_forward;
@@ -178,9 +178,9 @@ pub(crate) mod fps {
 
     fn keyboard_movement_system(time: Res<Time>, keyboard_input: Res<Input<KeyCode>>, mut query: Query<(&mut CameraState, &mut Transform)>) {
         for (camera, mut transform) in query.iter_mut() {
-            let axis_backward = movement_direction(&keyboard_input, KeyCode::S, KeyCode::W);
-            let axis_right = movement_direction(&keyboard_input, KeyCode::D, KeyCode::A);
-            let axis_up = movement_direction(&keyboard_input, KeyCode::Q, KeyCode::E);
+            let axis_backward = movement_direction(&keyboard_input, &[KeyCode::S], &[KeyCode::W]);
+            let axis_right = movement_direction(&keyboard_input, &[KeyCode::D], &[KeyCode::A]);
+            let axis_up = movement_direction(&keyboard_input, &[KeyCode::Q], &[KeyCode::E]);
 
             let forward_vector = forward_vector(&transform.rotation).normalize();
             let strafe_vector = strafe_vector(forward_vector);
@@ -201,8 +201,8 @@ pub(crate) mod fps {
         // the arrow keys to rotate the camera instead.
         #[cfg(target_arch = "wasm32")]
         {
-            let axis_yaw = movement_direction(&keyboard_input, KeyCode::Right, KeyCode::Left);
-            let axis_pitch = movement_direction(&keyboard_input, KeyCode::Up, KeyCode::Down);
+            let axis_yaw = movement_direction(&keyboard_input, &[KeyCode::Right, KeyCode::Numpad6], &[KeyCode::Left, KeyCode::Numpad4]);
+            let axis_pitch = movement_direction(&keyboard_input, &[KeyCode::Up, KeyCode::Numpad8], &[KeyCode::Down, KeyCode::Numpad2]);
 
             for (mut camera, mut transform) in query.iter_mut() {
                 camera.yaw -= axis_yaw * camera.rotation_speed * time.delta_seconds;
@@ -233,12 +233,12 @@ pub(crate) mod fps {
     }
 }
 
-fn movement_direction(input: &Res<Input<KeyCode>>, positive: KeyCode, negative: KeyCode) -> f32 {
+fn movement_direction(input: &Res<Input<KeyCode>>, positive: &[KeyCode], negative: &[KeyCode]) -> f32 {
     let mut direction = 0.0;
-    if input.pressed(positive) {
+    if positive.iter().any(|k| input.pressed(*k)) {
         direction += 1.0;
     }
-    if input.pressed(negative) {
+    if negative.iter().any(|k| input.pressed(*k)) {
         direction -= 1.0;
     }
     direction

@@ -24,31 +24,20 @@ use greeting::HelloPlugin;
 
 fn main() {
     #[cfg(not(target_arch = "wasm32"))]
-    {
-        App::build()
-            .add_plugins(DefaultPlugins)
-            .add_plugin(HelloPlugin)
-            .add_plugin(CameraMovementPlugin)
-            .add_plugin(PickingPlugin)
-            .add_plugin(InteractablePickingPlugin)
-            .add_plugin(DebugPickingPlugin)
-            .add_startup_system(setup.system())
-            .add_system(toggle_cursor.system())
-            .run();
-    }
+    let default_plugins = DefaultPlugins;
     #[cfg(target_arch = "wasm32")]
-    {
-        App::build()
-            .add_plugins(bevy_webgl2::DefaultPlugins)
-            .add_plugin(HelloPlugin)
-            .add_plugin(CameraMovementPlugin)
-            .add_plugin(PickingPlugin)
-            .add_plugin(InteractablePickingPlugin)
-            .add_plugin(DebugPickingPlugin)
-            .add_startup_system(setup.system())
-            .add_system(toggle_cursor.system())
-            .run();
-    }
+    let default_plugins = bevy_webgl2::DefaultPlugins;
+
+    App::build()
+        .add_plugins(default_plugins)
+        .add_plugin(HelloPlugin)
+        .add_plugin(CameraMovementPlugin)
+        .add_plugin(PickingPlugin)
+        .add_plugin(InteractablePickingPlugin)
+        .add_plugin(DebugPickingPlugin)
+        .add_startup_system(setup.system())
+        .add_system(toggle_cursor.system())
+        .run();
 }
 
 // Setup a simple 3D scene.

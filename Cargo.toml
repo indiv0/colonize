@@ -44,3 +44,7 @@ wasm = [
     "bevy/png",
     "bevy_webgl2"
 ]
+
+[profile.release]
+lto = true
+opt-level = "s"

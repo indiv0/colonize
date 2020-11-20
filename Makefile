@@ -1,4 +1,7 @@
-run:
+debug:
+	cargo run
+
+release:
 	cargo run --release
 
 wasm_release:

@@ -48,10 +48,8 @@ wasm = [
 [profile.dev]
 opt-level = 3
 
-# Optimize all dependencies for size while keeping the top crate unoptimized and debugger friendly.
-[profile.dev.package."*"]
-opt-level = "z"
-
 [profile.release]
+debug = true
+debug-assertions = true
+overflow-checks = true
 lto = true
-opt-level = "s"

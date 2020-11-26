@@ -831,7 +831,6 @@ checksum = "0d8c1fef690941d3e7788d328517591fecc684c084084702d6ff1641e993699a"
 [[package]]
 name = "building-blocks"
 version = "0.2.1"
-source = "git+https://github.com/bonsairobo/building-blocks?rev=4e765eddfeb9819eb834d41c0241aec13fdabfc9#4e765eddfeb9819eb834d41c0241aec13fdabfc9"
 dependencies = [
  "building_blocks_core",
  "building_blocks_mesh",
@@ -841,7 +840,6 @@ dependencies = [
 [[package]]
 name = "building_blocks_core"
 version = "0.2.1"
-source = "git+https://github.com/bonsairobo/building-blocks?rev=4e765eddfeb9819eb834d41c0241aec13fdabfc9#4e765eddfeb9819eb834d41c0241aec13fdabfc9"
 dependencies = [
  "itertools",
  "num",
@@ -851,7 +849,6 @@ dependencies = [
 [[package]]
 name = "building_blocks_mesh"
 version = "0.2.0"
-source = "git+https://github.com/bonsairobo/building-blocks?rev=4e765eddfeb9819eb834d41c0241aec13fdabfc9#4e765eddfeb9819eb834d41c0241aec13fdabfc9"
 dependencies = [
  "building_blocks_core",
  "building_blocks_storage",
@@ -861,7 +858,6 @@ dependencies = [
 [[package]]
 name = "building_blocks_storage"
 version = "0.2.1"
-source = "git+https://github.com/bonsairobo/building-blocks?rev=4e765eddfeb9819eb834d41c0241aec13fdabfc9#4e765eddfeb9819eb834d41c0241aec13fdabfc9"
 dependencies = [
  "building_blocks_core",
  "compressible-map",
@@ -1066,7 +1062,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "194d179a54d3b2219ccb2fb617e6373b49f64c8296b54d3a6b382ff6cf324834"
 dependencies = [
  "bincode",
- "lz4",
  "serde",
  "snap",
 ]
@@ -2253,26 +2248,6 @@ dependencies = [
  "scoped-tls",
  "serde",
  "serde_json",
-]
-
-[[package]]
-name = "lz4"
-version = "1.23.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aac20ed6991e01bf6a2e68cc73df2b389707403662a8ba89f68511fb340f724c"
-dependencies = [
- "libc",
- "lz4-sys",
-]
-
-[[package]]
-name = "lz4-sys"
-version = "1.9.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dca79aa95d8b3226213ad454d328369853be3a1382d89532a854f4d69640acae"
-dependencies = [
- "cc",
- "libc",
 ]
 
 [[package]]

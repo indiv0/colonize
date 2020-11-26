@@ -169,6 +169,7 @@ impl Cubic {
             Cubic::Terrace => {
                 let extent =
                     Extent3i::from_min_and_shape(PointN([-20; 3]), PointN([40; 3])).padded(1);
+                /*
                 let mut voxels = Array3::fill(extent, CubeVoxel(false));
                 for i in 0..40 {
                     let level = Extent3i::from_min_and_shape(
@@ -177,6 +178,17 @@ impl Cubic {
                     );
                     voxels.fill_extent(&level, CubeVoxel(true));
                 }
+                */
+                let terrain_density_range = Uniform::from(-34..16);
+                let rng = rand::thread_rng();
+                let mut iter = terrain_density_range.sample_iter(rng);
+                let voxels = Array3::fill_with(extent, |point| {
+                    if iter.next().unwrap() > 0 {
+                        CubeVoxel(true)
+                    } else {
+                        CubeVoxel(false)
+                    }
+                });
 
                 voxels
             }

@@ -6,14 +6,12 @@ extern crate building_blocks;
 extern crate rand;
 
 mod camera;
-mod greeting;
 mod terrain;
 
 use bevy::prelude::*;
 use bevy_mod_picking::*;
 
 use camera::fps::{CameraMovementPlugin, CameraState};
-use greeting::HelloPlugin;
 use terrain::TerrainPlugin;
 
 fn main() {
@@ -22,17 +20,31 @@ fn main() {
     #[cfg(target_arch = "wasm32")]
     let default_plugins = bevy_webgl2::DefaultPlugins;
 
-    App::build()
-        .add_plugins(default_plugins)
-        //.add_plugin(HelloPlugin)
-        .add_plugin(CameraMovementPlugin)
-        .add_plugin(PickingPlugin)
-        .add_plugin(InteractablePickingPlugin)
-        .add_plugin(DebugPickingPlugin)
-        .add_startup_system(setup.system())
-        .add_system(toggle_cursor.system())
-        .add_plugin(TerrainPlugin)
-        .run();
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        App::build()
+            .add_plugins(default_plugins)
+            .add_plugin(CameraMovementPlugin)
+            .add_plugin(PickingPlugin)
+            .add_plugin(InteractablePickingPlugin)
+            .add_plugin(DebugPickingPlugin)
+            .add_startup_system(setup.system())
+            .add_system(toggle_cursor.system())
+            .add_plugin(TerrainPlugin)
+            .run();
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        App::build()
+            .add_plugins(default_plugins)
+            .add_plugin(CameraMovementPlugin)
+            .add_plugin(PickingPlugin)
+            .add_plugin(InteractablePickingPlugin)
+            .add_plugin(DebugPickingPlugin)
+            .add_startup_system(setup.system())
+            .add_plugin(TerrainPlugin)
+            .run();
+    }
 }
 
 // Setup a simple 3D scene.
@@ -82,10 +94,10 @@ fn setup(
         .with(PickSource::default());
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 /// Toggles the cursor's visibility and lock mode when the space bar is pressed.
 fn toggle_cursor(input: Res<Input<KeyCode>>, mut windows: ResMut<Windows>) {
     let window = windows.get_primary_mut().unwrap();
-    #[cfg(not(target_arch = "wasm32"))]
     if input.just_pressed(KeyCode::Space) {
         window.set_cursor_lock_mode(!window.cursor_locked());
         window.set_cursor_visibility(!window.cursor_visible());

@@ -6,12 +6,14 @@ extern crate building_blocks;
 extern crate rand;
 
 mod camera;
+mod dwarf;
 mod terrain;
 
 use bevy::prelude::*;
 use bevy_mod_picking::*;
 
 use camera::fps::{CameraMovementPlugin, CameraState};
+use dwarf::DwarfPlugin;
 use terrain::TerrainPlugin;
 
 fn main() {
@@ -24,6 +26,7 @@ fn main() {
     {
         App::build()
             .add_plugins(default_plugins)
+            .add_plugin(DwarfPlugin)
             .add_plugin(CameraMovementPlugin)
             .add_plugin(PickingPlugin)
             .add_plugin(InteractablePickingPlugin)
@@ -37,6 +40,7 @@ fn main() {
     {
         App::build()
             .add_plugins(default_plugins)
+            .add_plugin(DwarfPlugin)
             .add_plugin(CameraMovementPlugin)
             .add_plugin(PickingPlugin)
             .add_plugin(InteractablePickingPlugin)

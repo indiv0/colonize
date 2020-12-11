@@ -177,7 +177,7 @@ pub(crate) mod rts {
                 let strafe_vector = strafe_vector(forward_vector);
                 let mut translation = (strafe_vector * -translation.x
                     + forward_vector * -translation.y)
-                    * time.delta_seconds;
+                    * time.delta_seconds();
                 translation.z = -scroll;
                 camera.focus += translation;
                 transform.translation += translation;
@@ -254,10 +254,10 @@ pub(crate) mod fps {
                 + Vec3::unit_y() * axis_up)
                 .normalize();
             // Multiply the velocity vector by the speed constant so that the camera moves faster.
-            velocity = velocity * camera.translation_speed * time.delta_seconds;
+            velocity = velocity * camera.translation_speed * time.delta_seconds();
             // If we are not currently moving, one or more of the vector's components will be NaN so we
             // need to zero out the vector to avoid corrupting the translation matrix.
-            if velocity.is_nan().all() {
+            if velocity.is_nan() {
                 velocity = Vec3::zero()
             }
 
@@ -280,8 +280,8 @@ pub(crate) mod fps {
             );
 
             for (mut camera, mut transform) in query.iter_mut() {
-                camera.yaw -= axis_yaw * camera.rotation_speed * time.delta_seconds;
-                camera.pitch += axis_pitch * camera.rotation_speed * time.delta_seconds;
+                camera.yaw -= axis_yaw * camera.rotation_speed * time.delta_seconds();
+                camera.pitch += axis_pitch * camera.rotation_speed * time.delta_seconds();
                 transform.rotation = Quat::from_axis_angle(Vec3::unit_y(), camera.yaw.to_radians())
                     * Quat::from_axis_angle(-Vec3::unit_x(), camera.pitch.to_radians());
             }
@@ -300,8 +300,8 @@ pub(crate) mod fps {
         }
 
         for (mut camera, mut transform) in query.iter_mut() {
-            camera.yaw -= delta.x * camera.rotation_speed * time.delta_seconds;
-            camera.pitch += delta.y * camera.rotation_speed * time.delta_seconds;
+            camera.yaw -= delta.x * camera.rotation_speed * time.delta_seconds();
+            camera.pitch += delta.y * camera.rotation_speed * time.delta_seconds();
             transform.rotation = Quat::from_axis_angle(Vec3::unit_y(), camera.yaw.to_radians())
                 * Quat::from_axis_angle(-Vec3::unit_x(), camera.pitch.to_radians());
         }

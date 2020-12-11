@@ -13,7 +13,7 @@ use std::collections::HashMap;
 use bevy::prelude::*;
 use bevy::render::mesh::{Indices, VertexAttributeValues};
 use bevy::render::pipeline::PrimitiveTopology;
-use bevy::tasks::{ComputeTaskPool, TaskPool};
+use bevy::tasks::ComputeTaskPool;
 use building_blocks::prelude::{copy_extent, LocalChunkCache3};
 use building_blocks::storage::{Array3, ChunkMap, ChunkMapReader, IsEmpty, Snappy};
 use building_blocks::{
@@ -27,7 +27,7 @@ use building_blocks::{
     },
     storage::{ForEachMut, LocalChunkCache},
 };
-use noise::{utils::NoiseMapBuilder, utils::PlaneMapBuilder, Fbm, MultiFractal, NoiseFn};
+use noise::{Fbm, MultiFractal, NoiseFn};
 
 const CHUNK_SIZE: usize = 64;
 const REGION_SIZE: usize = 256; // CHUNK_SIZE * NUM_CHUNKS

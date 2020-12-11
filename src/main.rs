@@ -54,35 +54,9 @@ fn main() {
 // Setup a simple 3D scene.
 fn setup(
     commands: &mut Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     // Add entities to the world.
     commands
-        //// Plane
-        //.spawn(PbrBundle {
-        //    mesh: meshes.add(Mesh::from(shape::Plane { size: 10.0 })),
-        //    material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
-        //    ..Default::default()
-        //})
-        //// Cube
-        //.spawn(PbrBundle {
-        //    mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
-        //    material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
-        //    transform: Transform::from_translation(Vec3::new(0.0, 1.0, 0.0)),
-        //    ..Default::default()
-        //})
-        //// Chunk
-        //.spawn(PbrBundle {
-        //    mesh: meshes.add(meshify_chunk(&Chunk::default())),
-        //    material: materials.add(Color::rgb(0.5, 0.5, 0.5).into()),
-        //    transform: Transform::from_translation(Vec3::new(-5.0, -5.0, -5.0)),
-        //    ..Default::default()
-        //})
-        //.with(PickableMesh::default())
-        //.with(InteractableMesh::default())
-        //.with(HighlightablePickMesh::default())
-        //.with(SelectablePickMesh::default())
         // Light
         .spawn(LightBundle {
             transform: Transform::from_translation(Vec3::new(4.0, 8.0, 4.0)),

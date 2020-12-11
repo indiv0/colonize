@@ -52,9 +52,7 @@ fn main() {
 }
 
 // Setup a simple 3D scene.
-fn setup(
-    commands: &mut Commands,
-) {
+fn setup(commands: &mut Commands) {
     // Add entities to the world.
     commands
         // Light

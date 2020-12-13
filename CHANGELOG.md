@@ -1,3 +1,36 @@
+<a name="v0.3.0"></a>
+## v0.3.0 (2020-12-13)
+
+
+#### Features
+
+*   Add placeholder Dwarf plugin ([3bba076c](https://github.com/indiv0/colonize/commit/3bba076ca50b73a649d8a5dc240d7c3a62dece1c))
+*   Add noise-based terrain ([0218fa33](https://github.com/indiv0/colonize/commit/0218fa33facb171c7cb72bc66398b5bed8c2fdec))
+*   Add some basic building-blocks meshing with upstream snappy changes ([d90f3b53](https://github.com/indiv0/colonize/commit/d90f3b538180a8dc984bc92b4ad7b6cfe6e7e204))
+*   Add initial usage of building-blocks ([8a211a12](https://github.com/indiv0/colonize/commit/8a211a12760e6d71baba4a542ab909dc91cc0785))
+*   Add tesselation library for dual contouring ([62c63b11](https://github.com/indiv0/colonize/commit/62c63b1103ef5aa9ff00cb0b0e6ff787424336a6))
+*   Add broken pan-orbit (aka arcball) camera implementation ([b8b5aa2f](https://github.com/indiv0/colonize/commit/b8b5aa2f8187e0925be56412531c789b4d3978e5))
+*   Add toggle for cursor visibility and locking ([f5c8a151](https://github.com/indiv0/colonize/commit/f5c8a151fad24049650059291402608dfea97842))
+*   Add mesh picking support via bevy_mod_picking ([0dc2d16e](https://github.com/indiv0/colonize/commit/0dc2d16e06264c017f271b68d01d7985546e910b))
+*   Add basic camera plugin which allows for motion in 3D space ([fdaa86cf](https://github.com/indiv0/colonize/commit/fdaa86cffd326955695ac5f6ea41923938314b71))
+*   Add support for compiling to WASM ([e87a0efd](https://github.com/indiv0/colonize/commit/e87a0efd3a1176aadee7cefb01cdebda2417812d))
+*   Add basic 3D scene ([599c2509](https://github.com/indiv0/colonize/commit/599c250942d2be28eb5cee39c257c53743d98ecb))
+*   Add initial Bevy hello world example ([16eae019](https://github.com/indiv0/colonize/commit/16eae0197f7b825d26b6c8b297213350aa697fc6))
+
+#### Improvements
+
+*   Spawn some "dwarf" cubes ([45daf208](https://github.com/indiv0/colonize/commit/45daf20845cf62ec928edc4cb7c8a08e1b9ea64a))
+*   Fix rustc and clippy lints ([28858e47](https://github.com/indiv0/colonize/commit/28858e4756f8b440aaff56418c08a1b1f4975d2a))
+*   Switch to local building-blocks fork and randomized terrain ([47a8d3b6](https://github.com/indiv0/colonize/commit/47a8d3b623cae9822f86da5b29005a9f01901513))
+*   Add support for tilting with numpad keys ([9f94918b](https://github.com/indiv0/colonize/commit/9f94918b607ca095bae456226467fd5376b409fe))
+*   Update for latest bevy commit & enable debug optimizations ([78f72990](https://github.com/indiv0/colonize/commit/78f729903ee6233addecbdcf8b8712c8d40de53d))
+
+#### Documentation
+
+*   Add link to guide on enabling fast incremental compiles ([ba58c27c](https://github.com/indiv0/colonize/commit/ba58c27c923143ee1f47fe27c2d75aa13a885be0))
+
+
+
 <a name="v0.1.0"></a>
 ## v0.1.0 (2016-05-16)
 

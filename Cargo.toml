@@ -1,6 +1,6 @@
 [package]
 name = "colonize"
-version = "0.4.0"
+version = "0.5.0"
 authors = ["Nikita Pekin <nikita@frecency.com>"]
 description = "A Dwarf Fortress/Rimworld-like game written in Rust"
 repository = "https://github.com/indiv0/colonize"

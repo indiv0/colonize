@@ -1,3 +1,18 @@
+<a name="v0.4.0"></a>
+## v0.4.0 (2020-12-15)
+
+
+#### Improvements
+
+*   Move camera closer to dwarf landing zone ([674d6bc4](https://github.com/indiv0/colonize/commit/674d6bc4b710ab910f4078db08a0503ca668283d))
+
+#### Features
+
+*   Add rigidbody physics to chunks and dwarves ([0c27dcbd](https://github.com/indiv0/colonize/commit/0c27dcbd9459261d42c27fa04a78353304d2ed2e))
+*   Add bevy_rapier3d for basic physics ([c5f7ca9a](https://github.com/indiv0/colonize/commit/c5f7ca9a9a5d7ffe014d2fa677eb79fe45666964))
+
+
+
 <a name="v0.3.0"></a>
 ## v0.3.0 (2020-12-13)
 

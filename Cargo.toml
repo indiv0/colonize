@@ -19,6 +19,7 @@ edition = "2018"
 [dependencies]
 bevy = { git = "https://github.com/bevyengine/bevy", rev = "1398d7833007e85198cfd35d5fabc70b51b4db31", default-features = false }
 bevy_mod_picking = { git = "https://github.com/indiv0/bevy_mod_picking", rev = "5eb072678f0b0a65632610b715a880c240f21104" }
+bevy_rapier3d = { git = "https://github.com/indiv0/bevy_rapier", rev = "55bd5f3a2b06f86eeafbb2d338b5bf75485d1dc9", default-features = false, features = ["dim3"] }
 bevy_webgl2 = { git = "https://github.com/mrk-its/bevy_webgl2", rev = "fb00690c589162272139df74d1e2d077adebc1bc", optional = true }
 building-blocks = { git = "https://github.com/bonsairobo/building-blocks", rev = "37fa5fd4e2fcbc57795eb6fa4d681dd315277447", default-features = false, features = ["mesh", "snappy"] }
 noise = { version = "0.6.0", default-features = false }

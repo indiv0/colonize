@@ -11,6 +11,7 @@ mod terrain;
 
 use bevy::prelude::*;
 use bevy_mod_picking::*;
+use bevy_rapier3d::physics::RapierPhysicsPlugin;
 
 use camera::fps::{CameraMovementPlugin, CameraState};
 use dwarf::DwarfPlugin;
@@ -34,6 +35,7 @@ fn main() {
             .add_startup_system(setup.system())
             .add_system(toggle_cursor.system())
             .add_plugin(TerrainPlugin)
+            .add_plugin(RapierPhysicsPlugin)
             .run();
     }
     #[cfg(target_arch = "wasm32")]

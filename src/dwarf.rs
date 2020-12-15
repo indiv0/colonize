@@ -1,4 +1,14 @@
-use bevy::{ecs::{Res, ResMut}, input::Input, math::Vec3, pbr::PbrBundle, prelude::Assets, prelude::{AppBuilder, Color, Commands, IntoSystem, KeyCode, Mesh, Plugin, StandardMaterial, Transform, shape}};
+use bevy::{
+    ecs::{Res, ResMut},
+    input::Input,
+    math::Vec3,
+    pbr::PbrBundle,
+    prelude::Assets,
+    prelude::{
+        shape, AppBuilder, Color, Commands, IntoSystem, KeyCode, Mesh, Plugin, StandardMaterial,
+        Transform,
+    },
+};
 use bevy_mod_picking::{HighlightablePickMesh, InteractableMesh, PickableMesh, SelectablePickMesh};
 use bevy_rapier3d::rapier::{dynamics::RigidBodyBuilder, geometry::ColliderBuilder};
 use rand::{thread_rng, Rng};
@@ -95,7 +105,6 @@ fn input_system(
         add_dwarves(commands, meshes, materials, terrain_res);
     }
 }
-
 
 pub(crate) struct DwarfPlugin;
 

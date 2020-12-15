@@ -239,7 +239,14 @@ fn generate_voxels(mut terrain_res: ResMut<TerrainResource>) {
     }
     copy_extent(&query_extent, &dense_map, &mut terrain_res.chunks);
     // Ensure that we inserted the expected number of chunks.
-    assert_eq!(terrain_res.chunks.chunk_keys().collect::<Vec<&PointN<[i32; 3]>>>().len(), (REGION_SIZE / CHUNK_SIZE).pow(3) as usize);
+    assert_eq!(
+        terrain_res
+            .chunks
+            .chunk_keys()
+            .collect::<Vec<&PointN<[i32; 3]>>>()
+            .len(),
+        (REGION_SIZE / CHUNK_SIZE).pow(3) as usize
+    );
     terrain_res.chunks.flush_chunk_cache(local_cache);
 
     terrain_res.generated_voxels = true;

@@ -1,6 +1,4 @@
-use bevy::{ecs::{Res, ResMut}, math::Vec3, pbr::PbrBundle, prelude::Assets, prelude::{
-        shape, AppBuilder, Color, Commands, IntoSystem, Mesh, Plugin, StandardMaterial, Transform,
-    }};
+use bevy::{ecs::{Res, ResMut}, input::Input, math::Vec3, pbr::PbrBundle, prelude::Assets, prelude::{AppBuilder, Color, Commands, IntoSystem, KeyCode, Mesh, Plugin, StandardMaterial, Transform, shape}};
 use bevy_mod_picking::{HighlightablePickMesh, InteractableMesh, PickableMesh, SelectablePickMesh};
 use bevy_rapier3d::rapier::{dynamics::RigidBodyBuilder, geometry::ColliderBuilder};
 use rand::{thread_rng, Rng};
@@ -84,10 +82,26 @@ fn random_point_in_circle(origin: (f64, f64), radius: f64) -> (f64, f64) {
     let y = origin.1 + r * theta.sin();
     (x, y)
 }
+
+fn input_system(
+    keyboard_input: Res<Input<KeyCode>>,
+    commands: &mut Commands,
+    meshes: ResMut<Assets<Mesh>>,
+    materials: ResMut<Assets<StandardMaterial>>,
+    terrain_res: Res<TerrainResource>,
+) {
+    // If the `T` button is pressed, spawn in 10 more dwarves.
+    if keyboard_input.pressed(KeyCode::T) {
+        add_dwarves(commands, meshes, materials, terrain_res);
+    }
+}
+
+
 pub(crate) struct DwarfPlugin;
 
 impl Plugin for DwarfPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.add_startup_system(add_dwarves.system());
+        app.add_startup_system(add_dwarves.system())
+            .add_system(input_system);
     }
 }

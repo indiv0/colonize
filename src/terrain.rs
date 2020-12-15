@@ -14,6 +14,7 @@ use bevy::prelude::*;
 use bevy::render::mesh::{Indices, VertexAttributeValues};
 use bevy::render::pipeline::PrimitiveTopology;
 use bevy::tasks::ComputeTaskPool;
+use bevy_rapier3d::rapier::{dynamics::RigidBodyBuilder, geometry::ColliderBuilder, math::Point};
 use building_blocks::prelude::{copy_extent, LocalChunkCache3};
 use building_blocks::storage::{Array3, ChunkMap, ChunkMapReader, IsEmpty, Snappy};
 use building_blocks::{
@@ -51,7 +52,7 @@ fn setup(mut res: ResMut<TerrainResource>, mut materials: ResMut<Assets<Standard
     ));
 }
 
-struct TerrainResource {
+pub(crate) struct TerrainResource {
     materials: Vec<MeshMaterial>,
     noise: Fbm,
     chunks: ChunkMap3<CubeVoxel>,
@@ -63,6 +64,16 @@ struct TerrainResource {
 impl TerrainResource {
     fn y_scale(&self) -> f64 {
         self.sea_level * 0.2
+    }
+
+    /// Returns the y-value of the surface of the terrain at the specified x & z coordinates,
+    /// as determined solely by the terrain generation algorithm.
+    ///
+    /// If the terrain gets modified after generation (e.g. digging holes or adding structures)
+    /// the modifications are not taken into account by this function.
+    pub(crate) fn surface_y(&self, x: f64, z: f64) -> i32 {
+        // FIXME: I don't think this calculation is actually correct.
+        (self.noise.get([x, z]) * self.y_scale() + self.y_offset).round() as i32
     }
 }
 
@@ -199,10 +210,9 @@ fn generate_voxels(mut terrain_res: ResMut<TerrainResource>) {
         return;
     }
 
-    trace!("Generating voxels");
-
     let min = PointN([-(REGION_SIZE as i32 / 2); 3]);
     let max = PointN([REGION_SIZE as i32 / 2; 3]);
+    trace!("Generating voxels between {:?} and {:?}", min, max);
 
     let material_from_height = |height| {
         if height < 0.9 * terrain_res.y_scale() {
@@ -213,7 +223,7 @@ fn generate_voxels(mut terrain_res: ResMut<TerrainResource>) {
     };
 
     let local_cache = LocalChunkCache::new();
-    let query_extent = Extent3i::from_min_and_shape(min, max);
+    let query_extent = Extent3i::from_min_and_shape(min, PointN([REGION_SIZE as i32; 3]));
     let mut dense_map = Array3::fill(query_extent, CubeVoxel(false));
     for z in min.z()..max.z() {
         for x in min.x()..max.x() {
@@ -228,6 +238,8 @@ fn generate_voxels(mut terrain_res: ResMut<TerrainResource>) {
         }
     }
     copy_extent(&query_extent, &dense_map, &mut terrain_res.chunks);
+    // Ensure that we inserted the expected number of chunks.
+    assert_eq!(terrain_res.chunks.chunk_keys().collect::<Vec<&PointN<[i32; 3]>>>().len(), (REGION_SIZE / CHUNK_SIZE).pow(3) as usize);
     terrain_res.chunks.flush_chunk_cache(local_cache);
 
     terrain_res.generated_voxels = true;
@@ -316,6 +328,15 @@ fn generate_mesh_entity(
     assert_eq!(mesh.positions.len(), mesh.normals.len());
     let num_vertices = mesh.positions.len();
 
+    // Generate a colliding entity for the mesh to use for physics.
+    // TODO: does this position actually need to match the position of the chunk mesh?
+    //   It appears to work fine without any translation applied.
+    let rigid_body = RigidBodyBuilder::new_static();
+    let collider = ColliderBuilder::trimesh(
+        nested_array_f32_to_points(&mesh.positions),
+        flat_array_f32_to_points(&mesh.indices),
+    );
+
     let mut render_mesh = Mesh::new(PrimitiveTopology::TriangleList);
     render_mesh.set_attribute(
         "Vertex_Position",
@@ -332,13 +353,30 @@ fn generate_mesh_entity(
     )));
 
     let mesh_handle = meshes.add(render_mesh);
+
     let entity = commands
         .spawn(PbrBundle {
             mesh: mesh_handle.clone_weak(),
             material,
             ..Default::default()
         })
+        .with(rigid_body)
+        .with(collider)
         .current_entity()
         .unwrap();
     (entity, mesh_handle)
+}
+
+fn nested_array_f32_to_points(array: &[[f32; 3]]) -> Vec<Point<f32>> {
+    array
+        .iter()
+        .map(|[x, y, z]| Point::new(*x, *y, *z))
+        .collect()
+}
+
+fn flat_array_f32_to_points(array: &[u32]) -> Vec<Point<u32>> {
+    array
+        .chunks(3)
+        .map(|c| Point::new(c[0], c[1], c[2]))
+        .collect()
 }

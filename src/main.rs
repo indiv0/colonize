@@ -1,5 +1,6 @@
 extern crate bevy;
 extern crate bevy_mod_picking;
+extern crate bevy_rapier3d;
 #[cfg(target_arch = "wasm32")]
 extern crate bevy_webgl2;
 extern crate building_blocks;
@@ -49,6 +50,7 @@ fn main() {
             .add_plugin(DebugPickingPlugin)
             .add_startup_system(setup.system())
             .add_plugin(TerrainPlugin)
+            .add_plugin(RapierPhysicsPlugin)
             .run();
     }
 }
@@ -64,7 +66,7 @@ fn setup(commands: &mut Commands) {
         })
         // Camera
         .spawn(Camera3dBundle {
-            transform: Transform::from_translation(Vec3::new(-10.0, 10.0, 10.0))
+            transform: Transform::from_translation(Vec3::new(100.0, 10.0, 100.0))
                 .looking_at(Vec3::default(), Vec3::unit_y()),
             ..Default::default()
         })

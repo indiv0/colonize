@@ -17,7 +17,7 @@ license = "GPL-3.0-or-later"
 edition = "2018"
 
 [dependencies]
-bevy = { git = "https://github.com/bevyengine/bevy", rev = "2e2423139e0cd8efda3aa0d474d3eb231dad566b", default-features = false }
+bevy = { git = "https://github.com/bevyengine/bevy", rev = "2e2423139e0cd8efda3aa0d474d3eb231dad566b", default-features = false, features = ["bevy_gltf", "bevy_winit", "png", "render"] }
 bevy_mod_picking = { git = "https://github.com/indiv0/bevy_mod_picking" }
 bevy_rapier3d = { git = "https://github.com/indiv0/bevy_rapier", default-features = false, features = ["dim3"]}
 bevy_webgl2 = { git = "https://github.com/indiv0/bevy_webgl2", optional = true }
@@ -30,20 +30,12 @@ default = [
     "bevy/bevy_audio",
     "bevy/bevy_dynamic_plugin",
     "bevy/bevy_gilrs",
-    "bevy/bevy_gltf",
     "bevy/bevy_wgpu",
-    "bevy/bevy_winit",
-    "bevy/render",
-    "bevy/png",
     "bevy/hdr",
     "bevy/mp3",
     "bevy/x11"
 ]
 wasm = [
-    "bevy/bevy_gltf",
-    "bevy/bevy_winit",
-    "bevy/render",
-    "bevy/png",
     "bevy_webgl2"
 ]
 

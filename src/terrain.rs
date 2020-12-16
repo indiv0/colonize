@@ -31,7 +31,7 @@ use building_blocks::{
 use noise::{Fbm, MultiFractal, NoiseFn};
 
 const CHUNK_SIZE: usize = 64;
-const REGION_SIZE: usize = 256; // CHUNK_SIZE * NUM_CHUNKS
+const REGION_SIZE: usize = 128; // CHUNK_SIZE * NUM_CHUNKS
 
 pub struct TerrainPlugin;
 

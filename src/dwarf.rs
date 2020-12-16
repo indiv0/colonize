@@ -5,12 +5,15 @@ use bevy::{
     pbr::PbrBundle,
     prelude::Assets,
     prelude::{
-        shape, AppBuilder, Color, Commands, IntoSystem, KeyCode, Mesh, Plugin, StandardMaterial,
-        Transform,
+        info, shape, AppBuilder, Color, Commands, IntoSystem, KeyCode, Mesh, Plugin,
+        StandardMaterial, Transform,
     },
 };
 use bevy_mod_picking::{HighlightablePickMesh, InteractableMesh, PickableMesh, SelectablePickMesh};
-use bevy_rapier3d::rapier::{dynamics::RigidBodyBuilder, geometry::ColliderBuilder};
+use bevy_rapier3d::{
+    physics::EventQueue,
+    rapier::{dynamics::RigidBodyBuilder, geometry::ColliderBuilder},
+};
 use rand::{thread_rng, Rng};
 
 use crate::terrain::TerrainResource;
@@ -116,6 +119,16 @@ fn input_system(
     // If the `T` button is pressed, spawn in 10 more dwarves.
     if keyboard_input.pressed(KeyCode::T) {
         add_dwarves(commands, meshes, materials, terrain_res);
+    }
+}
+
+fn print_events(events: Res<EventQueue>) {
+    while let Ok(proximity_event) = events.proximity_events.pop() {
+        info!("Received proximity event: {:?}", proximity_event);
+    }
+
+    while let Ok(contact_event) = events.contact_events.pop() {
+        info!("Received contact event: {:?}", contact_event);
     }
 }
 

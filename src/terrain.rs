@@ -10,12 +10,12 @@
 //! is (384, 384, 384).
 use std::collections::HashMap;
 
-use bevy::prelude::*;
+use bevy::{prelude::*, render::pipeline::RenderPipeline};
 use bevy::render::mesh::{Indices, VertexAttributeValues};
 use bevy::render::pipeline::PrimitiveTopology;
 use bevy::tasks::ComputeTaskPool;
 use bevy_rapier3d::rapier::{dynamics::RigidBodyBuilder, geometry::ColliderBuilder, math::Point};
-use building_blocks::prelude::{copy_extent, LocalChunkCache3};
+use building_blocks::{mesh::PosNormTexMesh, prelude::{copy_extent, LocalChunkCache3}};
 use building_blocks::storage::{Array3, ChunkMap, ChunkMapReader, IsEmpty, Snappy};
 use building_blocks::{
     core::{Extent3i, Point3i, PointN},
@@ -29,6 +29,8 @@ use building_blocks::{
     storage::{ForEachMut, LocalChunkCache},
 };
 use noise::{Fbm, MultiFractal, NoiseFn};
+
+use crate::shader::{ArrayTexture, ArrayTexturePipeline};
 
 const CHUNK_SIZE: usize = 64;
 const REGION_SIZE: usize = 128; // CHUNK_SIZE * NUM_CHUNKS
@@ -70,7 +72,7 @@ impl TerrainResource {
     }
 
     /// Returns the y-value of the surface of the terrain at the specified x & z coordinates,
-    /// as determined solely by the terrain generation algorithm.
+    /// as determined solely by the terrain generatio    pipeline: Res<ArrayTexturePipeline>,n algorithm.
     ///
     /// If the terrain gets modified after generation (e.g. digging holes or adding structures)
     /// the modifications are not taken into account by this function.
@@ -107,6 +109,11 @@ impl Default for MeshResource {
 
 #[derive(Default)]
 pub struct MeshMaterial(pub Handle<StandardMaterial>);
+struct ShaderHandles {
+    material: Handle<StandardMaterial>,
+    render_pipelines: RenderPipelines,
+    array_texture: Handle<ArrayTexture>,
+}
 
 #[derive(Clone, Copy)]
 struct CubeVoxel(bool);
@@ -261,6 +268,8 @@ fn generate_meshes(
     terrain: Res<TerrainResource>,
     mut mesh_res: ResMut<MeshResource>,
     pool: Res<ComputeTaskPool>,
+    pipeline: Res<ArrayTexturePipeline>,
+    array_textures: Res<Assets<ArrayTexture>>,
 ) {
     let map_ref = &terrain.chunks;
     let chunk_keys = map_ref
@@ -281,7 +290,11 @@ fn generate_meshes(
             let entity = generate_mesh_entity(
                 mesh,
                 commands,
-                terrain.materials[0].0.clone(),
+            ShaderHandles {
+                    material: terrain.materials[0].0.clone(),
+                    render_pipelines: RenderPipelines::from_pipelines(vec![RenderPipeline::new(pipeline.0.clone())]),
+                    array_texture: array_textures.get_handle("terrain.png")
+                },
                 &mut mesh_assets,
             );
             trace!("Inserting {:?} into the mesh map", p);
@@ -300,7 +313,7 @@ fn generate_meshes(
 async fn generate_mesh(
     map_ref: &ChunkMap3<CubeVoxel>,
     chunk_key: &Point3i,
-) -> (Point3i, Option<PosNormMesh>) {
+) -> (Point3i, Option<PosNormTexMesh>) {
     trace!("Generating mesh for chunk at {:?}", chunk_key);
     let local_cache = LocalChunkCache3::new();
     let map_reader = ChunkMapReader::new(map_ref, &local_cache);
@@ -315,10 +328,10 @@ async fn generate_mesh(
     let mut buffer = GreedyQuadsBuffer::new(padded_chunk_extent);
     greedy_quads(&padded_chunk, &padded_chunk_extent, &mut buffer);
 
-    let mut mesh = PosNormMesh::default();
+    let mut mesh = PosNormTexMesh::default();
     for group in buffer.quad_groups.iter() {
         for (quad, _material) in group.quads.iter() {
-            group.face.add_quad_to_pos_norm_mesh(&quad, &mut mesh);
+            group.face.add_quad_to_pos_norm_tex_mesh(&quad, &mut mesh);
         }
     }
 
@@ -330,9 +343,9 @@ async fn generate_mesh(
 }
 
 fn generate_mesh_entity(
-    mesh: PosNormMesh,
+    mesh: PosNormTexMesh,
     commands: &mut Commands,
-    material: Handle<StandardMaterial>,
+    shader_handles: ShaderHandles,
     meshes: &mut Assets<Mesh>,
 ) -> (Entity, Handle<Mesh>) {
     assert_eq!(mesh.positions.len(), mesh.normals.len());
@@ -355,7 +368,7 @@ fn generate_mesh_entity(
     render_mesh.set_attribute("Vertex_Normal", VertexAttributeValues::Float3(mesh.normals));
     render_mesh.set_attribute(
         "Vertex_Uv",
-        VertexAttributeValues::Float2(vec![[0.0; 2]; num_vertices]),
+        VertexAttributeValues::Float2(mesh.tex_coords),
     );
     // TODO: find a way to avoid this usize -> u32 conversion
     render_mesh.set_indices(Some(Indices::U32(
@@ -367,10 +380,11 @@ fn generate_mesh_entity(
     let entity = commands
         .spawn(PbrBundle {
             mesh: mesh_handle.clone_weak(),
-            material,
+            render_pipelines: shader_handles.render_pipelines,
             ..Default::default()
         })
         .with(Chunk)
+        .with(shader_handles.array_texture)
         .current_entity()
         .unwrap();
     collider = collider.user_data(entity.to_bits() as u128);

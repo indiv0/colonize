@@ -8,6 +8,7 @@ extern crate rand;
 
 mod camera;
 mod dwarf;
+mod shader;
 mod terrain;
 
 use bevy::prelude::*;
@@ -16,6 +17,7 @@ use bevy_rapier3d::physics::RapierPhysicsPlugin;
 
 use camera::fps::{CameraMovementPlugin, CameraState};
 use dwarf::DwarfPlugin;
+use shader::ShaderPlugin;
 use terrain::TerrainPlugin;
 
 fn main() {
@@ -35,6 +37,7 @@ fn main() {
             .add_plugin(DebugPickingPlugin)
             .add_startup_system(setup.system())
             .add_system(toggle_cursor.system())
+            .add_plugin(ShaderPlugin)
             .add_plugin(TerrainPlugin)
             .add_plugin(RapierPhysicsPlugin)
             .run();
@@ -49,6 +52,7 @@ fn main() {
             .add_plugin(InteractablePickingPlugin)
             .add_plugin(DebugPickingPlugin)
             .add_startup_system(setup.system())
+            .add_plugin(ShaderPlugin)
             .add_plugin(TerrainPlugin)
             .add_plugin(RapierPhysicsPlugin)
             .run();

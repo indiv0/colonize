@@ -87,7 +87,7 @@ impl Default for TerrainResource {
         Self {
             materials: Vec::new(),
             noise: Fbm::new().set_frequency(0.008).set_octaves(5),
-            chunks: ChunkMap::new(PointN([CHUNK_SIZE as i32; 3]), CubeVoxel(false), (), Snappy),
+            chunks: ChunkMap::new(PointN([CHUNK_SIZE as i32; 3]), CubeVoxel::Air, (), Snappy),
             generated_voxels: false,
             sea_level: 100.,
             y_offset: 10.,
@@ -116,19 +116,30 @@ struct ShaderHandles {
 }
 
 #[derive(Clone, Copy)]
-struct CubeVoxel(bool);
+enum CubeVoxel {
+    Air,
+    Stone,
+    Grass
+}
 
 impl MaterialVoxel for CubeVoxel {
     type Material = u8;
 
     fn material(&self) -> Self::Material {
-        1 // only 1 material
+        match self {
+            CubeVoxel::Air => 0,
+            CubeVoxel::Stone => 1,
+            CubeVoxel::Grass => 2,
+        }
     }
 }
 
 impl IsEmpty for CubeVoxel {
     fn is_empty(&self) -> bool {
-        !self.0
+        match self {
+            CubeVoxel::Air => true,
+            CubeVoxel::Stone | CubeVoxel::Grass => false,
+        }
     }
 }
 
@@ -200,7 +211,7 @@ fn reset_world(
 ) {
     // Delete the voxels associated with the current world.
     terrain_res.chunks =
-        ChunkMap::new(PointN([CHUNK_SIZE as i32; 3]), CubeVoxel(false), (), Snappy);
+        ChunkMap::new(PointN([CHUNK_SIZE as i32; 3]), CubeVoxel::Air, (), Snappy);
 
     // Delete the entities and meshes associated with the current world.
     let to_remove = mesh_res.meshes.keys().cloned().collect::<Vec<_>>();
@@ -225,16 +236,18 @@ fn generate_voxels(mut terrain_res: ResMut<TerrainResource>) {
     trace!("Generating voxels between {:?} and {:?}", min, max);
 
     let material_from_height = |height| {
-        if height < 0.9 * terrain_res.y_scale() {
-            CubeVoxel(true)
+        if height < -55. {
+            CubeVoxel::Stone
+        } else if height < -50. {
+            CubeVoxel::Grass
         } else {
-            CubeVoxel(false)
+            CubeVoxel::Air
         }
     };
 
     let local_cache = LocalChunkCache::new();
     let query_extent = Extent3i::from_min_and_shape(min, PointN([REGION_SIZE as i32; 3]));
-    let mut dense_map = Array3::fill(query_extent, CubeVoxel(false));
+    let mut dense_map = Array3::fill(query_extent, CubeVoxel::Air);
     for z in min.z()..max.z() {
         for x in min.x()..max.x() {
             let max_y = (terrain_res.noise.get([x as f64, z as f64]) * terrain_res.y_scale()
@@ -286,9 +299,10 @@ fn generate_meshes(
         }
     });
     for mesh in meshes.into_iter() {
-        if let (p, Some(mesh)) = mesh {
+        if let (p, Some((mesh, mesh_voxels))) = mesh {
             let entity = generate_mesh_entity(
                 mesh,
+                mesh_voxels,
                 commands,
             ShaderHandles {
                     material: terrain.materials[0].0.clone(),
@@ -313,14 +327,14 @@ fn generate_meshes(
 async fn generate_mesh(
     map_ref: &ChunkMap3<CubeVoxel>,
     chunk_key: &Point3i,
-) -> (Point3i, Option<PosNormTexMesh>) {
+) -> (Point3i, Option<(PosNormTexMesh, MeshVoxels)>) {
     trace!("Generating mesh for chunk at {:?}", chunk_key);
     let local_cache = LocalChunkCache3::new();
     let map_reader = ChunkMapReader::new(map_ref, &local_cache);
     let padded_chunk_extent =
         padded_greedy_quads_chunk_extent(&map_ref.extent_for_chunk_at_key(chunk_key));
 
-    let mut padded_chunk = Array3::fill(padded_chunk_extent, CubeVoxel(false));
+    let mut padded_chunk = Array3::fill(padded_chunk_extent, CubeVoxel::Air);
     copy_extent(&padded_chunk_extent, &map_reader, &mut padded_chunk);
 
     // TODO bevy: we could avoid re-allocating the buffers on every call if we had
@@ -329,21 +343,27 @@ async fn generate_mesh(
     greedy_quads(&padded_chunk, &padded_chunk_extent, &mut buffer);
 
     let mut mesh = PosNormTexMesh::default();
+    let mut mesh_voxels = MeshVoxels(Vec::new());
     for group in buffer.quad_groups.iter() {
-        for (quad, _material) in group.quads.iter() {
+        for (quad, material) in group.quads.iter() {
             group.face.add_quad_to_pos_norm_tex_mesh(&quad, &mut mesh);
+            let material = *material as f32;
+            mesh_voxels.0.extend_from_slice(&[material; 4]);
         }
     }
 
     if mesh.is_empty() {
         (chunk_key.clone(), None)
     } else {
-        (chunk_key.clone(), Some(mesh))
+        (chunk_key.clone(), Some((mesh, mesh_voxels)))
     }
 }
 
+struct MeshVoxels(Vec<f32>);
+
 fn generate_mesh_entity(
     mesh: PosNormTexMesh,
+    mesh_voxels: MeshVoxels,
     commands: &mut Commands,
     shader_handles: ShaderHandles,
     meshes: &mut Assets<Mesh>,
@@ -369,6 +389,11 @@ fn generate_mesh_entity(
     render_mesh.set_attribute(
         "Vertex_Uv",
         VertexAttributeValues::Float2(mesh.tex_coords),
+    );
+    warn!("voxels: {:?}", mesh_voxels.0);
+    render_mesh.set_attribute(
+        "Vertex_Voxel",
+        VertexAttributeValues::Float(mesh_voxels.0),
     );
     // TODO: find a way to avoid this usize -> u32 conversion
     render_mesh.set_indices(Some(Indices::U32(

@@ -111,10 +111,12 @@ const VERTEX_SHADER: &str = r#"
 layout(location = 0) in vec3 Vertex_Position;
 layout(location = 1) in vec3 Vertex_Normal;
 layout(location = 2) in vec2 Vertex_Uv;
+layout(location = 3) in float Vertex_Voxel;
 
 layout(location = 0) out vec3 v_Position;
 layout(location = 1) out vec3 v_Normal;
 layout(location = 2) out vec2 v_Uv;
+layout(location = 3) out float v_Voxel;
 
 layout(set = 0, binding = 0) uniform Camera {
     mat4 ViewProj;
@@ -128,6 +130,7 @@ void main() {
     v_Normal = mat3(Model) * Vertex_Normal;
     v_Position = (Model * vec4(Vertex_Position, 1.0)).xyz;
     v_Uv = Vertex_Uv;
+    v_Voxel = Vertex_Voxel;
     gl_Position = ViewProj * vec4(v_Position, 1.0);
     //v_Position = ViewProj * Model * vec4(Vertex_Position, 1.0);
     //gl_Position = v_Position;
@@ -178,6 +181,7 @@ struct Light {
 layout(location = 0) in vec3 v_Position;
 layout(location = 1) in vec3 v_Normal;
 layout(location = 2) in vec2 v_Uv;
+layout(location = 3) in float v_Voxel;
 //layout(location = 4) in float v_Vox_Val;
 //layout(location = 6) in float v_AO;
 layout(location = 0) out vec4 o_Target;
@@ -227,7 +231,8 @@ void main() {
 
     //// multiply the light by material color
     //o_Target = output_color;
-    o_Target = vec4(1.0, 1.0, 1.0, 0.5);
+    float output_color = v_Voxel / 2.0;
+    o_Target = vec4(output_color, output_color, output_color, 1.0);
 }
 "#;
 

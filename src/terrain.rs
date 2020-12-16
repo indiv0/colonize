@@ -33,6 +33,9 @@ use noise::{Fbm, MultiFractal, NoiseFn};
 const CHUNK_SIZE: usize = 64;
 const REGION_SIZE: usize = 128; // CHUNK_SIZE * NUM_CHUNKS
 
+#[derive(Debug)]
+pub struct Chunk;
+
 pub struct TerrainPlugin;
 
 impl Plugin for TerrainPlugin {
@@ -339,7 +342,7 @@ fn generate_mesh_entity(
     // TODO: does this position actually need to match the position of the chunk mesh?
     //   It appears to work fine without any translation applied.
     let rigid_body = RigidBodyBuilder::new_static();
-    let collider = ColliderBuilder::trimesh(
+    let mut collider = ColliderBuilder::trimesh(
         nested_array_f32_to_points(&mesh.positions),
         flat_array_f32_to_points(&mesh.indices),
     );
@@ -367,10 +370,11 @@ fn generate_mesh_entity(
             material,
             ..Default::default()
         })
-        .with(rigid_body)
-        .with(collider)
+        .with(Chunk)
         .current_entity()
         .unwrap();
+    collider = collider.user_data(entity.to_bits() as u128);
+    commands.insert(entity, (rigid_body, collider));
     (entity, mesh_handle)
 }
 

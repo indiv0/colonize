@@ -1,24 +1,51 @@
 use bevy::{
-    ecs::{Res, ResMut},
+    ecs::{Entity, Query, Res, ResMut},
     input::Input,
     math::Vec3,
     pbr::PbrBundle,
     prelude::Assets,
     prelude::{
-        info, shape, AppBuilder, Color, Commands, IntoSystem, KeyCode, Mesh, Plugin,
+        shape, trace, AppBuilder, Color, Commands, IntoSystem, KeyCode, Mesh, Plugin,
         StandardMaterial, Transform,
     },
 };
 use bevy_mod_picking::{HighlightablePickMesh, InteractableMesh, PickableMesh, SelectablePickMesh};
 use bevy_rapier3d::{
     physics::EventQueue,
-    rapier::{dynamics::RigidBodyBuilder, geometry::ColliderBuilder},
+    rapier::{
+        dynamics::RigidBodyBuilder,
+        geometry::{ColliderBuilder, ColliderSet, ContactEvent},
+    },
 };
 use rand::{thread_rng, Rng};
 
-use crate::terrain::TerrainResource;
+use crate::terrain::{Chunk, TerrainResource};
 
-struct Dwarf;
+#[derive(Debug)]
+enum State {
+    Falling,
+    Stationary,
+}
+
+#[derive(Debug)]
+struct Dwarf {
+    state: State,
+}
+
+impl Dwarf {
+    fn set_state(&mut self, state: State) {
+        self.state = state
+    }
+}
+
+impl Default for Dwarf {
+    fn default() -> Self {
+        Self {
+            state: State::Falling,
+        }
+    }
+}
+
 #[derive(Debug)]
 struct Name(String);
 
@@ -78,25 +105,26 @@ fn spawn_dwarf(
     materials: &mut ResMut<Assets<StandardMaterial>>,
 ) {
     const SIZE: f32 = 1.;
-    // Dynamic rigid-body with cuboid shape as the collision box.
-    let rigid_body = RigidBodyBuilder::new_dynamic().translation(px, py, pz);
-    let collider = ColliderBuilder::cuboid(SIZE, SIZE, SIZE);
 
-    commands
+    let entity = commands
         .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Cube { size: SIZE })),
             material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
             transform: Transform::from_translation(Vec3::new(px, py, pz)),
             ..Default::default()
         })
-        .with(Dwarf)
+        .with(Dwarf::default())
         .with(Name(name.to_string()))
-        .with(rigid_body)
-        .with(collider)
         .with(PickableMesh::default())
         .with(InteractableMesh::default())
         .with(HighlightablePickMesh::default())
-        .with(SelectablePickMesh::default());
+        .with(SelectablePickMesh::default())
+        .current_entity()
+        .unwrap();
+    // Dynamic rigid-body with cuboid shape as the collision box.
+    let rigid_body = RigidBodyBuilder::new_dynamic().translation(px, py, pz);
+    let collider = ColliderBuilder::cuboid(SIZE, SIZE, SIZE).user_data(entity.to_bits() as u128);
+    commands.insert(entity, (rigid_body, collider));
 }
 
 /// Chooses a random point with a circle.
@@ -122,13 +150,82 @@ fn input_system(
     }
 }
 
-fn print_events(events: Res<EventQueue>) {
+fn handle_physics_events(
+    events: Res<EventQueue>,
+    collider_set: Res<ColliderSet>,
+    mut dwarf_query: Query<&mut Dwarf>,
+    chunk_query: Query<&Chunk>,
+) {
     while let Ok(proximity_event) = events.proximity_events.pop() {
-        info!("Received proximity event: {:?}", proximity_event);
+        trace!("Received proximity event: {:?}", proximity_event);
     }
 
     while let Ok(contact_event) = events.contact_events.pop() {
-        info!("Received contact event: {:?}", contact_event);
+        trace!("Received contact event: {:?}", contact_event);
+
+        if let ContactEvent::Started(handle_1, handle_2) = contact_event {
+            // If a dwarf has collided with the ground, mark him as no longer falling.
+            let collider_1 = collider_set.get(handle_1).unwrap();
+            let collider_2 = collider_set.get(handle_2).unwrap();
+
+            let entity_1 = Entity::from_bits(collider_1.user_data as u64);
+            let entity_2 = Entity::from_bits(collider_2.user_data as u64);
+
+            let mut maybe_dwarf_entity: Option<Entity> = Option::None;
+            if let Ok(_) = dwarf_query.get_component::<Dwarf>(entity_1) {
+                maybe_dwarf_entity.replace(entity_1);
+            } else if let Ok(_) = dwarf_query.get_component::<Dwarf>(entity_2) {
+                maybe_dwarf_entity.replace(entity_2);
+            }
+
+            let mut maybe_chunk_entity: Option<Entity> = Option::None;
+            if let Ok(_) = chunk_query.get_component::<Chunk>(entity_1) {
+                maybe_chunk_entity.replace(entity_1);
+            } else if let Ok(_) = chunk_query.get_component::<Chunk>(entity_2) {
+                maybe_chunk_entity.replace(entity_2);
+            }
+
+            if let Some(dwarf_entity) = maybe_dwarf_entity {
+                if let Some(_chunk_entity) = maybe_chunk_entity {
+                    let mut dwarf = dwarf_query
+                        .get_component_mut::<Dwarf>(dwarf_entity)
+                        .unwrap();
+                    dwarf.set_state(State::Stationary);
+                    trace!("Dwarf is now stationary");
+                }
+            }
+        } else if let ContactEvent::Stopped(handle_1, handle_2) = contact_event {
+            // If a dwarf is colliding with the ground, mark him as falling.
+            let collider_1 = collider_set.get(handle_1).unwrap();
+            let collider_2 = collider_set.get(handle_2).unwrap();
+
+            let entity_1 = Entity::from_bits(collider_1.user_data as u64);
+            let entity_2 = Entity::from_bits(collider_2.user_data as u64);
+
+            let mut maybe_dwarf_entity: Option<Entity> = Option::None;
+            if let Ok(_) = dwarf_query.get_component::<Dwarf>(entity_1) {
+                maybe_dwarf_entity.replace(entity_1);
+            } else if let Ok(_) = dwarf_query.get_component::<Dwarf>(entity_2) {
+                maybe_dwarf_entity.replace(entity_2);
+            }
+
+            let mut maybe_chunk_entity: Option<Entity> = Option::None;
+            if let Ok(_) = chunk_query.get_component::<Chunk>(entity_1) {
+                maybe_chunk_entity.replace(entity_1);
+            } else if let Ok(_) = chunk_query.get_component::<Chunk>(entity_2) {
+                maybe_chunk_entity.replace(entity_2);
+            }
+
+            if let Some(dwarf_entity) = maybe_dwarf_entity {
+                if let Some(_chunk_entity) = maybe_chunk_entity {
+                    let mut dwarf = dwarf_query
+                        .get_component_mut::<Dwarf>(dwarf_entity)
+                        .unwrap();
+                    dwarf.set_state(State::Falling);
+                    trace!("Dwarf is now falling");
+                }
+            }
+        }
     }
 }
 
@@ -138,6 +235,6 @@ impl Plugin for DwarfPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_startup_system(add_dwarves.system())
             .add_system(input_system)
-            .add_system(print_events);
+            .add_system(handle_physics_events);
     }
 }

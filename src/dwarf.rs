@@ -57,30 +57,43 @@ fn add_dwarves(
 
     for name in &names {
         let position = spawn_positions.next().unwrap();
-
-        // Dynamic rigid-body with cuboid shape as the collision box.
-        let rigid_body =
-            RigidBodyBuilder::new_dynamic().translation(position.0, position.1, position.2);
-        let collider = ColliderBuilder::cuboid(1., 1., 1.);
-
-        commands
-            .spawn(PbrBundle {
-                mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
-                material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
-                transform: Transform::from_translation(Vec3::new(
-                    position.0, position.1, position.2,
-                )),
-                ..Default::default()
-            })
-            .with(Dwarf)
-            .with(Name(name.to_string()))
-            .with(rigid_body)
-            .with(collider)
-            .with(PickableMesh::default())
-            .with(InteractableMesh::default())
-            .with(HighlightablePickMesh::default())
-            .with(SelectablePickMesh::default());
+        spawn_dwarf(
+            name.to_string(),
+            position,
+            commands,
+            &mut meshes,
+            &mut materials,
+        );
     }
+}
+
+fn spawn_dwarf(
+    name: String,
+    (px, py, pz): (f32, f32, f32),
+    commands: &mut Commands,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+) {
+    const SIZE: f32 = 1.;
+    // Dynamic rigid-body with cuboid shape as the collision box.
+    let rigid_body = RigidBodyBuilder::new_dynamic().translation(px, py, pz);
+    let collider = ColliderBuilder::cuboid(SIZE, SIZE, SIZE);
+
+    commands
+        .spawn(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Cube { size: SIZE })),
+            material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
+            transform: Transform::from_translation(Vec3::new(px, py, pz)),
+            ..Default::default()
+        })
+        .with(Dwarf)
+        .with(Name(name.to_string()))
+        .with(rigid_body)
+        .with(collider)
+        .with(PickableMesh::default())
+        .with(InteractableMesh::default())
+        .with(HighlightablePickMesh::default())
+        .with(SelectablePickMesh::default());
 }
 
 /// Chooses a random point with a circle.
@@ -111,6 +124,7 @@ pub(crate) struct DwarfPlugin;
 impl Plugin for DwarfPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_startup_system(add_dwarves.system())
-            .add_system(input_system);
+            .add_system(input_system)
+            .add_system(print_events);
     }
 }

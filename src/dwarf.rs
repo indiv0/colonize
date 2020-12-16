@@ -11,9 +11,9 @@ use bevy::{
 };
 use bevy_mod_picking::{HighlightablePickMesh, InteractableMesh, PickableMesh, SelectablePickMesh};
 use bevy_rapier3d::{
-    physics::EventQueue,
+    physics::{EventQueue, RigidBodyHandleComponent},
     rapier::{
-        dynamics::RigidBodyBuilder,
+        dynamics::{RigidBody, RigidBodyBuilder, RigidBodySet},
         geometry::{ColliderBuilder, ColliderSet, ContactEvent},
     },
 };
@@ -21,7 +21,7 @@ use rand::{thread_rng, Rng};
 
 use crate::terrain::{Chunk, TerrainResource};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 enum State {
     Falling,
     Stationary,
@@ -29,20 +29,18 @@ enum State {
 
 #[derive(Debug)]
 struct Dwarf {
-    state: State,
+    free_fall: bool,
 }
 
 impl Dwarf {
-    fn set_state(&mut self, state: State) {
-        self.state = state
+    fn set_free_fall(&mut self, free_fall: bool) {
+        self.free_fall = free_fall
     }
 }
 
 impl Default for Dwarf {
     fn default() -> Self {
-        Self {
-            state: State::Falling,
-        }
+        Self { free_fall: true }
     }
 }
 
@@ -190,7 +188,7 @@ fn handle_physics_events(
                     let mut dwarf = dwarf_query
                         .get_component_mut::<Dwarf>(dwarf_entity)
                         .unwrap();
-                    dwarf.set_state(State::Stationary);
+                    dwarf.set_free_fall(false);
                     trace!("Dwarf is now stationary");
                 }
             }
@@ -221,10 +219,26 @@ fn handle_physics_events(
                     let mut dwarf = dwarf_query
                         .get_component_mut::<Dwarf>(dwarf_entity)
                         .unwrap();
-                    dwarf.set_state(State::Falling);
+                    dwarf.set_free_fall(true);
                     trace!("Dwarf is now falling");
                 }
             }
+        }
+    }
+}
+
+fn move_around(
+    mut rigid_body_set: ResMut<RigidBodySet>,
+    mut dwarf_rigid_body_query: Query<(&mut Dwarf, &Name, &RigidBodyHandleComponent)>,
+) {
+    for (dwarf, name, rigid_body_handle) in dwarf_rigid_body_query.iter_mut() {
+        let rigid_body = rigid_body_set.get(rigid_body_handle.handle()).unwrap();
+        // A dwarf that is falling can't do anything until they stop falling.
+        // A dwarf that is in motion stays in motion.
+        let is_idle = !dwarf.free_fall && !rigid_body.is_moving();
+        if is_idle {
+            // If the dwarf is idle, then that means it can start performing an action.
+            trace!("Dwarf {:?} is now walking around", name);
         }
     }
 }
@@ -235,6 +249,7 @@ impl Plugin for DwarfPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_startup_system(add_dwarves.system())
             .add_system(input_system)
-            .add_system(handle_physics_events);
+            .add_system(handle_physics_events)
+            .add_system(move_around);
     }
 }

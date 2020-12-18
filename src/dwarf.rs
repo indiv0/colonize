@@ -1,15 +1,5 @@
-use bevy::{
-    ecs::{Entity, Query, Res, ResMut},
-    input::Input,
-    math::Vec3,
-    pbr::PbrBundle,
-    prelude::Assets,
-    prelude::{
-        shape, trace, AppBuilder, Color, Commands, IntoSystem, KeyCode, Mesh, Plugin,
-        StandardMaterial, Transform,
-    },
-};
-use bevy_mod_picking::{HighlightablePickMesh, InteractableMesh, PickableMesh, SelectablePickMesh};
+use bevy::{ecs::{Entity, Query, Res, ResMut}, input::Input, math::Vec3, pbr::PbrBundle, prelude::Assets, prelude::{AppBuilder, Color, Commands, IntoSystem, KeyCode, Mesh, MouseButton, Plugin, StandardMaterial, Transform, shape, trace}};
+use bevy_mod_picking::{Group, HighlightablePickMesh, InteractableMesh, PickableMesh, SelectablePickMesh};
 use bevy_rapier3d::{na::{Vector2, Vector3}, physics::{EventQueue, RigidBodyHandleComponent}, rapier::{
         dynamics::{RigidBody, RigidBodyBuilder, RigidBodySet},
         geometry::{ColliderBuilder, ColliderSet, ContactEvent},
@@ -27,6 +17,11 @@ enum State {
 #[derive(Debug, PartialEq)]
 enum Task {
     RandomWalk,
+}
+
+// Struct for storing the currently selected dwarf, if any.
+struct SelectedDwarf {
+    dwarf: Option<Entity>,
 }
 
 #[derive(Debug)]
@@ -100,6 +95,8 @@ fn add_dwarves(
             &mut materials,
         );
     }
+
+    commands.insert_resource(SelectedDwarf { dwarf: None });
 }
 
 fn spawn_dwarf(
@@ -256,6 +253,63 @@ fn move_around(
     }
 }
 
+fn select_dwarves(event_query: Query<(&InteractableMesh, Entity)>,
+    mut dwarf_query: Query<&mut Dwarf>,
+    mut selected_dwarf: ResMut<SelectedDwarf>,
+) {
+    for (interactable, entity) in &mut event_query.iter() {
+        let mouse_down_event = interactable
+            .mouse_down_event(&Group::default(), MouseButton::Left)
+            .unwrap();
+        // If a mouse down event has occurred, select the dwarf for motion.
+        if mouse_down_event.is_none() {
+            continue;
+        }
+
+        // Check if the entity is a dwarf.
+        if let Ok(dwarf) = dwarf_query.get_component::<Dwarf>(entity) {
+            selected_dwarf.dwarf = Some(entity);
+        }
+    }
+}
+
+fn movement_direction(
+    input: &Res<Input<KeyCode>>,
+    positive: &[KeyCode],
+    negative: &[KeyCode],
+) -> i8 {
+    let mut direction = 0;
+    if positive.iter().any(|k| input.pressed(*k)) {
+        direction += 1;
+    }
+    if negative.iter().any(|k| input.pressed(*k)) {
+        direction -= 1;
+    }
+    direction
+}
+
+fn keyboard_movement_system(
+    keyboard_input: Res<Input<KeyCode>>,
+    mut rigid_body_set: ResMut<RigidBodySet>,
+    mut selected_dwarf: ResMut<SelectedDwarf>,
+    mut dwarf_query: Query<&mut RigidBodyHandleComponent>,
+) {
+    let mut rng = thread_rng();
+    if let Some(entity) = selected_dwarf.dwarf {
+        let rigid_body_handle = dwarf_query.get_component_mut::<RigidBodyHandleComponent>(entity).unwrap();
+        let rigid_body = rigid_body_set.get_mut(rigid_body_handle.handle()).unwrap();
+
+        let axis_backward = movement_direction(&keyboard_input, &[KeyCode::Z], &[KeyCode::X]);
+        let axis_right = movement_direction(&keyboard_input, &[KeyCode::C], &[KeyCode::V]);
+        let axis_up = movement_direction(&keyboard_input, &[KeyCode::B], &[KeyCode::N]);
+
+        if axis_backward != 0 || axis_right != 0 || axis_up != 0 {
+            let impulse = Vector3::new(axis_backward as f32, axis_right as f32, axis_up as f32).normalize() * 10.;
+            rigid_body.apply_impulse(impulse, true);
+        }
+    }
+}
+
 pub(crate) struct DwarfPlugin;
 
 impl Plugin for DwarfPlugin {
@@ -263,6 +317,8 @@ impl Plugin for DwarfPlugin {
         app.add_startup_system(add_dwarves.system())
             .add_system(input_system)
             .add_system(handle_physics_events)
-            .add_system(move_around);
+            .add_system(move_around)
+            .add_system(select_dwarves)
+            .add_system(keyboard_movement_system);
     }
 }

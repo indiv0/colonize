@@ -12,14 +12,10 @@ use bevy::{
 use bevy_mod_picking::{
     Group, HighlightablePickMesh, InteractableMesh, PickableMesh, SelectablePickMesh,
 };
-use bevy_rapier3d::{
-    na::Vector3,
-    physics::{EventQueue, RigidBodyHandleComponent},
-    rapier::{
+use bevy_rapier3d::{na::{Point3, Vector3}, physics::{EventQueue, RigidBodyHandleComponent}, rapier::{
         dynamics::{RigidBodyBuilder, RigidBodySet},
         geometry::{ColliderBuilder, ColliderSet, ContactEvent},
-    },
-};
+    }};
 use rand::{thread_rng, Rng};
 
 use crate::terrain::{Chunk, TerrainResource};
@@ -144,7 +140,7 @@ fn spawn_dwarf(
         .unwrap();
     // Dynamic rigid-body with cuboid shape as the collision box.
     let rigid_body = RigidBodyBuilder::new_dynamic().translation(px, py, pz);
-    let collider = ColliderBuilder::cuboid(SIZE, SIZE, SIZE).user_data(entity.to_bits() as u128);
+    let collider = ColliderBuilder::cuboid(SIZE / 2., SIZE / 2., SIZE / 2.).user_data(entity.to_bits() as u128);
     commands.insert(entity, (rigid_body, collider));
 }
 
@@ -242,8 +238,9 @@ fn handle_physics_events(
                     let mut dwarf = dwarf_query
                         .get_component_mut::<Dwarf>(dwarf_entity)
                         .unwrap();
-                    dwarf.set_free_fall(true);
-                    trace!("Dwarf is now falling");
+                    // FIXME
+                    //dwarf.set_free_fall(true);
+                    //trace!("Dwarf is now falling");
                 }
             }
         }
@@ -253,6 +250,7 @@ fn handle_physics_events(
 fn move_around(
     mut rigid_body_set: ResMut<RigidBodySet>,
     mut dwarf_rigid_body_query: Query<(&mut Dwarf, &Name, &RigidBodyHandleComponent)>,
+    terrain_res: ResMut<TerrainResource>,
 ) {
     let mut rng = thread_rng();
 
@@ -261,13 +259,21 @@ fn move_around(
         // A dwarf that is falling can't do anything until they stop falling.
         // A dwarf that is in motion stays in motion.
         let is_idle = !dwarf.free_fall && !rigid_body.is_moving();
-        if is_idle {
+        if !dwarf.free_fall {
             // If the dwarf is idle, then that means it can start performing an action.
-            trace!("Dwarf {:?} is now walking around", name);
-            dwarf.start_random_walk();
-            // TODO: do we need to wake up the rigidbody?
-            let impulse = Vector3::new(rng.gen::<f32>(), 0., rng.gen::<f32>()).normalize() * 1000.;
-            rigid_body.apply_impulse(impulse, true);
+            //trace!("Dwarf {:?} is now walking around", name);
+            if rng.gen::<f32>() < 0.05 {
+                let rigid_body_position = rigid_body.position().transform_point(&Point3::new(0., 0., 0.));
+                let nearest_gold = terrain_res.find_nearest_gold(rigid_body_position.x as i32, rigid_body_position.y as i32, rigid_body_position.z as i32);
+                if let Some(gold) = nearest_gold {
+                    let difference = rigid_body_position - Point3::new(gold.x() as f32, gold.y() as f32 + 1., gold.z() as f32);
+                    // TODO: do we need to wake up the rigidbody?
+                    //let impulse = Vector3::new(rng.gen::<f32>(), 0., rng.gen::<f32>()).normalize() * 100.;
+                    trace!("Dwarf {:?} is moving from {:?} to {:?}", name, rigid_body_position, gold);
+                    let impulse = -difference * 10.;
+                    rigid_body.apply_impulse(impulse, true);
+                }
+            }
         }
     }
 }

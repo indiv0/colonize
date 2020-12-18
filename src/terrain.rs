@@ -15,7 +15,7 @@ use bevy::render::mesh::{Indices, VertexAttributeValues};
 use bevy::render::pipeline::PrimitiveTopology;
 use bevy::tasks::ComputeTaskPool;
 use bevy_rapier3d::rapier::{dynamics::RigidBodyBuilder, geometry::ColliderBuilder, math::Point};
-use building_blocks::storage::{Array3, ChunkMap, ChunkMapReader, IsEmpty, Snappy};
+use building_blocks::{core::{Point2, Point3}, storage::{Array3, ChunkMap, ChunkMapReader, ForEach, IsEmpty, Snappy}};
 use building_blocks::{
     core::Extent2i,
     prelude::{copy_extent, LocalChunkCache3},
@@ -90,6 +90,22 @@ impl TerrainResource {
         // FIXME: I don't think this calculation is actually correct.
         (self.noise.get([x, z]) * self.y_scale() + self.y_offset).round() as i32
     }
+
+    pub(crate) fn find_nearest_gold(&self, x: i32, y: i32, z: i32) -> Option<Point3<i32>> {
+        const SEARCH_SIZE: i32 = 10;
+        let min = PointN([x, y, z]) + PointN([-(SEARCH_SIZE as i32 / 2); 3]);
+        let size = PointN([SEARCH_SIZE as i32; 3]);
+        let query_extent = Extent3i::from_min_and_shape(min, size);
+        let mut gold_loc = Option::None;
+        let local_cache = LocalChunkCache::new();
+        let reader = ChunkMapReader::new(&self.chunks, &local_cache);
+        reader.for_each(&query_extent, |p: Point3i, value| {
+            if value == CubeVoxel::Gold {
+                gold_loc.replace(p);
+            }
+        });
+        gold_loc
+    }
 }
 
 impl Default for TerrainResource {
@@ -120,7 +136,7 @@ impl Default for MeshResource {
 #[derive(Default)]
 pub struct MeshMaterial(pub Handle<StandardMaterial>);
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 enum CubeVoxel {
     Air,
     Stone,

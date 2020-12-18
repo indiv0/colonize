@@ -10,13 +10,10 @@ use bevy::{
     },
 };
 use bevy_mod_picking::{HighlightablePickMesh, InteractableMesh, PickableMesh, SelectablePickMesh};
-use bevy_rapier3d::{
-    physics::{EventQueue, RigidBodyHandleComponent},
-    rapier::{
+use bevy_rapier3d::{na::{Vector2, Vector3}, physics::{EventQueue, RigidBodyHandleComponent}, rapier::{
         dynamics::{RigidBody, RigidBodyBuilder, RigidBodySet},
         geometry::{ColliderBuilder, ColliderSet, ContactEvent},
-    },
-};
+    }};
 use rand::{thread_rng, Rng};
 
 use crate::terrain::{Chunk, TerrainResource};
@@ -27,20 +24,30 @@ enum State {
     Stationary,
 }
 
+#[derive(Debug, PartialEq)]
+enum Task {
+    RandomWalk,
+}
+
 #[derive(Debug)]
 struct Dwarf {
     free_fall: bool,
+    task: Option<Task>,
 }
 
 impl Dwarf {
     fn set_free_fall(&mut self, free_fall: bool) {
         self.free_fall = free_fall
     }
+
+    fn start_random_walk(&mut self) {
+        self.task = Some(Task::RandomWalk);
+    }
 }
 
 impl Default for Dwarf {
     fn default() -> Self {
-        Self { free_fall: true }
+        Self { free_fall: true, task: None }
     }
 }
 
@@ -231,14 +238,20 @@ fn move_around(
     mut rigid_body_set: ResMut<RigidBodySet>,
     mut dwarf_rigid_body_query: Query<(&mut Dwarf, &Name, &RigidBodyHandleComponent)>,
 ) {
-    for (dwarf, name, rigid_body_handle) in dwarf_rigid_body_query.iter_mut() {
-        let rigid_body = rigid_body_set.get(rigid_body_handle.handle()).unwrap();
+    let mut rng = thread_rng();
+
+    for (mut dwarf, name, rigid_body_handle) in dwarf_rigid_body_query.iter_mut() {
+        let rigid_body = rigid_body_set.get_mut(rigid_body_handle.handle()).unwrap();
         // A dwarf that is falling can't do anything until they stop falling.
         // A dwarf that is in motion stays in motion.
         let is_idle = !dwarf.free_fall && !rigid_body.is_moving();
         if is_idle {
             // If the dwarf is idle, then that means it can start performing an action.
             trace!("Dwarf {:?} is now walking around", name);
+            dwarf.start_random_walk();
+            // TODO: do we need to wake up the rigidbody?
+            let impulse = Vector3::new(rng.gen::<f32>(), 0., rng.gen::<f32>()).normalize() * 1000.;
+            rigid_body.apply_impulse(impulse, true);
         }
     }
 }

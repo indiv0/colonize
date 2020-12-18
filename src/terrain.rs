@@ -51,6 +51,9 @@ impl Plugin for TerrainPlugin {
 
 fn setup(mut res: ResMut<TerrainResource>, mut materials: ResMut<Assets<StandardMaterial>>) {
     res.materials.push(MeshMaterial(
+        materials.add(Color::rgb(0.5, 0.5, 0.5).into()), // Stone
+    ));
+    res.materials.push(MeshMaterial(
         materials.add(Color::rgb(0.376, 0.502, 0.22).into()), // Grass
     ));
 }
@@ -85,7 +88,7 @@ impl Default for TerrainResource {
         Self {
             materials: Vec::new(),
             noise: Fbm::new().set_frequency(0.008).set_octaves(5),
-            chunks: ChunkMap::new(PointN([CHUNK_SIZE as i32; 3]), CubeVoxel(false), (), Snappy),
+            chunks: ChunkMap::new(PointN([CHUNK_SIZE as i32; 3]), CubeVoxel::Air, (), Snappy),
             generated_voxels: false,
             sea_level: 100.,
             y_offset: 10.,
@@ -94,7 +97,7 @@ impl Default for TerrainResource {
 }
 
 struct MeshResource {
-    meshes: HashMap<Point3i, Option<(Entity, Handle<Mesh>)>>,
+    meshes: HashMap<Point3i, Option<Vec<(Entity, Handle<Mesh>)>>>,
 }
 
 impl Default for MeshResource {
@@ -109,19 +112,32 @@ impl Default for MeshResource {
 pub struct MeshMaterial(pub Handle<StandardMaterial>);
 
 #[derive(Clone, Copy)]
-struct CubeVoxel(bool);
+enum CubeVoxel {
+    Air,
+    Stone,
+    Grass
+}
 
 impl MaterialVoxel for CubeVoxel {
     type Material = u8;
 
     fn material(&self) -> Self::Material {
-        1 // only 1 material
+        match self {
+            // Technically air doesn't have a material since it doesn't get rendered, but we need to
+            // provide _something_ here.
+            CubeVoxel::Air => 0,
+            CubeVoxel::Stone => 0,
+            CubeVoxel::Grass => 1
+        }
     }
 }
 
 impl IsEmpty for CubeVoxel {
     fn is_empty(&self) -> bool {
-        !self.0
+        match self {
+            CubeVoxel::Air => true,
+            CubeVoxel::Stone | CubeVoxel::Grass => false,
+        }
     }
 }
 
@@ -193,14 +209,16 @@ fn reset_world(
 ) {
     // Delete the voxels associated with the current world.
     terrain_res.chunks =
-        ChunkMap::new(PointN([CHUNK_SIZE as i32; 3]), CubeVoxel(false), (), Snappy);
+        ChunkMap::new(PointN([CHUNK_SIZE as i32; 3]), CubeVoxel::Air, (), Snappy);
 
     // Delete the entities and meshes associated with the current world.
     let to_remove = mesh_res.meshes.keys().cloned().collect::<Vec<_>>();
     for p in to_remove {
-        if let Some(Some((entity, mesh))) = mesh_res.meshes.remove(&p) {
-            commands.despawn(entity);
-            mesh_assets.remove(&mesh);
+        if let Some(Some(meshes)) = mesh_res.meshes.remove(&p) {
+            for (entity, mesh) in meshes {
+                commands.despawn(entity);
+                mesh_assets.remove(&mesh);
+            }
         }
     }
 
@@ -218,16 +236,18 @@ fn generate_voxels(mut terrain_res: ResMut<TerrainResource>) {
     trace!("Generating voxels between {:?} and {:?}", min, max);
 
     let material_from_height = |height| {
-        if height < 0.9 * terrain_res.y_scale() {
-            CubeVoxel(true)
+        if height < -50. {
+            CubeVoxel::Stone
+        } else if height < -40. {
+            CubeVoxel::Grass
         } else {
-            CubeVoxel(false)
+            CubeVoxel::Air
         }
     };
 
     let local_cache = LocalChunkCache::new();
     let query_extent = Extent3i::from_min_and_shape(min, PointN([REGION_SIZE as i32; 3]));
-    let mut dense_map = Array3::fill(query_extent, CubeVoxel(false));
+    let mut dense_map = Array3::fill(query_extent, CubeVoxel::Air);
     for z in min.z()..max.z() {
         for x in min.x()..max.x() {
             let max_y = (terrain_res.noise.get([x as f64, z as f64]) * terrain_res.y_scale()
@@ -277,15 +297,18 @@ fn generate_meshes(
         }
     });
     for mesh in meshes.into_iter() {
-        if let (p, Some(mesh)) = mesh {
-            let entity = generate_mesh_entity(
-                mesh,
-                commands,
-                terrain.materials[0].0.clone(),
-                &mut mesh_assets,
-            );
+        if let (p, Some(meshes_map)) = mesh {
+            let entities = meshes_map
+                .into_iter()
+                .map(|(material, mesh)| generate_mesh_entity(
+                    mesh,
+                    commands,
+                    terrain.materials[material as usize].0.clone(),
+                    &mut mesh_assets,
+                ))
+                .collect::<Vec<_>>();
             trace!("Inserting {:?} into the mesh map", p);
-            mesh_res.meshes.insert(p, Some(entity));
+            mesh_res.meshes.insert(p, Some(entities));
         } else if let (p, None) = mesh {
             // Insert points with no associated mesh into the hash map.
             // We use the presence of the chunk key in the hash map as a flag on
@@ -297,17 +320,19 @@ fn generate_meshes(
     }
 }
 
+type Material = u8;
+
 async fn generate_mesh(
     map_ref: &ChunkMap3<CubeVoxel>,
     chunk_key: &Point3i,
-) -> (Point3i, Option<PosNormMesh>) {
+) -> (Point3i, Option<HashMap<Material, PosNormMesh>>) {
     trace!("Generating mesh for chunk at {:?}", chunk_key);
     let local_cache = LocalChunkCache3::new();
     let map_reader = ChunkMapReader::new(map_ref, &local_cache);
     let padded_chunk_extent =
         padded_greedy_quads_chunk_extent(&map_ref.extent_for_chunk_at_key(chunk_key));
 
-    let mut padded_chunk = Array3::fill(padded_chunk_extent, CubeVoxel(false));
+    let mut padded_chunk = Array3::fill(padded_chunk_extent, CubeVoxel::Air);
     copy_extent(&padded_chunk_extent, &map_reader, &mut padded_chunk);
 
     // TODO bevy: we could avoid re-allocating the buffers on every call if we had
@@ -315,17 +340,22 @@ async fn generate_mesh(
     let mut buffer = GreedyQuadsBuffer::new(padded_chunk_extent);
     greedy_quads(&padded_chunk, &padded_chunk_extent, &mut buffer);
 
-    let mut mesh = PosNormMesh::default();
+    // Separate the meshes by material, so that we can render each voxel type with a different color.
+    let mut meshes: HashMap<Material, PosNormMesh> = HashMap::new();
     for group in buffer.quad_groups.iter() {
-        for (quad, _material) in group.quads.iter() {
-            group.face.add_quad_to_pos_norm_mesh(&quad, &mut mesh);
+        for (quad, material) in group.quads.iter() {
+            let mesh = meshes.entry(*material).or_insert(PosNormMesh::default());
+            group.face.add_quad_to_pos_norm_mesh(&quad, mesh);
         }
     }
 
-    if mesh.is_empty() {
+    // If all the meshes are empty, don't return anything.
+    let all_are_empty = meshes.iter().fold(false, |acc, (_material, mesh)| if acc { acc } else { mesh.is_empty() });
+
+    if all_are_empty {
         (chunk_key.clone(), None)
     } else {
-        (chunk_key.clone(), Some(mesh))
+        (chunk_key.clone(), Some(meshes))
     }
 }
 

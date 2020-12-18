@@ -15,13 +15,14 @@ use bevy::render::mesh::{Indices, VertexAttributeValues};
 use bevy::render::pipeline::PrimitiveTopology;
 use bevy::tasks::ComputeTaskPool;
 use bevy_rapier3d::rapier::{dynamics::RigidBodyBuilder, geometry::ColliderBuilder, math::Point};
-use building_blocks::prelude::{copy_extent, LocalChunkCache3};
+use building_blocks::{core::Extent2i, prelude::{copy_extent, LocalChunkCache3}, storage::Array2};
 use building_blocks::storage::{Array3, ChunkMap, ChunkMapReader, IsEmpty, Snappy};
 use building_blocks::{
     core::{Extent3i, Point3i, PointN},
     storage::ChunkMap3,
 };
 use building_blocks::{
+    prelude::Get,
     mesh::{
         greedy_quads, padded_greedy_quads_chunk_extent, GreedyQuadsBuffer, MaterialVoxel,
         PosNormMesh,
@@ -115,7 +116,8 @@ pub struct MeshMaterial(pub Handle<StandardMaterial>);
 enum CubeVoxel {
     Air,
     Stone,
-    Grass
+    Grass,
+    Gold,
 }
 
 impl MaterialVoxel for CubeVoxel {
@@ -127,7 +129,8 @@ impl MaterialVoxel for CubeVoxel {
             // provide _something_ here.
             CubeVoxel::Air => 0,
             CubeVoxel::Stone => 0,
-            CubeVoxel::Grass => 1
+            CubeVoxel::Grass => 1,
+            CubeVoxel::Gold => 2,
         }
     }
 }
@@ -136,7 +139,7 @@ impl IsEmpty for CubeVoxel {
     fn is_empty(&self) -> bool {
         match self {
             CubeVoxel::Air => true,
-            CubeVoxel::Stone | CubeVoxel::Grass => false,
+            CubeVoxel::Stone | CubeVoxel::Grass | CubeVoxel::Gold => false,
         }
     }
 }
@@ -231,6 +234,13 @@ fn generate_voxels(mut terrain_res: ResMut<TerrainResource>) {
         return;
     }
 
+    let min_2d = PointN([-(REGION_SIZE as i32 / 2); 2]);
+    let size_2d = PointN([REGION_SIZE as i32; 2]);
+    let height_map_query = Extent2i::from_min_and_shape(min_2d, size_2d);
+    let mut height_map = Array2::fill_with(height_map_query, |p| {
+        terrain_res.noise.get([p.x() as f64, p.y() as f64]).round()
+    });
+
     let min = PointN([-(REGION_SIZE as i32 / 2); 3]);
     let max = PointN([REGION_SIZE as i32 / 2; 3]);
     trace!("Generating voxels between {:?} and {:?}", min, max);
@@ -256,7 +266,7 @@ fn generate_voxels(mut terrain_res: ResMut<TerrainResource>) {
             let y_extent =
                 Extent3i::from_min_and_shape(PointN([x, min.y(), z]), PointN([1, max_y + 1, 1]));
             dense_map.for_each_mut(&y_extent, |p: Point3i, value| {
-                *value = material_from_height(p.y() as f64)
+                *value = height_map.get(PointN([p.x(), p.z()]));
             });
         }
     }

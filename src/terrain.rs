@@ -15,22 +15,26 @@ use bevy::render::mesh::{Indices, VertexAttributeValues};
 use bevy::render::pipeline::PrimitiveTopology;
 use bevy::tasks::ComputeTaskPool;
 use bevy_rapier3d::rapier::{dynamics::RigidBodyBuilder, geometry::ColliderBuilder, math::Point};
-use building_blocks::{core::Extent2i, prelude::{copy_extent, LocalChunkCache3}, storage::Array2};
 use building_blocks::storage::{Array3, ChunkMap, ChunkMapReader, IsEmpty, Snappy};
+use building_blocks::{
+    core::Extent2i,
+    prelude::{copy_extent, LocalChunkCache3},
+    storage::Array2,
+};
 use building_blocks::{
     core::{Extent3i, Point3i, PointN},
     storage::ChunkMap3,
 };
 use building_blocks::{
-    prelude::Get,
     mesh::{
         greedy_quads, padded_greedy_quads_chunk_extent, GreedyQuadsBuffer, MaterialVoxel,
         PosNormMesh,
     },
+    prelude::Get,
     storage::{ForEachMut, LocalChunkCache},
 };
 use noise::{Fbm, MultiFractal, NoiseFn};
-use rand::{Rng, thread_rng};
+use rand::{thread_rng, Rng};
 
 const CHUNK_SIZE: usize = 64;
 const REGION_SIZE: usize = 128; // CHUNK_SIZE * NUM_CHUNKS
@@ -215,8 +219,7 @@ fn reset_world(
     mesh_res: &mut ResMut<MeshResource>,
 ) {
     // Delete the voxels associated with the current world.
-    terrain_res.chunks =
-        ChunkMap::new(PointN([CHUNK_SIZE as i32; 3]), CubeVoxel::Air, (), Snappy);
+    terrain_res.chunks = ChunkMap::new(PointN([CHUNK_SIZE as i32; 3]), CubeVoxel::Air, (), Snappy);
 
     // Delete the entities and meshes associated with the current world.
     let to_remove = mesh_res.meshes.keys().cloned().collect::<Vec<_>>();
@@ -242,7 +245,9 @@ fn generate_voxels(mut terrain_res: ResMut<TerrainResource>) {
     let size_2d = PointN([REGION_SIZE as i32; 2]);
     let height_map_query = Extent2i::from_min_and_shape(min_2d, size_2d);
     let height_map = Array2::fill_with(height_map_query, |p| {
-        (terrain_res.noise.get([p.x() as f64, p.y() as f64]) * terrain_res.y_scale() + terrain_res.y_offset).round() as i32
+        (terrain_res.noise.get([p.x() as f64, p.y() as f64]) * terrain_res.y_scale()
+            + terrain_res.y_offset)
+            .round() as i32
     });
 
     let min = PointN([-(REGION_SIZE as i32 / 2); 3]);
@@ -318,12 +323,14 @@ fn generate_meshes(
         if let (p, Some(meshes_map)) = mesh {
             let entities = meshes_map
                 .into_iter()
-                .map(|(material, mesh)| generate_mesh_entity(
-                    mesh,
-                    commands,
-                    terrain.materials[material as usize].0.clone(),
-                    &mut mesh_assets,
-                ))
+                .map(|(material, mesh)| {
+                    generate_mesh_entity(
+                        mesh,
+                        commands,
+                        terrain.materials[material as usize].0.clone(),
+                        &mut mesh_assets,
+                    )
+                })
                 .collect::<Vec<_>>();
             trace!("Inserting {:?} into the mesh map", p);
             mesh_res.meshes.insert(p, Some(entities));
@@ -368,7 +375,10 @@ async fn generate_mesh(
     }
 
     // If all the meshes are empty, don't return anything.
-    let all_are_empty = meshes.iter().fold(false, |acc, (_material, mesh)| if acc { acc } else { mesh.is_empty() });
+    let all_are_empty = meshes.iter().fold(
+        false,
+        |acc, (_material, mesh)| if acc { acc } else { mesh.is_empty() },
+    );
 
     if all_are_empty {
         (chunk_key.clone(), None)

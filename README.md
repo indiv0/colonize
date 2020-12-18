@@ -4,8 +4,8 @@ A Dwarf Fortress/Rimworld-like game written in Rust.
 
 <table>
   <tr>
-    <td><strong>Live Demo (v0.4.0; <a href="https://github.com/indiv0/colonize#controls">Controls</a>)</strong></td>
-    <td><a href="https://colonize.rs/0.4.0/">https://colonize.rs/0.4.0/</td>
+    <td><strong>Live Demo (v0.5.0; <a href="https://github.com/indiv0/colonize#controls">Controls</a>)</strong></td>
+    <td><a href="https://colonize.rs/0.5.0/">https://colonize.rs/0.5.0/</td>
   </tr>
   <tr>
     <td colspan="2">
@@ -58,6 +58,7 @@ Currently, the controls are focused on moving around the map and regenerating
 the terrain with new parameters.
 
 - Movement: W/A/S/D/Q/E
+- Moving a Dwarf: Select them with the mouse first, then use Z/X/C/V/B/N
 - Orientation: Arrow Keys or Numpad Arrows (WASM); Mouse (Native)
 - Terrain:
     - Y-Offset (+/- 1): U/H

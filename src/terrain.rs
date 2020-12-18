@@ -237,36 +237,31 @@ fn generate_voxels(mut terrain_res: ResMut<TerrainResource>) {
     let min_2d = PointN([-(REGION_SIZE as i32 / 2); 2]);
     let size_2d = PointN([REGION_SIZE as i32; 2]);
     let height_map_query = Extent2i::from_min_and_shape(min_2d, size_2d);
-    let mut height_map = Array2::fill_with(height_map_query, |p| {
-        terrain_res.noise.get([p.x() as f64, p.y() as f64]).round()
+    let height_map = Array2::fill_with(height_map_query, |p| {
+        (terrain_res.noise.get([p.x() as f64, p.y() as f64]) * terrain_res.y_scale() + terrain_res.y_offset).round() as i32
     });
 
     let min = PointN([-(REGION_SIZE as i32 / 2); 3]);
     let max = PointN([REGION_SIZE as i32 / 2; 3]);
     trace!("Generating voxels between {:?} and {:?}", min, max);
 
-    let material_from_height = |height| {
-        if height < -50. {
-            CubeVoxel::Stone
-        } else if height < -40. {
-            CubeVoxel::Grass
-        } else {
-            CubeVoxel::Air
-        }
-    };
-
     let local_cache = LocalChunkCache::new();
     let query_extent = Extent3i::from_min_and_shape(min, PointN([REGION_SIZE as i32; 3]));
     let mut dense_map = Array3::fill(query_extent, CubeVoxel::Air);
     for z in min.z()..max.z() {
         for x in min.x()..max.x() {
-            let max_y = (terrain_res.noise.get([x as f64, z as f64]) * terrain_res.y_scale()
-                + terrain_res.y_offset)
-                .round() as i32;
+            let max_y = height_map.get(&PointN([x, z]));
             let y_extent =
                 Extent3i::from_min_and_shape(PointN([x, min.y(), z]), PointN([1, max_y + 1, 1]));
             dense_map.for_each_mut(&y_extent, |p: Point3i, value| {
-                *value = height_map.get(PointN([p.x(), p.z()]));
+                let voxel = if p.y() < max_y - 70 {
+                    CubeVoxel::Stone
+                } else if p.y() < max_y {
+                    CubeVoxel::Grass
+                } else {
+                    CubeVoxel::Air
+                };
+                *value = voxel;
             });
         }
     }

@@ -30,6 +30,7 @@ use building_blocks::{
     storage::{ForEachMut, LocalChunkCache},
 };
 use noise::{Fbm, MultiFractal, NoiseFn};
+use rand::{Rng, thread_rng};
 
 const CHUNK_SIZE: usize = 64;
 const REGION_SIZE: usize = 128; // CHUNK_SIZE * NUM_CHUNKS
@@ -56,6 +57,9 @@ fn setup(mut res: ResMut<TerrainResource>, mut materials: ResMut<Assets<Standard
     ));
     res.materials.push(MeshMaterial(
         materials.add(Color::rgb(0.376, 0.502, 0.22).into()), // Grass
+    ));
+    res.materials.push(MeshMaterial(
+        materials.add(Color::rgb(1.0, 0.843, 0.).into()), // Grass
     ));
 }
 
@@ -245,6 +249,8 @@ fn generate_voxels(mut terrain_res: ResMut<TerrainResource>) {
     let max = PointN([REGION_SIZE as i32 / 2; 3]);
     trace!("Generating voxels between {:?} and {:?}", min, max);
 
+    let mut rng = thread_rng();
+
     let local_cache = LocalChunkCache::new();
     let query_extent = Extent3i::from_min_and_shape(min, PointN([REGION_SIZE as i32; 3]));
     let mut dense_map = Array3::fill(query_extent, CubeVoxel::Air);
@@ -256,8 +262,15 @@ fn generate_voxels(mut terrain_res: ResMut<TerrainResource>) {
             dense_map.for_each_mut(&y_extent, |p: Point3i, value| {
                 let voxel = if p.y() < max_y - 70 {
                     CubeVoxel::Stone
-                } else if p.y() < max_y {
+                } else if p.y() < max_y - 66 {
                     CubeVoxel::Grass
+                } else if p.y() < max_y {
+                    // The top layer of the surface has a small chance of containing gold.
+                    if rng.gen::<f32>() < 0.002 {
+                        CubeVoxel::Gold
+                    } else {
+                        CubeVoxel::Grass
+                    }
                 } else {
                     CubeVoxel::Air
                 };

@@ -20,17 +20,6 @@ use rand::{thread_rng, Rng};
 
 use crate::terrain::{Chunk, TerrainResource};
 
-#[derive(Debug, PartialEq)]
-enum State {
-    Falling,
-    Stationary,
-}
-
-#[derive(Debug, PartialEq)]
-enum Task {
-    RandomWalk,
-}
-
 // Struct for storing the currently selected dwarf, if any.
 struct SelectedDwarf {
     dwarf: Option<Entity>,
@@ -39,16 +28,11 @@ struct SelectedDwarf {
 #[derive(Debug)]
 struct Dwarf {
     free_fall: bool,
-    task: Option<Task>,
 }
 
 impl Dwarf {
     fn set_free_fall(&mut self, free_fall: bool) {
         self.free_fall = free_fall
-    }
-
-    fn start_random_walk(&mut self) {
-        self.task = Some(Task::RandomWalk);
     }
 }
 
@@ -56,7 +40,6 @@ impl Default for Dwarf {
     fn default() -> Self {
         Self {
             free_fall: true,
-            task: None,
         }
     }
 }
@@ -235,7 +218,7 @@ fn handle_physics_events(
 
             if let Some(dwarf_entity) = maybe_dwarf_entity {
                 if let Some(_chunk_entity) = maybe_chunk_entity {
-                    let mut dwarf = dwarf_query
+                    let _dwarf = dwarf_query
                         .get_component_mut::<Dwarf>(dwarf_entity)
                         .unwrap();
                     // FIXME
@@ -254,11 +237,12 @@ fn move_around(
 ) {
     let mut rng = thread_rng();
 
-    for (mut dwarf, name, rigid_body_handle) in dwarf_rigid_body_query.iter_mut() {
+    for (dwarf, name, rigid_body_handle) in dwarf_rigid_body_query.iter_mut() {
         let rigid_body = rigid_body_set.get_mut(rigid_body_handle.handle()).unwrap();
         // A dwarf that is falling can't do anything until they stop falling.
         // A dwarf that is in motion stays in motion.
-        let is_idle = !dwarf.free_fall && !rigid_body.is_moving();
+        // FIXME
+        let _is_idle = !dwarf.free_fall && !rigid_body.is_moving();
         if !dwarf.free_fall {
             // If the dwarf is idle, then that means it can start performing an action.
             //trace!("Dwarf {:?} is now walking around", name);

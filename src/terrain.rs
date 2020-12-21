@@ -15,7 +15,7 @@ use bevy::render::mesh::{Indices, VertexAttributeValues};
 use bevy::render::pipeline::PrimitiveTopology;
 use bevy::tasks::ComputeTaskPool;
 use bevy_rapier3d::rapier::{dynamics::RigidBodyBuilder, geometry::ColliderBuilder, math::Point};
-use building_blocks::{core::{Point2, Point3}, storage::{Array3, ChunkMap, ChunkMapReader, ForEach, IsEmpty, Snappy}};
+use building_blocks::{core::Point3, storage::{Array3, ChunkMap, ChunkMapReader, ForEach, IsEmpty, Snappy}};
 use building_blocks::{
     core::Extent2i,
     prelude::{copy_extent, LocalChunkCache3},

@@ -61,7 +61,7 @@ fn setup(commands: &mut Commands) {
     commands
         // Light
         .spawn(LightBundle {
-            transform: Transform::from_translation(Vec3::new(4.0, 8.0, 4.0)),
+            transform: Transform::from_translation(Vec3::new(4.0, 200.0, 4.0)),
             ..Default::default()
         })
         // Camera

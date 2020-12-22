@@ -822,8 +822,9 @@ checksum = "0d8c1fef690941d3e7788d328517591fecc684c084084702d6ff1641e993699a"
 
 [[package]]
 name = "building-blocks"
-version = "0.3.0"
-source = "git+https://github.com/bonsairobo/building-blocks?rev=37fa5fd4e2fcbc57795eb6fa4d681dd315277447#37fa5fd4e2fcbc57795eb6fa4d681dd315277447"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7b3b6a8f6a938533fce15bedf3b6c076e9db7f3804338a63c30cc20ff66e3626"
 dependencies = [
  "building_blocks_core",
  "building_blocks_mesh",
@@ -832,8 +833,9 @@ dependencies = [
 
 [[package]]
 name = "building_blocks_core"
-version = "0.3.0"
-source = "git+https://github.com/bonsairobo/building-blocks?rev=37fa5fd4e2fcbc57795eb6fa4d681dd315277447#37fa5fd4e2fcbc57795eb6fa4d681dd315277447"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e6a1ef84a4b75391efcdf039859712fd9eda7ba289be1bba54fd3e77e9d7a409"
 dependencies = [
  "itertools",
  "num",
@@ -842,8 +844,9 @@ dependencies = [
 
 [[package]]
 name = "building_blocks_mesh"
-version = "0.3.0"
-source = "git+https://github.com/bonsairobo/building-blocks?rev=37fa5fd4e2fcbc57795eb6fa4d681dd315277447#37fa5fd4e2fcbc57795eb6fa4d681dd315277447"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "804851b134c929b9cb562becc2ada39a4e601490e52b3cc21e5af99db9692cbb"
 dependencies = [
  "building_blocks_core",
  "building_blocks_storage",
@@ -852,17 +855,20 @@ dependencies = [
 
 [[package]]
 name = "building_blocks_storage"
-version = "0.3.0"
-source = "git+https://github.com/bonsairobo/building-blocks?rev=37fa5fd4e2fcbc57795eb6fa4d681dd315277447#37fa5fd4e2fcbc57795eb6fa4d681dd315277447"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d1b950d68216ce0516baf2c46c3cf7e3983440b6031d8b45d57f3b9b33c37f1c"
 dependencies = [
+ "bincode",
  "building_blocks_core",
- "compressible-map",
  "either",
  "fnv",
  "futures",
  "itertools",
  "num",
  "serde",
+ "slab",
+ "snap",
 ]
 
 [[package]]
@@ -1078,17 +1084,6 @@ dependencies = [
  "bytes",
  "memchr",
  "pin-project-lite 0.1.11",
-]
-
-[[package]]
-name = "compressible-map"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "581831132649b42cbe92d892ee22b87041bfe29474321793660472da995ebf76"
-dependencies = [
- "bincode",
- "serde",
- "snap",
 ]
 
 [[package]]

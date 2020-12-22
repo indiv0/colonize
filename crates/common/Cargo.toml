@@ -6,4 +6,4 @@ authors = ["Nikita Pekin <nikita@frecency.com>"]
 publish = false
 
 [dependencies]
-building-blocks = { git = "https://github.com/bonsairobo/building-blocks", rev = "37fa5fd4e2fcbc57795eb6fa4d681dd315277447", default-features = false, features = ["mesh", "snappy"] }
+building-blocks = { version = "0.4.3", default-features = false, features = ["mesh", "snappy"] }

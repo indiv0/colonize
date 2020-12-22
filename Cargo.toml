@@ -16,12 +16,18 @@ keywords = [
 license = "GPL-3.0-or-later"
 edition = "2018"
 
+[workspace]
+members = ["crates/*"]
+
 [dependencies]
 bevy = { git = "https://github.com/bevyengine/bevy", rev = "2e2423139e0cd8efda3aa0d474d3eb231dad566b", default-features = false, features = ["bevy_gltf", "bevy_winit", "png", "render"] }
 bevy_mod_picking = { git = "https://github.com/indiv0/bevy_mod_picking" }
 bevy_rapier3d = { git = "https://github.com/indiv0/bevy_rapier", default-features = false, features = ["dim3"]}
 bevy_webgl2 = { git = "https://github.com/indiv0/bevy_webgl2", optional = true }
 building-blocks = { git = "https://github.com/bonsairobo/building-blocks", rev = "37fa5fd4e2fcbc57795eb6fa4d681dd315277447", default-features = false, features = ["mesh", "snappy"] }
+colonize_common = { path = "crates/common" }
+colonize_core = { path = "crates/core" }
+colonize_noise = { path = "crates/noise" }
 noise = { version = "0.6.0", default-features = false }
 rand = "0.7.3"
 

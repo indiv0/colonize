@@ -4,11 +4,11 @@ extern crate bevy_rapier3d;
 #[cfg(target_arch = "wasm32")]
 extern crate bevy_webgl2;
 extern crate building_blocks;
+extern crate colonize_common;
 extern crate rand;
 
 mod camera;
 mod dwarf;
-mod noise;
 mod terrain;
 
 use bevy::prelude::*;

@@ -1,0 +1,10 @@
+[package]
+name = "colonize_noise"
+version = "0.1.0"
+edition = "2018"
+authors = ["Nikita Pekin <nikita@frecency.com>"]
+publish = false
+
+[dependencies]
+colonize_core = { path = "../core" }
+noise = { version = "0.6.0", default-features = false }

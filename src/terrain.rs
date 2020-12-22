@@ -8,18 +8,16 @@
 //! The origin point (0, 0, 0) is in the middle of the map. This means that
 //! the minimum point on the map is (-384, -384, -384) and the maximum point
 //! is (384, 384, 384).
-use std::{collections::{HashMap, VecDeque}, iter};
+use std::collections::HashMap;
 
-use bevy::prelude::*;
-use bevy::render::mesh::{Indices, VertexAttributeValues};
+use bevy::log::trace;
+use bevy::{ecs::{Commands, Entity, IntoSystem, Res, ResMut}, input::Input, prelude::{AppBuilder, Assets, Color, Handle, KeyCode, Mesh, Plugin, StandardMaterial}, render::mesh::{Indices, VertexAttributeValues}, pbr::PbrBundle};
 use bevy::render::pipeline::PrimitiveTopology;
 use bevy::tasks::ComputeTaskPool;
 use bevy_rapier3d::rapier::{dynamics::RigidBodyBuilder, geometry::ColliderBuilder, math::Point};
-use building_blocks::{core::{Point2i, Point3}, storage::{Array3, ChunkMap, ChunkMapReader, ForEach, GetMut, IsEmpty, Snappy, compressible_map::LocalCache}};
+use building_blocks::{core::Point3, storage::{Array3, ChunkMap, ChunkMapReader, ForEach, Snappy, compressible_map::LocalCache}};
 use building_blocks::{
-    core::Extent2i,
     prelude::{copy_extent, LocalChunkCache3},
-    storage::Array2,
 };
 use building_blocks::{
     core::{Extent3i, Point3i, PointN},
@@ -27,18 +25,19 @@ use building_blocks::{
 };
 use building_blocks::{
     mesh::{
-        greedy_quads, padded_greedy_quads_chunk_extent, GreedyQuadsBuffer, MaterialVoxel,
+        greedy_quads, padded_greedy_quads_chunk_extent, GreedyQuadsBuffer,
         PosNormMesh,
     },
-    prelude::Get,
-    storage::{ForEachMut, LocalChunkCache},
+    storage::LocalChunkCache,
 };
+use colonize_core::WaterGenerator;
+use colonize_noise::Noise2d;
 use noise::{MultiFractal, NoiseFn, RidgedMulti, Seedable};
 use rand::{thread_rng, Rng};
 
-use crate::noise::{CubeVoxel, HeightMapSampler, Noise2d, VoxelColumn};
+use colonize_common::CubeVoxel; 
 
-const CHUNK_SIZE: usize = 64;
+const CHUNK_SIZE: usize = 256;
 const REGION_SIZE: usize = 512; // CHUNK_SIZE * NUM_CHUNKS
 // 512 underground blocks, plus 256 blocks above sea level.
 const REGION_HEIGHT: i32 = 768;
@@ -148,31 +147,6 @@ impl Default for MeshResource {
 #[derive(Default)]
 pub struct MeshMaterial(pub Handle<StandardMaterial>);
 
-impl MaterialVoxel for CubeVoxel {
-    type Material = u8;
-
-    fn material(&self) -> Self::Material {
-        match self {
-            // Technically air doesn't have a material since it doesn't get rendered, but we need to
-            // provide _something_ here.
-            CubeVoxel::Air => 0,
-            CubeVoxel::Stone => 0,
-            CubeVoxel::Grass => 1,
-            CubeVoxel::Gold => 2,
-            CubeVoxel::Water => 3,
-        }
-    }
-}
-
-impl IsEmpty for CubeVoxel {
-    fn is_empty(&self) -> bool {
-        match self {
-            CubeVoxel::Air => true,
-            CubeVoxel::Stone | CubeVoxel::Grass | CubeVoxel::Gold | CubeVoxel::Water => false,
-        }
-    }
-}
-
 fn modify_config(
     commands: &mut Commands,
     mut mesh_assets: ResMut<Assets<Mesh>>,
@@ -257,164 +231,46 @@ fn reset_world(
     terrain_res.generated_voxels = false;
 }
 
-struct HeightMap(Array2<i32>);
-
-impl HeightMapSampler<[i32; 2]> for HeightMap {
-    fn sample_elevation(&self, point: [i32; 2]) -> i32 {
-        self.0.get(&PointN(point))
-    }
-}
-
-fn generate_height_map() -> HeightMap {
-    const REGION_MIN_2D: Point2i = PointN([-(REGION_SIZE as i32 / 2); 2]);
-    const REGION_SHAPE_2D: Point2i = PointN([REGION_SIZE as i32; 2]);
-    let extent = Extent2i::from_min_and_shape(REGION_MIN_2D, REGION_SHAPE_2D);
-    trace!("Creating height map with extent {:?}", extent);
-
-    let height_map_noise_fn = Noise2d::new(RidgedMulti::new()
-        .set_seed(random_seed())
-        .set_frequency(0.001)
-        .set_lacunarity(4.0)
-        .set_persistence(0.7)
-        .set_octaves(8));
-    let filler = |p: &Point2i| height_map_noise_fn.sample_elevation([p.x() as f64, p.y() as f64]);
-
-    let array = Array2::fill_with(extent, filler);
-    HeightMap(array)
-}
-
-fn random_seed() -> u32 {
-    thread_rng().gen()
-}
-
-struct WaterGenerator {
-    strata_map: StrataMap,
-}
-
-impl WaterGenerator {
-    fn new(strata_map: StrataMap) -> Self {
-        Self { strata_map }
-    }
-
-    fn flood_fill_water(&mut self, x: i32, z: i32) {
-        let location = PointN([x, SEA_LEVEL - 1, z]);
-        let voxel = self.strata_map.0.get_mut(&location);
-        if *voxel != CubeVoxel::Air {
-            return;
-        }
-
-        *voxel = CubeVoxel::Water;
-
-        let mut queue = VecDeque::new();
-        queue.push_back(location);
-
-        while let Some(n) = queue.pop_front() {
-            assert!(n.x() >= REGION_MIN_3D.x());
-            assert!(n.x() <= REGION_MAX_3D.x());
-            assert!(n.z() >= REGION_MIN_3D.z());
-            assert!(n.z() <= REGION_MAX_3D.z());
-            if n.x() < REGION_MAX_3D.x() - 1 {
-                let west = self.strata_map.0.get_mut(&PointN([n.x() + 1, SEA_LEVEL - 1, n.z()]));
-                if *west == CubeVoxel::Air {
-                    *west = CubeVoxel::Water;
-                    queue.push_back(PointN([n.x() + 1, SEA_LEVEL - 1, n.z()]));
-                }
-            }
-            if n.x() > REGION_MIN_3D.x() {
-                let east = self.strata_map.0.get_mut(&PointN([n.x() - 1, SEA_LEVEL - 1, n.z()]));
-                if *east == CubeVoxel::Air {
-                    *east = CubeVoxel::Water;
-                    queue.push_back(PointN([n.x() - 1, SEA_LEVEL - 1, n.z()]));
-                }
-            }
-            if n.z() < REGION_MAX_3D.z() - 1 {
-                let north = self.strata_map.0.get_mut(&PointN([n.x(), SEA_LEVEL - 1, n.z() + 1]));
-                if *north == CubeVoxel::Air {
-                    *north = CubeVoxel::Water;
-                    queue.push_back(PointN([n.x(), SEA_LEVEL - 1, n.z() + 1]));
-                }
-            }
-            if n.z() > REGION_MIN_3D.z() {
-                let south = self.strata_map.0.get_mut(&PointN([n.x(), SEA_LEVEL - 1, n.z() - 1]));
-                if *south == CubeVoxel::Air {
-                    *south = CubeVoxel::Water;
-                    queue.push_back(PointN([n.x(), SEA_LEVEL - 1, n.z() - 1]));
-                }
-            }
-        }
-    }
-
-    fn flood_fill_down(&mut self, min: &Point3i, max: &Point3i) {
-        for z in min.z()..max.z() {
-            for x in min.x()..max.x() {
-                for y in (min.y()..(SEA_LEVEL - 1)).rev() {
-                    let voxel = self.strata_map.0.get_mut(&PointN([x, y, z]));
-                    if *voxel == CubeVoxel::Water {
-                        continue;
-                    } else if *voxel == CubeVoxel::Air {
-                        *voxel = CubeVoxel::Water;
-                        continue;
-                    } else {
-                        break;
-                    }
-                }
-            }
-        }
-    }
-}
-
-fn generate_strata_map<H>(height_map_sampler: &H, min: &Point3i, max: &Point3i, shape: &Point3i, query: Extent3i) -> StrataMap
-    where H: HeightMapSampler<[i32; 2]>,
-{
-    let dirt_thickness_noise_fn: Noise2d<_, [f64; 2]> = Noise2d::new(RidgedMulti::new()
-        .set_seed(random_seed()));
-
-    let mut dense_map = Array3::fill(query, CubeVoxel::Air);
-    (min.z()..max.z())
-        .flat_map(|z| iter::repeat(z).zip(min.x()..max.x()))
-        .map(|(z, x)| {
-            let strata_sampler = VoxelColumn::new(&dirt_thickness_noise_fn, height_map_sampler, [x as i32, z as i32], min.y(), max.y());
-            let y_extent = Extent3i::from_min_and_shape(PointN([x, min.y(), z]), PointN([1, shape.y(), 1]));
-            (strata_sampler, y_extent)
-        })
-        .map(|(mut sampler, extent)| {
-            dense_map.for_each_mut(&extent, |_point: Point3i, value| *value = sampler.next().unwrap());
-            assert!(sampler.next().is_none());
-        })
-        .for_each(drop);
-    StrataMap(dense_map)
-}
-
-struct StrataMap(Array3<CubeVoxel>);
-
 fn generate_voxels(mut terrain_res: ResMut<TerrainResource>) {
     if terrain_res.generated_voxels {
         return;
     }
 
-    // Generate the height map.
-    let height_map = generate_height_map();
+    // Generate the 2D height map.
+    trace!("Generating 2D height map");
+    let elevation_noise = Noise2d::new(RidgedMulti::new()
+        .set_seed(random_seed())
+        .set_frequency(0.001)
+        .set_lacunarity(4.0)
+        .set_persistence(0.7)
+        .set_octaves(8));
+    let minimum = [-(REGION_SIZE as i32 / 2); 2];
+    let shape = [REGION_SIZE as i32; 2];
+    let height_array = colonize_core::generate_height_map(&elevation_noise, minimum, shape);
 
+    // Generate the 3D strata map from the height map.
+    let dirt_thickness_noise = Noise2d::new(RidgedMulti::new().set_seed(random_seed()));
     let query = Extent3i::from_min_and_shape(REGION_MIN_3D, REGION_SHAPE_3D);
-    trace!("Generating voxels between {:?} and {:?} with extent {:?}", REGION_MIN_3D, REGION_MAX_3D, query);
-    let local_cache: LocalCache<PointN<_>, building_blocks::storage::Chunk<[i32; 3], CubeVoxel, ()>, _> = LocalChunkCache::new();
-
-    // Generate the strata map.
-    let strata_map = generate_strata_map(&height_map, &REGION_MIN_3D, &REGION_MAX_3D, &REGION_SHAPE_3D, query);
+    trace!("Generating 3D strata map for extent {:?}", query);
+    let mut strata_array = colonize_core::generate_strata_map(&dirt_thickness_noise, &height_array, REGION_MIN_3D, REGION_SHAPE_3D);
 
     // Flood-fill the water on the map.
-    let mut water_generator = WaterGenerator::new(strata_map);
-    water_generator.flood_fill_water(REGION_MIN_3D.x(), REGION_MIN_3D.z());
-    water_generator.flood_fill_water(REGION_MIN_3D.x(), REGION_MAX_3D.z() - 1);
-    water_generator.flood_fill_water(REGION_MAX_3D.x() - 1, REGION_MIN_3D.z());
-    water_generator.flood_fill_water(REGION_MAX_3D.x() - 1, REGION_MAX_3D.z() - 1);
-    water_generator.flood_fill_down(&REGION_MIN_3D, &REGION_MAX_3D);
+    trace!("Flood-filling water on map");
+    let water_generator = WaterGenerator::new(SEA_LEVEL, REGION_MIN_3D.x(), REGION_MAX_3D.x(), REGION_MIN_3D.y(), REGION_MIN_3D.z(), REGION_MAX_3D.z());
+    water_generator.flood_fill(&mut strata_array);
 
     // Copy over the voxels from their intermediate representations to the chunk map.
-    copy_extent(&query, &water_generator.strata_map.0, &mut terrain_res.chunks);
+    trace!("Copying chunk data to chunk map");
+    let local_cache: LocalCache<PointN<_>, building_blocks::storage::Chunk<[i32; 3], CubeVoxel, ()>, _> = LocalChunkCache::new();
+    copy_extent(&query, &strata_array, &mut terrain_res.chunks);
     terrain_res.chunks.flush_chunk_cache(local_cache);
+    trace!("Finished generating the world");
 
     terrain_res.generated_voxels = true;
+}
+
+fn random_seed() -> u32 {
+    thread_rng().gen()
 }
 
 fn generate_meshes(
@@ -470,7 +326,7 @@ async fn generate_mesh(
     map_ref: &ChunkMap3<CubeVoxel>,
     chunk_key: &Point3i,
 ) -> (Point3i, Option<HashMap<Material, PosNormMesh>>) {
-    //trace!("Generating mesh for chunk at {:?}", chunk_key);
+    trace!("Generating mesh for chunk at {:?}", chunk_key);
     let local_cache = LocalChunkCache3::new();
     let map_reader = ChunkMapReader::new(map_ref, &local_cache);
     let padded_chunk_extent =

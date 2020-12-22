@@ -1019,8 +1019,35 @@ dependencies = [
  "bevy_rapier3d",
  "bevy_webgl2",
  "building-blocks",
+ "colonize_common",
+ "colonize_core",
+ "colonize_noise",
  "noise",
  "rand 0.7.3",
+]
+
+[[package]]
+name = "colonize_common"
+version = "0.1.0"
+dependencies = [
+ "building-blocks",
+]
+
+[[package]]
+name = "colonize_core"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "building-blocks",
+ "colonize_common",
+]
+
+[[package]]
+name = "colonize_noise"
+version = "0.1.0"
+dependencies = [
+ "colonize_core",
+ "noise",
 ]
 
 [[package]]

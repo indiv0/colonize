@@ -1,8 +1,11 @@
 debug:
-	cargo run
+	RUST_BACKTRACE=1 RUST_LOG=colonize=trace cargo run
 
 release:
-	cargo run --release
+	RUST_BACKTRACE=1 RUST_LOG=colonize=trace cargo run --release
+
+test:
+	RUST_BACKTRACE=1 cargo test --all
 
 wasm_release:
 	cargo build --release --target wasm32-unknown-unknown --no-default-features --features wasm

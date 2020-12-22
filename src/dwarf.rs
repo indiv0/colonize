@@ -12,10 +12,14 @@ use bevy::{
 use bevy_mod_picking::{
     Group, HighlightablePickMesh, InteractableMesh, PickableMesh, SelectablePickMesh,
 };
-use bevy_rapier3d::{na::{Point3, Vector3}, physics::{EventQueue, RigidBodyHandleComponent}, rapier::{
+use bevy_rapier3d::{
+    na::{Point3, Vector3},
+    physics::{EventQueue, RigidBodyHandleComponent},
+    rapier::{
         dynamics::{RigidBodyBuilder, RigidBodySet},
         geometry::{ColliderBuilder, ColliderSet, ContactEvent},
-    }};
+    },
+};
 use rand::{thread_rng, Rng};
 
 use crate::terrain::{Chunk, TerrainResource};
@@ -38,9 +42,7 @@ impl Dwarf {
 
 impl Default for Dwarf {
     fn default() -> Self {
-        Self {
-            free_fall: true,
-        }
+        Self { free_fall: true }
     }
 }
 
@@ -123,7 +125,8 @@ fn spawn_dwarf(
         .unwrap();
     // Dynamic rigid-body with cuboid shape as the collision box.
     let rigid_body = RigidBodyBuilder::new_dynamic().translation(px, py, pz);
-    let collider = ColliderBuilder::cuboid(SIZE / 2., SIZE / 2., SIZE / 2.).user_data(entity.to_bits() as u128);
+    let collider = ColliderBuilder::cuboid(SIZE / 2., SIZE / 2., SIZE / 2.)
+        .user_data(entity.to_bits() as u128);
     commands.insert(entity, (rigid_body, collider));
 }
 
@@ -247,13 +250,25 @@ fn move_around(
             // If the dwarf is idle, then that means it can start performing an action.
             //trace!("Dwarf {:?} is now walking around", name);
             if rng.gen::<f32>() < 0.05 {
-                let rigid_body_position = rigid_body.position().transform_point(&Point3::new(0., 0., 0.));
-                let nearest_gold = terrain_res.find_nearest_gold(rigid_body_position.x as i32, rigid_body_position.y as i32, rigid_body_position.z as i32);
+                let rigid_body_position = rigid_body
+                    .position()
+                    .transform_point(&Point3::new(0., 0., 0.));
+                let nearest_gold = terrain_res.find_nearest_gold(
+                    rigid_body_position.x as i32,
+                    rigid_body_position.y as i32,
+                    rigid_body_position.z as i32,
+                );
                 if let Some(gold) = nearest_gold {
-                    let difference = rigid_body_position - Point3::new(gold.x() as f32, gold.y() as f32 + 1., gold.z() as f32);
+                    let difference = rigid_body_position
+                        - Point3::new(gold.x() as f32, gold.y() as f32 + 1., gold.z() as f32);
                     // TODO: do we need to wake up the rigidbody?
                     //let impulse = Vector3::new(rng.gen::<f32>(), 0., rng.gen::<f32>()).normalize() * 100.;
-                    trace!("Dwarf {:?} is moving from {:?} to {:?}", name, rigid_body_position, gold);
+                    trace!(
+                        "Dwarf {:?} is moving from {:?} to {:?}",
+                        name,
+                        rigid_body_position,
+                        gold
+                    );
                     let impulse = -difference * 10.;
                     rigid_body.apply_impulse(impulse, true);
                 }

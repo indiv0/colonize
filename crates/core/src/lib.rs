@@ -1,5 +1,5 @@
 mod terrain;
 mod util;
 
-pub use terrain::{generate_height_map, generate_strata_map, NoiseSample, Sample, WaterGenerator};
+pub use terrain::{generate_map, NoiseSample, Sample};
 pub use util::array_int_to_float;

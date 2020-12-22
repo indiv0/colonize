@@ -8,6 +8,7 @@ extern crate rand;
 
 mod camera;
 mod dwarf;
+mod noise;
 mod terrain;
 
 use bevy::prelude::*;

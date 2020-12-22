@@ -8,7 +8,7 @@
 //! The origin point (0, 0, 0) is in the middle of the map. This means that
 //! the minimum point on the map is (-384, -384, -384) and the maximum point
 //! is (384, 384, 384).
-use std::collections::{HashMap, VecDeque};
+use std::{collections::{HashMap, VecDeque}, iter};
 
 use bevy::prelude::*;
 use bevy::render::mesh::{Indices, VertexAttributeValues};
@@ -36,8 +36,10 @@ use building_blocks::{
 use noise::{MultiFractal, NoiseFn, RidgedMulti, Seedable};
 use rand::{thread_rng, Rng};
 
+use crate::noise::{CubeVoxel, HeightMapSampler, Noise2d, VoxelColumn};
+
 const CHUNK_SIZE: usize = 64;
-const REGION_SIZE: usize = 128; // CHUNK_SIZE * NUM_CHUNKS
+const REGION_SIZE: usize = 512; // CHUNK_SIZE * NUM_CHUNKS
 // 512 underground blocks, plus 256 blocks above sea level.
 const REGION_HEIGHT: i32 = 768;
 const REGION_MIN_3D: Point3i = PointN([-(REGION_SIZE as i32 / 2), -512, -(REGION_SIZE as i32 / 2)]);
@@ -145,15 +147,6 @@ impl Default for MeshResource {
 
 #[derive(Default)]
 pub struct MeshMaterial(pub Handle<StandardMaterial>);
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-enum CubeVoxel {
-    Air,
-    Stone,
-    Grass,
-    Gold,
-    Water,
-}
 
 impl MaterialVoxel for CubeVoxel {
     type Material = u8;
@@ -264,92 +257,34 @@ fn reset_world(
     terrain_res.generated_voxels = false;
 }
 
-/// Scales a value in the range [a_min, a_max] to the range [b_min, b_max]
-fn scale(number: f64, a_min: f64, a_max: f64, b_min: f64, b_max: f64) -> f64 {
-    let scaled = (((number - a_min) * (b_max - b_min)) / (a_max - a_min)) + b_min;
-    assert!(number >= a_min, "{} must be greater than or equal to {}", number, a_min);
-    assert!(number <= a_max, "{} must be less than or equal to {}", number, a_max);
-    assert!(scaled >= b_min, "{} must be greater than or equal to {}", scaled, b_min);
-    assert!(scaled <= b_max, "{} must be less than or equal to {}", scaled, b_max);
-    scaled
-}
-
 struct HeightMap(Array2<i32>);
 
-struct HeightMapGenerator {
-    noise: RidgedMulti,
-}
-
-impl HeightMapGenerator {
-    fn new() -> Self {
-        Self {
-            noise: RidgedMulti::new()
-                .set_seed(thread_rng().gen::<u32>())
-                .set_frequency(0.001)
-                .set_lacunarity(4.0)
-                .set_persistence(0.7)
-                .set_octaves(8),
-        }
-    }
-
-    fn sample(&self, x: f64, z: f64) -> f64 {
-        const MIN_WATER_LEVEL: f64 = -128.;
-        const MAX_MOUNTAIN_HEIGHT: f64 = 128.;
-        let sample = self.noise.get([x, z]);
-        scale(sample, -1., 1., MIN_WATER_LEVEL, MAX_MOUNTAIN_HEIGHT)
-    }
-
-    fn height_map(&self) -> HeightMap {
-        const REGION_MIN_2D: Point2i = PointN([-(REGION_SIZE as i32 / 2); 2]);
-        const REGION_SHAPE_2D: Point2i = PointN([REGION_SIZE as i32; 2]);
-        let query = Extent2i::from_min_and_shape(REGION_MIN_2D, REGION_SHAPE_2D);
-        trace!("Creating height map with extent {:?}", query);
-
-        let array = Array2::fill_with(query, |p| {
-            self.sample(p.x() as f64, p.y() as f64).round() as i32
-            // TODO: what's the original actual range here? It looks to be more like [-0.7, 0.8] not [-1.0, 1.0]
-            //let height = scale(sampled, -1., 1., -(REGION_SIZE as f64) / 2. * 0.2, REGION_SIZE as f64 / 2. * 0.8);
-        });
-        HeightMap(array)
+impl HeightMapSampler<[i32; 2]> for HeightMap {
+    fn sample_elevation(&self, point: [i32; 2]) -> i32 {
+        self.0.get(&PointN(point))
     }
 }
 
-struct StrataMap(Array3<CubeVoxel>);
+fn generate_height_map() -> HeightMap {
+    const REGION_MIN_2D: Point2i = PointN([-(REGION_SIZE as i32 / 2); 2]);
+    const REGION_SHAPE_2D: Point2i = PointN([REGION_SIZE as i32; 2]);
+    let extent = Extent2i::from_min_and_shape(REGION_MIN_2D, REGION_SHAPE_2D);
+    trace!("Creating height map with extent {:?}", extent);
 
-struct StrataGenerator {
-    noise: RidgedMulti,
-    height_map: HeightMap,
+    let height_map_noise_fn = Noise2d::new(RidgedMulti::new()
+        .set_seed(random_seed())
+        .set_frequency(0.001)
+        .set_lacunarity(4.0)
+        .set_persistence(0.7)
+        .set_octaves(8));
+    let filler = |p: &Point2i| height_map_noise_fn.sample_elevation([p.x() as f64, p.y() as f64]);
+
+    let array = Array2::fill_with(extent, filler);
+    HeightMap(array)
 }
 
-impl StrataGenerator {
-    fn new(height_map: HeightMap) -> Self {
-        Self {
-            noise: RidgedMulti::new()
-                .set_seed(thread_rng().gen::<u32>()),
-            height_map,
-        }
-    }
-
-    fn strata_map(&self, min: &Point3i, max: &Point3i, shape: &Point3i, query: Extent3i) -> StrataMap {
-        let mut dense_map = Array3::fill(query, CubeVoxel::Air);
-        for z in min.z()..max.z() {
-            for x in min.x()..max.x() {
-                let dirt_thickness = scale(self.noise.get([x as f64, z as f64]), -1., 1., -2.0, 5.) as i32;
-                let dirt_transition = self.height_map.0.get(&PointN([x, z]));
-                let stone_transition = dirt_transition - dirt_thickness;
-                let y_extent = Extent3i::from_min_and_shape(PointN([x, min.y(), z]), PointN([1, shape.y(), 1]));
-                dense_map.for_each_mut(&y_extent, |p: Point3i, value| {
-                    let y = p.y();
-                    if y <= stone_transition {
-                        *value = CubeVoxel::Stone;
-                    } else if y <= dirt_transition {
-                        *value = CubeVoxel::Grass;
-                    }
-                });
-            }
-        }
-        StrataMap(dense_map)
-    }
+fn random_seed() -> u32 {
+    thread_rng().gen()
 }
 
 struct WaterGenerator {
@@ -374,10 +309,10 @@ impl WaterGenerator {
         queue.push_back(location);
 
         while let Some(n) = queue.pop_front() {
-            assert!(n.x() >= -64);
-            assert!(n.x() <= 63);
-            assert!(n.z() >= -64);
-            assert!(n.z() <= 63);
+            assert!(n.x() >= REGION_MIN_3D.x());
+            assert!(n.x() <= REGION_MAX_3D.x());
+            assert!(n.z() >= REGION_MIN_3D.z());
+            assert!(n.z() <= REGION_MAX_3D.z());
             if n.x() < REGION_MAX_3D.x() - 1 {
                 let west = self.strata_map.0.get_mut(&PointN([n.x() + 1, SEA_LEVEL - 1, n.z()]));
                 if *west == CubeVoxel::Air {
@@ -412,10 +347,8 @@ impl WaterGenerator {
     fn flood_fill_down(&mut self, min: &Point3i, max: &Point3i) {
         for z in min.z()..max.z() {
             for x in min.x()..max.x() {
-                trace!("y, min_y: {}, {}", SEA_LEVEL - 1, min.y());
                 for y in (min.y()..(SEA_LEVEL - 1)).rev() {
                     let voxel = self.strata_map.0.get_mut(&PointN([x, y, z]));
-                    trace!("voxel: {:?}", *voxel);
                     if *voxel == CubeVoxel::Water {
                         continue;
                     } else if *voxel == CubeVoxel::Air {
@@ -430,20 +363,44 @@ impl WaterGenerator {
     }
 }
 
+fn generate_strata_map<H>(height_map_sampler: &H, min: &Point3i, max: &Point3i, shape: &Point3i, query: Extent3i) -> StrataMap
+    where H: HeightMapSampler<[i32; 2]>,
+{
+    let dirt_thickness_noise_fn: Noise2d<_, [f64; 2]> = Noise2d::new(RidgedMulti::new()
+        .set_seed(random_seed()));
+
+    let mut dense_map = Array3::fill(query, CubeVoxel::Air);
+    (min.z()..max.z())
+        .flat_map(|z| iter::repeat(z).zip(min.x()..max.x()))
+        .map(|(z, x)| {
+            let strata_sampler = VoxelColumn::new(&dirt_thickness_noise_fn, height_map_sampler, [x as i32, z as i32], min.y(), max.y());
+            let y_extent = Extent3i::from_min_and_shape(PointN([x, min.y(), z]), PointN([1, shape.y(), 1]));
+            (strata_sampler, y_extent)
+        })
+        .map(|(mut sampler, extent)| {
+            dense_map.for_each_mut(&extent, |_point: Point3i, value| *value = sampler.next().unwrap());
+            assert!(sampler.next().is_none());
+        })
+        .for_each(drop);
+    StrataMap(dense_map)
+}
+
+struct StrataMap(Array3<CubeVoxel>);
+
 fn generate_voxels(mut terrain_res: ResMut<TerrainResource>) {
     if terrain_res.generated_voxels {
         return;
     }
 
     // Generate the height map.
-    let height_map = HeightMapGenerator::new().height_map();
+    let height_map = generate_height_map();
 
     let query = Extent3i::from_min_and_shape(REGION_MIN_3D, REGION_SHAPE_3D);
     trace!("Generating voxels between {:?} and {:?} with extent {:?}", REGION_MIN_3D, REGION_MAX_3D, query);
     let local_cache: LocalCache<PointN<_>, building_blocks::storage::Chunk<[i32; 3], CubeVoxel, ()>, _> = LocalChunkCache::new();
 
     // Generate the strata map.
-    let strata_map = StrataGenerator::new(height_map).strata_map(&REGION_MIN_3D, &REGION_MAX_3D, &REGION_SHAPE_3D, query);
+    let strata_map = generate_strata_map(&height_map, &REGION_MIN_3D, &REGION_MAX_3D, &REGION_SHAPE_3D, query);
 
     // Flood-fill the water on the map.
     let mut water_generator = WaterGenerator::new(strata_map);

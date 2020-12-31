@@ -179,7 +179,7 @@ impl Default for TerrainResource {
 }
 
 struct MeshResource {
-    meshes: HashMap<Point3i, Option<Vec<(Entity, Handle<Mesh>)>>>,
+    meshes: HashMap<Point3i, Vec<(Entity, Handle<Mesh>)>>,
 }
 
 impl Default for MeshResource {
@@ -266,7 +266,7 @@ fn reset_world(
     // Delete the entities and meshes associated with the current world.
     let to_remove = mesh_res.meshes.keys().cloned().collect::<Vec<_>>();
     for p in to_remove {
-        if let Some(Some(meshes)) = mesh_res.meshes.remove(&p) {
+        if let Some(meshes) = mesh_res.meshes.remove(&p) {
             for (entity, mesh) in meshes {
                 commands.despawn(entity);
                 mesh_assets.remove(&mesh);
@@ -352,14 +352,14 @@ fn generate_meshes(
                 })
                 .collect::<Vec<_>>();
             //trace!("Inserting {:?} into the mesh map", p);
-            mesh_res.meshes.insert(p, Some(entities));
+            mesh_res.meshes.insert(p, entities);
         } else if let (p, None) = mesh {
             // Insert points with no associated mesh into the hash map.
             // We use the presence of the chunk key in the hash map as a flag on
             // whether or not to generate the mesh. Chunks without meshes (i.e.
             // chunks with just air) shouldn't be regenerated so we add them to
             // the hash map as well.
-            mesh_res.meshes.insert(p, None);
+            mesh_res.meshes.insert(p, Vec::new());
         }
     }
 }

@@ -46,11 +46,11 @@ use rand::{thread_rng, Rng};
 
 use colonize_common::CubeVoxel;
 
-const CHUNK_SIZE: usize = 256;
-const REGION_SIZE: usize = 512; // CHUNK_SIZE * NUM_CHUNKS
+const CHUNK_SIZE: usize = 32;
+const REGION_SIZE: usize = 128; // CHUNK_SIZE * NUM_CHUNKS
                                 // 512 underground blocks, plus 256 blocks above sea level.
-const REGION_HEIGHT: i32 = 768;
-const REGION_MIN_3D: Point3i = PointN([-(REGION_SIZE as i32 / 2), -512, -(REGION_SIZE as i32 / 2)]);
+const REGION_HEIGHT: i32 = 128;
+const REGION_MIN_3D: Point3i = PointN([-(REGION_SIZE as i32 / 2), -64, -(REGION_SIZE as i32 / 2)]);
 const REGION_SHAPE_3D: Point3i = PointN([REGION_SIZE as i32, REGION_HEIGHT, REGION_SIZE as i32]);
 const SEA_LEVEL: i32 = 0;
 

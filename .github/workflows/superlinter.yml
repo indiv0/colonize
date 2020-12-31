@@ -11,17 +11,21 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-check-test-stable-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-check-test-stable-
+
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: stable
           override: true
-
-      - uses: actions/cache@v2
-        with:
-          path: |
-            target
-          key: ${{ runner.os }}-cargo-check-test-stable-${{ hashFiles('../../Cargo.lock') }}
 
       - name: Install alsa
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev
@@ -35,22 +39,31 @@ jobs:
         with:
           command: check
 
-  test:
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
+
+  build:
     runs-on: ubuntu-latest
+    needs: check
     steps:
       - uses: actions/checkout@v2
+
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-check-test-stable-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-check-test-stable-
 
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: stable
           override: true
-
-      - uses: actions/cache@v2
-        with:
-          path: |
-            target
-          key: ${{ runner.os }}-cargo-check-test-stable-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Install alsa
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev
@@ -62,10 +75,15 @@ jobs:
 
       - uses: actions-rs/cargo@v1
         with:
+          command: check
+
+      - uses: actions-rs/cargo@v1
+        with:
           command: test
 
-  test-wasm:
+  build-wasm:
     runs-on: ubuntu-latest
+    needs: check
     steps:
       - uses: actions/checkout@v2
 
@@ -79,8 +97,12 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: |
+            ~/.cargo/registry
+            ~/.cargo/git
             target
-          key: ${{ runner.os }}-cargo-check-test-stable-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-check-test-stable-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-check-test-stable-
 
       - uses: actions-rs/cargo@v1
         with:
@@ -107,6 +129,7 @@ jobs:
 
   clippy:
     runs-on: ubuntu-latest
+    needs: check
     steps:
       - uses: actions/checkout@v2
 
@@ -119,8 +142,12 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: |
+            ~/.cargo/registry
+            ~/.cargo/git
             target
-          key: ${{ runner.os }}-cargo-check-test-stable-${{ hashFiles('../../Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-check-test-stable-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-check-test-stable-
 
       - name: Install alsa
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev

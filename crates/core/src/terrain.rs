@@ -73,10 +73,10 @@ where
     let water_generator = WaterGenerator::new(
         sea_level,
         minimum.x(),
-        maximum.x(),
+        maximum.x() + 1,
         minimum.y(),
         minimum.z(),
-        maximum.z(),
+        maximum.z() + 1,
     );
     water_generator.flood_fill(&mut strata_array);
 

@@ -29,8 +29,8 @@ impl MergeVoxel for CubeVoxel {
 impl IsOpaque for CubeVoxel {
     fn is_opaque(&self) -> bool {
         match self {
-            CubeVoxel::Air | CubeVoxel::Water => true,
-            CubeVoxel::Stone | CubeVoxel::Grass | CubeVoxel::Gold => false,
+            CubeVoxel::Air | CubeVoxel::Water => false,
+            CubeVoxel::Stone | CubeVoxel::Grass | CubeVoxel::Gold => true,
         }
     }
 }

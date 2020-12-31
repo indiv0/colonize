@@ -6,6 +6,6 @@ authors = ["Nikita Pekin <nikita@frecency.com>"]
 publish = false
 
 [dependencies]
-bevy = { git = "https://github.com/bevyengine/bevy", rev = "2e2423139e0cd8efda3aa0d474d3eb231dad566b", default-features = false, features = ["bevy_gltf", "bevy_winit", "png", "render"] }
+bevy = { version = "0.4.0", default-features = false, features = ["bevy_gltf", "bevy_winit", "png", "render"] }
 building-blocks = { version = "0.4.3", default-features = false, features = ["mesh", "snappy"] }
 colonize_common = { path = "../common" }

@@ -21,18 +21,21 @@ use bevy::{
     render::mesh::{Indices, VertexAttributeValues},
 };
 use bevy_rapier3d::rapier::{dynamics::RigidBodyBuilder, geometry::ColliderBuilder, math::Point};
-use building_blocks::prelude::{copy_extent, LocalChunkCache3};
+use building_blocks::core::{Extent3i, Point3i, PointN};
 use building_blocks::{
     core::Point3,
-    storage::{compressible_map::LocalCache, Array3, ChunkMap, ChunkMapReader, ForEach, Snappy},
-};
-use building_blocks::{
-    core::{Extent3i, Point3i, PointN},
-    storage::ChunkMap3,
+    storage::{Array3, ForEach, Snappy},
 };
 use building_blocks::{
     mesh::{greedy_quads, padded_greedy_quads_chunk_extent, GreedyQuadsBuffer, PosNormMesh},
     storage::LocalChunkCache,
+};
+use building_blocks::{
+    prelude::{copy_extent, LocalChunkCache3},
+    storage::{
+        ChunkMapBuilder, ChunkMapBuilder3, CompressibleChunkMap3, CompressibleChunkStorage,
+        IterChunkKeys,
+    },
 };
 use colonize_noise::Noise2d;
 use noise::{MultiFractal, NoiseFn, RidgedMulti, Seedable};
@@ -47,6 +50,12 @@ const REGION_HEIGHT: i32 = 768;
 const REGION_MIN_3D: Point3i = PointN([-(REGION_SIZE as i32 / 2), -512, -(REGION_SIZE as i32 / 2)]);
 const REGION_SHAPE_3D: Point3i = PointN([REGION_SIZE as i32, REGION_HEIGHT, REGION_SIZE as i32]);
 const SEA_LEVEL: i32 = 0;
+
+const DEFAULT_BUILDER: ChunkMapBuilder3<CubeVoxel> = ChunkMapBuilder {
+    chunk_shape: PointN([CHUNK_SIZE as i32; 3]),
+    ambient_value: CubeVoxel::Air,
+    default_chunk_metadata: (),
+};
 
 #[derive(Debug)]
 pub struct Chunk;
@@ -82,7 +91,7 @@ fn setup(mut res: ResMut<TerrainResource>, mut materials: ResMut<Assets<Standard
 pub(crate) struct TerrainResource {
     materials: Vec<MeshMaterial>,
     noise: RidgedMulti,
-    chunks: ChunkMap3<CubeVoxel>,
+    chunks: CompressibleChunkMap3<CubeVoxel>,
     generated_voxels: bool,
     sea_level: f64,
     y_offset: f64,
@@ -110,18 +119,30 @@ impl TerrainResource {
         let query_extent = Extent3i::from_min_and_shape(min, size);
         let mut gold_loc = Option::None;
         let local_cache = LocalChunkCache::new();
-        let reader = ChunkMapReader::new(&self.chunks, &local_cache);
-        reader.for_each(&query_extent, |p: Point3i, value| {
+        let reader = self.chunks.storage().reader(&local_cache);
+        let reader_map = DEFAULT_BUILDER.build(reader);
+        //for chunk_key in self.chunks.indexer.chunk_keys_for_extent(&query_extent) {
+        //    if let Some(chunk) = reader.get(&chunk_key) {
+        //        chunk.array.for_each(&query_extent.clone(), |p: Point3i, value| f(p, value));
+        //    } else {
+        //        let chunk_extent = self.chunks.indexer.extent_for_chunk_at_key(chunk_key);
+        //        AmbientExtent::new(self.chunks.ambient_value())
+        //            .for_each(&query_extent.intersection(&chunk_extent), |p, value| f(p, value));
+        //    }
+        //}
+        let f = |p: Point3i, value| {
             if value == CubeVoxel::Gold {
-                gold_loc.replace(p);
+                gold_loc.replace(p.clone());
             }
-        });
+        };
+        reader_map.for_each(&query_extent, f);
         gold_loc
     }
 }
 
 impl Default for TerrainResource {
     fn default() -> Self {
+        let store = CompressibleChunkStorage::new(Snappy);
         Self {
             materials: Vec::new(),
             //noise: Fbm::new().set_frequency(0.008).set_octaves(8),
@@ -130,7 +151,7 @@ impl Default for TerrainResource {
                 .set_lacunarity(4.0)
                 .set_persistence(0.7)
                 .set_octaves(8),
-            chunks: ChunkMap::new(PointN([CHUNK_SIZE as i32; 3]), CubeVoxel::Air, (), Snappy),
+            chunks: DEFAULT_BUILDER.build(store),
             generated_voxels: false,
             sea_level: 100.,
             y_offset: 10.,
@@ -220,7 +241,8 @@ fn reset_world(
     mesh_res: &mut ResMut<MeshResource>,
 ) {
     // Delete the voxels associated with the current world.
-    terrain_res.chunks = ChunkMap::new(PointN([CHUNK_SIZE as i32; 3]), CubeVoxel::Air, (), Snappy);
+    let store = CompressibleChunkStorage::new(Snappy);
+    terrain_res.chunks = DEFAULT_BUILDER.build(store);
 
     // Delete the entities and meshes associated with the current world.
     let to_remove = mesh_res.meshes.keys().cloned().collect::<Vec<_>>();
@@ -264,13 +286,7 @@ fn generate_voxels(mut terrain_res: ResMut<TerrainResource>) {
 
     // Copy over the voxels from their intermediate representations to the chunk map.
     trace!("Copying chunk data to chunk map");
-    let local_cache: LocalCache<
-        PointN<_>,
-        building_blocks::storage::Chunk<[i32; 3], CubeVoxel, ()>,
-        _,
-    > = LocalChunkCache::new();
     copy_extent(&query, &strata_array, &mut terrain_res.chunks);
-    terrain_res.chunks.flush_chunk_cache(local_cache);
     trace!("Finished generating the world");
 
     terrain_res.generated_voxels = true;
@@ -289,6 +305,7 @@ fn generate_meshes(
 ) {
     let map_ref = &terrain.chunks;
     let chunk_keys = map_ref
+        .storage()
         .chunk_keys()
         .into_iter()
         .filter(|k| {
@@ -330,17 +347,18 @@ fn generate_meshes(
 type Material = u8;
 
 async fn generate_mesh(
-    map_ref: &ChunkMap3<CubeVoxel>,
+    map_ref: &CompressibleChunkMap3<CubeVoxel>,
     chunk_key: &Point3i,
 ) -> (Point3i, Option<HashMap<Material, PosNormMesh>>) {
     trace!("Generating mesh for chunk at {:?}", chunk_key);
     let local_cache = LocalChunkCache3::new();
-    let map_reader = ChunkMapReader::new(map_ref, &local_cache);
     let padded_chunk_extent =
-        padded_greedy_quads_chunk_extent(&map_ref.extent_for_chunk_at_key(chunk_key));
+        padded_greedy_quads_chunk_extent(&map_ref.indexer.extent_for_chunk_at_key(*chunk_key));
 
     let mut padded_chunk = Array3::fill(padded_chunk_extent, CubeVoxel::Air);
-    copy_extent(&padded_chunk_extent, &map_reader, &mut padded_chunk);
+    let reader = map_ref.storage().reader(&local_cache);
+    let reader_map = DEFAULT_BUILDER.build(reader);
+    copy_extent(&padded_chunk_extent, &reader_map, &mut padded_chunk);
 
     // TODO bevy: we could avoid re-allocating the buffers on every call if we had
     // thread-local storage accessible from this task

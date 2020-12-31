@@ -343,10 +343,10 @@ pub(crate) struct DwarfPlugin;
 impl Plugin for DwarfPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_startup_system(add_dwarves.system())
-            .add_system(input_system)
-            .add_system(handle_physics_events)
-            .add_system(move_around)
-            .add_system(select_dwarves)
-            .add_system(keyboard_movement_system);
+            .add_system(input_system.system())
+            .add_system(handle_physics_events.system())
+            .add_system(move_around.system())
+            .add_system(select_dwarves.system())
+            .add_system(keyboard_movement_system.system());
     }
 }

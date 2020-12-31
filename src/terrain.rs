@@ -79,22 +79,22 @@ impl Plugin for TerrainPlugin {
 }
 
 fn setup(mut res: ResMut<TerrainResource>, mut materials: ResMut<Assets<StandardMaterial>>) {
-    res.materials.push(MeshMaterial(
+    res.materials.insert(CubeVoxel::Stone, MeshMaterial(
         materials.add(Color::rgb(0.5, 0.5, 0.5).into()), // Stone
     ));
-    res.materials.push(MeshMaterial(
+    res.materials.insert(CubeVoxel::Grass, MeshMaterial(
         materials.add(Color::rgb(0.376, 0.502, 0.22).into()), // Grass
     ));
-    res.materials.push(MeshMaterial(
+    res.materials.insert(CubeVoxel::Gold, MeshMaterial(
         materials.add(Color::rgb(1.0, 0.843, 0.).into()), // Gold
     ));
-    res.materials.push(MeshMaterial(
-        materials.add(Color::rgb(0.0, 0.0, 0.5).into()), // Water
+    res.materials.insert(CubeVoxel::Water, MeshMaterial(
+        materials.add(Color::rgba(0.0, 0.0, 0.5, 0.5).into()), // Water
     ));
 }
 
 pub(crate) struct TerrainResource {
-    materials: Vec<MeshMaterial>,
+    materials: HashMap<CubeVoxel, MeshMaterial>,
     noise: RidgedMulti,
     chunks: CompressibleChunkMap3<CubeVoxel>,
     generated_voxels: bool,
@@ -106,7 +106,7 @@ impl TerrainResource {
     pub(crate) fn surface_y(&self, column: Point2i) -> i32 {
         let local_cache = LocalChunkCache::new();
         let reader = self.chunks.storage().reader(&local_cache);
-        let reader_map = DEFAULT_BUILDER.build(reader);
+        let reader_map = DEFAULT_BUILDER.build_with_read_storage(reader);
         let bounding_extent = reader_map.bounding_extent();
         let min_y = bounding_extent.minimum.y();
         for y in (min_y..bounding_extent.max().y()).rev() {
@@ -127,7 +127,7 @@ impl TerrainResource {
         let mut gold_loc = Option::None;
         let local_cache = LocalChunkCache::new();
         let reader = self.chunks.storage().reader(&local_cache);
-        let reader_map = DEFAULT_BUILDER.build(reader);
+        let reader_map = DEFAULT_BUILDER.build_with_read_storage(reader);
         //for chunk_key in self.chunks.indexer.chunk_keys_for_extent(&query_extent) {
         //    if let Some(chunk) = reader.get(&chunk_key) {
         //        chunk.array.for_each(&query_extent.clone(), |p: Point3i, value| f(p, value));
@@ -151,14 +151,14 @@ impl Default for TerrainResource {
     fn default() -> Self {
         let store = CompressibleChunkStorage::new(Snappy);
         Self {
-            materials: Vec::new(),
+            materials: HashMap::new(),
             //noise: Fbm::new().set_frequency(0.008).set_octaves(8),
             noise: RidgedMulti::new()
                 .set_frequency(0.001)
                 .set_lacunarity(4.0)
                 .set_persistence(0.7)
                 .set_octaves(8),
-            chunks: DEFAULT_BUILDER.build(store),
+            chunks: DEFAULT_BUILDER.build_with_write_storage(store),
             generated_voxels: false,
             sea_level: 100.,
             y_offset: 10.,
@@ -249,7 +249,7 @@ fn reset_world(
 ) {
     // Delete the voxels associated with the current world.
     let store = CompressibleChunkStorage::new(Snappy);
-    terrain_res.chunks = DEFAULT_BUILDER.build(store);
+    terrain_res.chunks = DEFAULT_BUILDER.build_with_write_storage(store);
 
     // Delete the entities and meshes associated with the current world.
     let to_remove = mesh_res.meshes.keys().cloned().collect::<Vec<_>>();
@@ -332,8 +332,9 @@ fn generate_meshes(
                 .map(|(material, mesh)| {
                     generate_mesh_entity(
                         mesh,
+                        material.collidable(),
                         commands,
-                        terrain.materials[material as usize].0.clone(),
+                        terrain.materials.get(&material).unwrap().0.clone(),
                         &mut mesh_assets,
                     )
                 })
@@ -351,12 +352,10 @@ fn generate_meshes(
     }
 }
 
-type Material = u8;
-
 async fn generate_mesh(
     map_ref: &CompressibleChunkMap3<CubeVoxel>,
     chunk_key: &Point3i,
-) -> (Point3i, Option<HashMap<Material, PosNormMesh>>) {
+) -> (Point3i, Option<HashMap<CubeVoxel, PosNormMesh>>) {
     trace!("Generating mesh for chunk at {:?}", chunk_key);
     let local_cache = LocalChunkCache3::new();
     let padded_chunk_extent =
@@ -364,7 +363,7 @@ async fn generate_mesh(
 
     let mut padded_chunk = Array3::fill(padded_chunk_extent, CubeVoxel::Air);
     let reader = map_ref.storage().reader(&local_cache);
-    let reader_map = DEFAULT_BUILDER.build(reader);
+    let reader_map = DEFAULT_BUILDER.build_with_read_storage(reader);
     copy_extent(&padded_chunk_extent, &reader_map, &mut padded_chunk);
 
     // TODO bevy: we could avoid re-allocating the buffers on every call if we had
@@ -373,10 +372,11 @@ async fn generate_mesh(
     greedy_quads(&padded_chunk, &padded_chunk_extent, &mut buffer);
 
     // Separate the meshes by material, so that we can render each voxel type with a different color.
-    let mut meshes: HashMap<Material, PosNormMesh> = HashMap::new();
+    let mut meshes: HashMap<CubeVoxel, PosNormMesh> = HashMap::new();
     for group in buffer.quad_groups.iter() {
-        for (quad, material) in group.quads.iter() {
-            let mesh = meshes.entry(*material).or_insert_with(PosNormMesh::default);
+        for quad in group.quads.iter() {
+            let material = reader_map.get(&quad.minimum);
+            let mesh = meshes.entry(material).or_insert_with(PosNormMesh::default);
             group.face.add_quad_to_pos_norm_mesh(&quad, mesh);
         }
     }
@@ -396,6 +396,7 @@ async fn generate_mesh(
 
 fn generate_mesh_entity(
     mesh: PosNormMesh,
+    collidable: bool,
     commands: &mut Commands,
     material: Handle<StandardMaterial>,
     meshes: &mut Assets<Mesh>,
@@ -403,14 +404,21 @@ fn generate_mesh_entity(
     assert_eq!(mesh.positions.len(), mesh.normals.len());
     let num_vertices = mesh.positions.len();
 
-    // Generate a colliding entity for the mesh to use for physics.
-    // TODO: does this position actually need to match the position of the chunk mesh?
-    //   It appears to work fine without any translation applied.
-    let rigid_body = RigidBodyBuilder::new_static();
-    let mut collider = ColliderBuilder::trimesh(
-        nested_array_f32_to_points(&mesh.positions),
-        flat_array_f32_to_points(&mesh.indices),
-    );
+    let rigid_body;
+    let collider;
+    if collidable {
+        // Generate a colliding entity for the mesh to use for physics.
+        // TODO: does this position actually need to match the position of the chunk mesh?
+        //   It appears to work fine without any translation applied.
+        rigid_body = Some(RigidBodyBuilder::new_static());
+        collider = Some(ColliderBuilder::trimesh(
+            nested_array_f32_to_points(&mesh.positions),
+            flat_array_f32_to_points(&mesh.indices),
+        ));
+    } else {
+        rigid_body = None;
+        collider = None;
+    }
 
     let mut render_mesh = Mesh::new(PrimitiveTopology::TriangleList);
     render_mesh.set_attribute(
@@ -438,8 +446,10 @@ fn generate_mesh_entity(
         .with(Chunk)
         .current_entity()
         .unwrap();
-    collider = collider.user_data(entity.to_bits() as u128);
-    commands.insert(entity, (rigid_body, collider));
+    if let (Some(rigid_body), Some(mut collider)) = (rigid_body, collider) {
+        collider = collider.user_data(entity.to_bits() as u128);
+        commands.insert(entity, (rigid_body, collider));
+    }
     (entity, mesh_handle)
 }
 

@@ -24,9 +24,9 @@ checksum = "d9fe5e32de01730eb1f6b7f5b51c17e03e2325bf40a74f754f04f130043affff"
 
 [[package]]
 name = "addr2line"
-version = "0.14.0"
+version = "0.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7c0929d69e78dd9bf5408269919fcbcaeb2e35e5d43e5815517cdc6a8e11a423"
+checksum = "a55f82cfe485775d02112886f4169bde0c5894d75e79ead7eafe7e40a25e45f7"
 dependencies = [
  "gimli",
 ]
@@ -860,8 +860,7 @@ checksum = "0d8c1fef690941d3e7788d328517591fecc684c084084702d6ff1641e993699a"
 [[package]]
 name = "building-blocks"
 version = "0.4.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7b3b6a8f6a938533fce15bedf3b6c076e9db7f3804338a63c30cc20ff66e3626"
+source = "git+https://github.com/bonsairobo/building-blocks?rev=b57fc864fdac5a40fe138c7bb8fbcd0614667cb5#b57fc864fdac5a40fe138c7bb8fbcd0614667cb5"
 dependencies = [
  "building_blocks_core",
  "building_blocks_mesh",
@@ -871,8 +870,7 @@ dependencies = [
 [[package]]
 name = "building_blocks_core"
 version = "0.4.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e6a1ef84a4b75391efcdf039859712fd9eda7ba289be1bba54fd3e77e9d7a409"
+source = "git+https://github.com/bonsairobo/building-blocks?rev=b57fc864fdac5a40fe138c7bb8fbcd0614667cb5#b57fc864fdac5a40fe138c7bb8fbcd0614667cb5"
 dependencies = [
  "itertools",
  "num",
@@ -882,8 +880,7 @@ dependencies = [
 [[package]]
 name = "building_blocks_mesh"
 version = "0.4.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "804851b134c929b9cb562becc2ada39a4e601490e52b3cc21e5af99db9692cbb"
+source = "git+https://github.com/bonsairobo/building-blocks?rev=b57fc864fdac5a40fe138c7bb8fbcd0614667cb5#b57fc864fdac5a40fe138c7bb8fbcd0614667cb5"
 dependencies = [
  "building_blocks_core",
  "building_blocks_storage",
@@ -893,8 +890,7 @@ dependencies = [
 [[package]]
 name = "building_blocks_storage"
 version = "0.4.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d1b950d68216ce0516baf2c46c3cf7e3983440b6031d8b45d57f3b9b33c37f1c"
+source = "git+https://github.com/bonsairobo/building-blocks?rev=b57fc864fdac5a40fe138c7bb8fbcd0614667cb5#b57fc864fdac5a40fe138c7bb8fbcd0614667cb5"
 dependencies = [
  "bincode",
  "building_blocks_core",

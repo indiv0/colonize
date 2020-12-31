@@ -7,5 +7,5 @@ publish = false
 
 [dependencies]
 bevy = { version = "0.4.0", default-features = false, features = ["bevy_gltf", "bevy_winit", "png", "render"] }
-building-blocks = { version = "0.4.3", default-features = false, features = ["mesh", "snappy"] }
+building-blocks = { git = "https://github.com/bonsairobo/building-blocks", rev = "b57fc864fdac5a40fe138c7bb8fbcd0614667cb5", default-features = false, features = ["mesh", "snappy"] }
 colonize_common = { path = "../common" }

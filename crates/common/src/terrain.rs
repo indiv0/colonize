@@ -1,6 +1,6 @@
-use building_blocks::{mesh::MaterialVoxel, storage::IsEmpty};
+use building_blocks::{mesh::{IsOpaque, MergeVoxel}, storage::IsEmpty};
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum CubeVoxel {
     Air,
     Stone,
@@ -9,18 +9,28 @@ pub enum CubeVoxel {
     Water,
 }
 
-impl MaterialVoxel for CubeVoxel {
-    type Material = u8;
-
-    fn material(&self) -> Self::Material {
+impl CubeVoxel {
+    pub fn collidable(&self) -> bool {
         match self {
-            // Technically air doesn't have a material since it doesn't get rendered, but we need to
-            // provide _something_ here.
-            CubeVoxel::Air => 0,
-            CubeVoxel::Stone => 0,
-            CubeVoxel::Grass => 1,
-            CubeVoxel::Gold => 2,
-            CubeVoxel::Water => 3,
+            CubeVoxel::Air | CubeVoxel::Water => false,
+            CubeVoxel::Stone | CubeVoxel::Grass | CubeVoxel::Gold => true,
+        }
+    }
+}
+
+impl MergeVoxel for CubeVoxel {
+    type VoxelValue = Self;
+
+    fn voxel_merge_value(&self) -> Self::VoxelValue {
+        *self
+    }
+}
+
+impl IsOpaque for CubeVoxel {
+    fn is_opaque(&self) -> bool {
+        match self {
+            CubeVoxel::Air | CubeVoxel::Water => true,
+            CubeVoxel::Stone | CubeVoxel::Grass | CubeVoxel::Gold => false,
         }
     }
 }

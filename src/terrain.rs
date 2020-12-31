@@ -52,6 +52,12 @@ const REGION_SIZE: usize = 128; // CHUNK_SIZE * NUM_CHUNKS
 const REGION_HEIGHT: i32 = 128;
 const REGION_MIN_3D: Point3i = PointN([-(REGION_SIZE as i32 / 2), -64, -(REGION_SIZE as i32 / 2)]);
 const REGION_SHAPE_3D: Point3i = PointN([REGION_SIZE as i32, REGION_HEIGHT, REGION_SIZE as i32]);
+const REGION_MAX_3D: Point3i = PointN([
+    REGION_MIN_3D.0[0] + REGION_SHAPE_3D.0[0],
+    REGION_MIN_3D.0[1] + REGION_SHAPE_3D.0[1],
+    REGION_MIN_3D.0[2] + REGION_SHAPE_3D.0[2],
+]);
+
 const SEA_LEVEL: i32 = 0;
 
 const DEFAULT_BUILDER: ChunkMapBuilder3<CubeVoxel> = ChunkMapBuilder {
@@ -105,6 +111,26 @@ fn setup(mut res: ResMut<TerrainResource>, mut materials: ResMut<Assets<Standard
     );
 }
 
+struct YLevel(i32);
+
+impl YLevel {
+    fn increment(&mut self) {
+        self.0 = i32::min(self.0 + 1, REGION_MAX_3D.y());
+        trace!("Incremented y-level to {:?}", self.0);
+    }
+
+    fn decrement(&mut self) {
+        self.0 = i32::max(self.0 - 1, REGION_MIN_3D.y());
+        trace!("Decremented y-level to {:?}", self.0);
+    }
+}
+
+impl Default for YLevel {
+    fn default() -> Self {
+        Self(REGION_MAX_3D.y())
+    }
+}
+
 pub(crate) struct TerrainResource {
     materials: HashMap<CubeVoxel, MeshMaterial>,
     noise: RidgedMulti,
@@ -112,6 +138,7 @@ pub(crate) struct TerrainResource {
     generated_voxels: bool,
     sea_level: f64,
     y_offset: f64,
+    y_level: YLevel,
 }
 
 impl TerrainResource {
@@ -174,6 +201,7 @@ impl Default for TerrainResource {
             generated_voxels: false,
             sea_level: 100.,
             y_offset: 10.,
+            y_level: YLevel::default(),
         }
     }
 }
@@ -245,6 +273,13 @@ fn modify_config(
     } else if keyboard_input.pressed(KeyCode::L) {
         terrain_res.noise.persistence -= 0.1;
         reset_flag = true;
+    }
+
+    // Increase/decrease the Y-level by 1 if the player pressed `<` or `>`.
+    if keyboard_input.just_pressed(KeyCode::Minus) {
+        terrain_res.y_level.decrement();
+    } else if keyboard_input.just_pressed(KeyCode::Plus) {
+        terrain_res.y_level.increment();
     }
 
     if reset_flag {

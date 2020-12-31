@@ -2,11 +2,27 @@ on: [push, pull_request]
 
 name: Continuous integration
 
+env:
+  CARGO_TERM_COLOR: always
+
 jobs:
   check:
-    name: Check
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - uses: actions/cache@v2
+        with:
+          path: |
+            target
+          key: ${{ runner.os }}-cargo-check-test-stable-${{ hashFiles('../../Cargo.lock') }}
+
       - name: Install alsa
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev
         if: ${{ runner.os == 'Linux' }}
@@ -15,20 +31,27 @@ jobs:
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libudev-dev
         if: ${{ runner.os == 'Linux' }}
 
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
       - uses: actions-rs/cargo@v1
         with:
           command: check
 
   test:
-    name: Test Suite
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - uses: actions/cache@v2
+        with:
+          path: |
+            target
+          key: ${{ runner.os }}-cargo-check-test-stable-${{ hashFiles('../../Cargo.lock') }}
+
       - name: Install alsa
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev
         if: ${{ runner.os == 'Linux' }}
@@ -37,36 +60,45 @@ jobs:
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libudev-dev
         if: ${{ runner.os == 'Linux' }}
 
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
       - uses: actions-rs/cargo@v1
         with:
           command: test
 
   fmt:
-    name: Rustfmt
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: stable
           override: true
+
       - run: rustup component add rustfmt
+
       - uses: actions-rs/cargo@v1
         with:
           command: fmt
           args: --all -- --check
 
   clippy:
-    name: Clippy
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - uses: actions/cache@v2
+        with:
+          path: |
+            target
+          key: ${{ runner.os }}-cargo-check-test-stable-${{ hashFiles('../../Cargo.lock') }}
+
       - name: Install alsa
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev
         if: ${{ runner.os == 'Linux' }}
@@ -75,13 +107,8 @@ jobs:
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libudev-dev
         if: ${{ runner.os == 'Linux' }}
 
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
       - run: rustup component add clippy
+
       - uses: actions-rs/cargo@v1
         with:
           command: clippy

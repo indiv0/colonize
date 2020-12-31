@@ -72,6 +72,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: test
+          args: --workspace
 
   build-wasm:
     runs-on: ubuntu-latest

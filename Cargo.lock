@@ -735,9 +735,9 @@ dependencies = [
 
 [[package]]
 name = "bevy_webgl2"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "32c54dfd3fc5578ae6a8dac06cbdcddd850baf68d7cd96a34ac95b80eb9a9835"
+checksum = "49b2acde914fa41f4523f507235b82e33aaa962b98b866fe6e060fcc2fa516c4"
 dependencies = [
  "bevy",
  "cfg-if 1.0.0",
@@ -860,7 +860,7 @@ checksum = "0d8c1fef690941d3e7788d328517591fecc684c084084702d6ff1641e993699a"
 [[package]]
 name = "building-blocks"
 version = "0.4.3"
-source = "git+https://github.com/bonsairobo/building-blocks?rev=b57fc864fdac5a40fe138c7bb8fbcd0614667cb5#b57fc864fdac5a40fe138c7bb8fbcd0614667cb5"
+source = "git+https://github.com/bonsairobo/building-blocks?rev=bf95c77450a1a118502b3c12c1d712fc215c0f86#bf95c77450a1a118502b3c12c1d712fc215c0f86"
 dependencies = [
  "building_blocks_core",
  "building_blocks_mesh",
@@ -870,7 +870,7 @@ dependencies = [
 [[package]]
 name = "building_blocks_core"
 version = "0.4.3"
-source = "git+https://github.com/bonsairobo/building-blocks?rev=b57fc864fdac5a40fe138c7bb8fbcd0614667cb5#b57fc864fdac5a40fe138c7bb8fbcd0614667cb5"
+source = "git+https://github.com/bonsairobo/building-blocks?rev=bf95c77450a1a118502b3c12c1d712fc215c0f86#bf95c77450a1a118502b3c12c1d712fc215c0f86"
 dependencies = [
  "itertools",
  "num",
@@ -880,7 +880,7 @@ dependencies = [
 [[package]]
 name = "building_blocks_mesh"
 version = "0.4.3"
-source = "git+https://github.com/bonsairobo/building-blocks?rev=b57fc864fdac5a40fe138c7bb8fbcd0614667cb5#b57fc864fdac5a40fe138c7bb8fbcd0614667cb5"
+source = "git+https://github.com/bonsairobo/building-blocks?rev=bf95c77450a1a118502b3c12c1d712fc215c0f86#bf95c77450a1a118502b3c12c1d712fc215c0f86"
 dependencies = [
  "building_blocks_core",
  "building_blocks_storage",
@@ -890,7 +890,7 @@ dependencies = [
 [[package]]
 name = "building_blocks_storage"
 version = "0.4.3"
-source = "git+https://github.com/bonsairobo/building-blocks?rev=b57fc864fdac5a40fe138c7bb8fbcd0614667cb5#b57fc864fdac5a40fe138c7bb8fbcd0614667cb5"
+source = "git+https://github.com/bonsairobo/building-blocks?rev=bf95c77450a1a118502b3c12c1d712fc215c0f86#bf95c77450a1a118502b3c12c1d712fc215c0f86"
 dependencies = [
  "bincode",
  "building_blocks_core",
@@ -1850,11 +1850,12 @@ dependencies = [
 
 [[package]]
 name = "getrandom"
-version = "0.1.15"
+version = "0.1.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fc587bc0ec293155d5bfa6b9891ec18a1e330c234f896ea47fbada4cadbe47e6"
+checksum = "8fc3cb4d91f53b50155bdcfd23f6a4c39ae1969c2ae85982b135750cccaf5fce"
 dependencies = [
- "cfg-if 0.1.10",
+ "cfg-if 1.0.0",
+ "js-sys",
  "libc",
  "wasi 0.9.0+wasi-snapshot-preview1",
  "wasm-bindgen",
@@ -3189,7 +3190,7 @@ version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6a6b1679d49b24bbfe0c803429aa1874472f50d9b363131f0e89fc356b544d03"
 dependencies = [
- "getrandom 0.1.15",
+ "getrandom 0.1.16",
  "libc",
  "rand_chacha",
  "rand_core 0.5.1",
@@ -3227,7 +3228,7 @@ version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "90bde5296fc891b0cef12a6d03ddccc162ce7b2aff54160af9338f8d40df6d19"
 dependencies = [
- "getrandom 0.1.15",
+ "getrandom 0.1.16",
 ]
 
 [[package]]

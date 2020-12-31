@@ -23,8 +23,8 @@ members = ["crates/*"]
 bevy = { version = "0.4.0", default-features = false, features = ["bevy_gltf", "bevy_winit", "png", "render"] }
 bevy_mod_picking = { version = "0.3.1", default-features = false }
 bevy_rapier3d = { version = "0.7.0", default-features = false, features = ["dim3"] }
-bevy_webgl2 = { version = "0.4.0", optional = true }
-building-blocks = { git = "https://github.com/bonsairobo/building-blocks", rev = "b57fc864fdac5a40fe138c7bb8fbcd0614667cb5", default-features = false, features = ["mesh", "snappy"] }
+bevy_webgl2 = { version = "0.4.1", optional = true }
+building-blocks = { git = "https://github.com/bonsairobo/building-blocks", rev = "bf95c77450a1a118502b3c12c1d712fc215c0f86", default-features = false, features = ["mesh", "snappy"] }
 colonize_common = { path = "crates/common" }
 colonize_core = { path = "crates/core" }
 colonize_noise = { path = "crates/noise" }

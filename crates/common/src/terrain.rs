@@ -1,4 +1,7 @@
-use building_blocks::{mesh::{IsOpaque, MergeVoxel}, storage::IsEmpty};
+use building_blocks::{
+    mesh::{IsOpaque, MergeVoxel},
+    storage::IsEmpty,
+};
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum CubeVoxel {

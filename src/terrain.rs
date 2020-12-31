@@ -79,18 +79,30 @@ impl Plugin for TerrainPlugin {
 }
 
 fn setup(mut res: ResMut<TerrainResource>, mut materials: ResMut<Assets<StandardMaterial>>) {
-    res.materials.insert(CubeVoxel::Stone, MeshMaterial(
-        materials.add(Color::rgb(0.5, 0.5, 0.5).into()), // Stone
-    ));
-    res.materials.insert(CubeVoxel::Grass, MeshMaterial(
-        materials.add(Color::rgb(0.376, 0.502, 0.22).into()), // Grass
-    ));
-    res.materials.insert(CubeVoxel::Gold, MeshMaterial(
-        materials.add(Color::rgb(1.0, 0.843, 0.).into()), // Gold
-    ));
-    res.materials.insert(CubeVoxel::Water, MeshMaterial(
-        materials.add(Color::rgba(0.0, 0.0, 0.5, 0.5).into()), // Water
-    ));
+    res.materials.insert(
+        CubeVoxel::Stone,
+        MeshMaterial(
+            materials.add(Color::rgb(0.5, 0.5, 0.5).into()), // Stone
+        ),
+    );
+    res.materials.insert(
+        CubeVoxel::Grass,
+        MeshMaterial(
+            materials.add(Color::rgb(0.376, 0.502, 0.22).into()), // Grass
+        ),
+    );
+    res.materials.insert(
+        CubeVoxel::Gold,
+        MeshMaterial(
+            materials.add(Color::rgb(1.0, 0.843, 0.).into()), // Gold
+        ),
+    );
+    res.materials.insert(
+        CubeVoxel::Water,
+        MeshMaterial(
+            materials.add(Color::rgba(0.0, 0.0, 0.5, 0.5).into()), // Water
+        ),
+    );
 }
 
 pub(crate) struct TerrainResource {

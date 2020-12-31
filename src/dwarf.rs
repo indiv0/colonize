@@ -20,9 +20,12 @@ use bevy_rapier3d::{
         geometry::{ColliderBuilder, ColliderSet, ContactEvent},
     },
 };
+use building_blocks::core::PointN;
 use rand::{thread_rng, Rng};
 
 use crate::terrain::{Chunk, TerrainResource};
+
+pub(crate) const DWARVES: &str = "DWARVES";
 
 // Struct for storing the currently selected dwarf, if any.
 struct SelectedDwarf {
@@ -83,7 +86,13 @@ fn add_dwarves(
         .into_iter()
         // FIXME: `surface_y` doesn't return the correct value. It returns a value that's way
         //   above the actual surface.
-        .map(|(x, z)| (x as f32, terrain_res.surface_y(x, z) as f32, z as f32));
+        .map(|(x, z)| {
+            (
+                x as f32,
+                terrain_res.surface_y(PointN([x as i32, z as i32])) as f32 + 5.,
+                z as f32,
+            )
+        });
 
     for name in &names {
         let position = spawn_positions.next().unwrap();
@@ -106,6 +115,7 @@ fn spawn_dwarf(
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
 ) {
+    trace!("Spawning dwarf at {:?}", (px, py, pz));
     const SIZE: f32 = 1.;
 
     let entity = commands
@@ -116,7 +126,7 @@ fn spawn_dwarf(
             ..Default::default()
         })
         .with(Dwarf::default())
-        .with(Name(name.to_string()))
+        .with(Name(name))
         .with(PickableMesh::default())
         .with(InteractableMesh::default())
         .with(HighlightablePickMesh::default())
@@ -175,16 +185,16 @@ fn handle_physics_events(
             let entity_2 = Entity::from_bits(collider_2.user_data as u64);
 
             let mut maybe_dwarf_entity: Option<Entity> = Option::None;
-            if let Ok(_) = dwarf_query.get_component::<Dwarf>(entity_1) {
+            if dwarf_query.get_component::<Dwarf>(entity_1).is_ok() {
                 maybe_dwarf_entity.replace(entity_1);
-            } else if let Ok(_) = dwarf_query.get_component::<Dwarf>(entity_2) {
+            } else if dwarf_query.get_component::<Dwarf>(entity_2).is_ok() {
                 maybe_dwarf_entity.replace(entity_2);
             }
 
             let mut maybe_chunk_entity: Option<Entity> = Option::None;
-            if let Ok(_) = chunk_query.get_component::<Chunk>(entity_1) {
+            if chunk_query.get_component::<Chunk>(entity_1).is_ok() {
                 maybe_chunk_entity.replace(entity_1);
-            } else if let Ok(_) = chunk_query.get_component::<Chunk>(entity_2) {
+            } else if chunk_query.get_component::<Chunk>(entity_2).is_ok() {
                 maybe_chunk_entity.replace(entity_2);
             }
 
@@ -206,16 +216,16 @@ fn handle_physics_events(
             let entity_2 = Entity::from_bits(collider_2.user_data as u64);
 
             let mut maybe_dwarf_entity: Option<Entity> = Option::None;
-            if let Ok(_) = dwarf_query.get_component::<Dwarf>(entity_1) {
+            if dwarf_query.get_component::<Dwarf>(entity_1).is_ok() {
                 maybe_dwarf_entity.replace(entity_1);
-            } else if let Ok(_) = dwarf_query.get_component::<Dwarf>(entity_2) {
+            } else if dwarf_query.get_component::<Dwarf>(entity_2).is_ok() {
                 maybe_dwarf_entity.replace(entity_2);
             }
 
             let mut maybe_chunk_entity: Option<Entity> = Option::None;
-            if let Ok(_) = chunk_query.get_component::<Chunk>(entity_1) {
+            if chunk_query.get_component::<Chunk>(entity_1).is_ok() {
                 maybe_chunk_entity.replace(entity_1);
-            } else if let Ok(_) = chunk_query.get_component::<Chunk>(entity_2) {
+            } else if chunk_query.get_component::<Chunk>(entity_2).is_ok() {
                 maybe_chunk_entity.replace(entity_2);
             }
 
@@ -342,7 +352,7 @@ pub(crate) struct DwarfPlugin;
 
 impl Plugin for DwarfPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.add_startup_system(add_dwarves.system())
+        app.add_startup_system_to_stage(DWARVES, add_dwarves.system())
             .add_system(input_system.system())
             .add_system(handle_physics_events.system())
             .add_system(move_around.system())

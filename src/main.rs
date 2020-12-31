@@ -11,13 +11,13 @@ mod camera;
 mod dwarf;
 mod terrain;
 
-use bevy::prelude::*;
+use bevy::{app::startup_stage, prelude::*};
 use bevy_mod_picking::*;
 use bevy_rapier3d::physics::RapierPhysicsPlugin;
 
 use camera::fps::{CameraMovementPlugin, CameraState};
-use dwarf::DwarfPlugin;
-use terrain::TerrainPlugin;
+use dwarf::{DwarfPlugin, DWARVES};
+use terrain::{TerrainPlugin, TERRAIN};
 
 fn main() {
     #[cfg(not(target_arch = "wasm32"))]
@@ -28,6 +28,8 @@ fn main() {
     #[cfg(not(target_arch = "wasm32"))]
     {
         App::build()
+            .add_startup_stage_after(startup_stage::PRE_STARTUP, TERRAIN, SystemStage::parallel())
+            .add_startup_stage_after(TERRAIN, DWARVES, SystemStage::parallel())
             .add_plugins(default_plugins)
             .add_plugin(DwarfPlugin)
             .add_plugin(CameraMovementPlugin)
@@ -43,6 +45,8 @@ fn main() {
     #[cfg(target_arch = "wasm32")]
     {
         App::build()
+            .add_startup_stage_after(startup_stage::STARTUP, TERRAIN, SystemStage::parallel())
+            .add_startup_stage_after(TERRAIN, DWARVES, SystemStage::parallel())
             .add_plugins(default_plugins)
             .add_plugin(DwarfPlugin)
             .add_plugin(CameraMovementPlugin)
@@ -67,7 +71,7 @@ fn setup(commands: &mut Commands) {
         })
         // Camera
         .spawn(Camera3dBundle {
-            transform: Transform::from_translation(Vec3::new(32.0, -20.0, 32.0))
+            transform: Transform::from_translation(Vec3::new(32.0, 100.0, 32.0))
                 .looking_at(Vec3::default(), Vec3::unit_y()),
             ..Default::default()
         })

@@ -21,10 +21,13 @@ use bevy::{
     render::mesh::{Indices, VertexAttributeValues},
 };
 use bevy_rapier3d::rapier::{dynamics::RigidBodyBuilder, geometry::ColliderBuilder, math::Point};
-use building_blocks::core::{Extent3i, Point3i, PointN};
 use building_blocks::{
     core::Point3,
     storage::{Array3, ForEach, Snappy},
+};
+use building_blocks::{
+    core::{Extent3i, Point2i, Point3i, PointN},
+    storage::Get,
 };
 use building_blocks::{
     mesh::{greedy_quads, padded_greedy_quads_chunk_extent, GreedyQuadsBuffer, PosNormMesh},
@@ -38,7 +41,7 @@ use building_blocks::{
     },
 };
 use colonize_noise::Noise2d;
-use noise::{MultiFractal, NoiseFn, RidgedMulti, Seedable};
+use noise::{MultiFractal, RidgedMulti, Seedable};
 use rand::{thread_rng, Rng};
 
 use colonize_common::CubeVoxel;
@@ -57,6 +60,8 @@ const DEFAULT_BUILDER: ChunkMapBuilder3<CubeVoxel> = ChunkMapBuilder {
     default_chunk_metadata: (),
 };
 
+pub(crate) const TERRAIN: &str = "terrain";
+
 #[derive(Debug)]
 pub struct Chunk;
 
@@ -67,7 +72,7 @@ impl Plugin for TerrainPlugin {
         app.add_resource(TerrainResource::default())
             .add_resource(MeshResource::default())
             .add_startup_system(setup.system())
-            .add_system(generate_voxels.system())
+            .add_startup_system_to_stage(TERRAIN, generate_voxels.system())
             .add_system(generate_meshes.system())
             .add_system(modify_config.system());
     }
@@ -98,18 +103,20 @@ pub(crate) struct TerrainResource {
 }
 
 impl TerrainResource {
-    fn y_scale(&self) -> f64 {
-        self.sea_level * 0.2
-    }
-
-    /// Returns the y-value of the surface of the terrain at the specified x & z coordinates,
-    /// as determined solely by the terrain generation algorithm.
-    ///
-    /// If the terrain gets modified after generation (e.g. digging holes or adding structures)
-    /// the modifications are not taken into account by this function.
-    pub(crate) fn surface_y(&self, x: f64, z: f64) -> i32 {
-        // FIXME: I don't think this calculation is actually correct.
-        (self.noise.get([x, z]) * self.y_scale() + self.y_offset).round() as i32
+    pub(crate) fn surface_y(&self, column: Point2i) -> i32 {
+        let local_cache = LocalChunkCache::new();
+        let reader = self.chunks.storage().reader(&local_cache);
+        let reader_map = DEFAULT_BUILDER.build(reader);
+        let bounding_extent = reader_map.bounding_extent();
+        let min_y = bounding_extent.minimum.y();
+        for y in (min_y..bounding_extent.max().y()).rev() {
+            let location = PointN([column.x(), y, column.y()]);
+            let value = reader_map.get(&location);
+            if value != CubeVoxel::Air {
+                return y;
+            }
+        }
+        min_y
     }
 
     pub(crate) fn find_nearest_gold(&self, x: i32, y: i32, z: i32) -> Option<Point3<i32>> {
@@ -132,7 +139,7 @@ impl TerrainResource {
         //}
         let f = |p: Point3i, value| {
             if value == CubeVoxel::Gold {
-                gold_loc.replace(p.clone());
+                gold_loc.replace(p);
             }
         };
         reader_map.for_each(&query_extent, f);
@@ -369,7 +376,7 @@ async fn generate_mesh(
     let mut meshes: HashMap<Material, PosNormMesh> = HashMap::new();
     for group in buffer.quad_groups.iter() {
         for (quad, material) in group.quads.iter() {
-            let mesh = meshes.entry(*material).or_insert(PosNormMesh::default());
+            let mesh = meshes.entry(*material).or_insert_with(PosNormMesh::default);
             group.face.add_quad_to_pos_norm_mesh(&quad, mesh);
         }
     }
@@ -381,9 +388,9 @@ async fn generate_mesh(
     );
 
     if all_are_empty {
-        (chunk_key.clone(), None)
+        (*chunk_key, None)
     } else {
-        (chunk_key.clone(), Some(meshes))
+        (*chunk_key, Some(meshes))
     }
 }
 

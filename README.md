@@ -4,8 +4,8 @@ A Dwarf Fortress/Rimworld-like game written in Rust.
 
 <table>
   <tr>
-    <td><strong>Live Demo (v0.5.0; <a href="https://github.com/indiv0/colonize#controls">Controls</a>)</strong></td>
-    <td><a href="https://colonize.rs/0.5.0/">https://colonize.rs/0.5.0/</td>
+    <td><strong>Live Demo (v0.6.0; <a href="https://github.com/indiv0/colonize#controls">Controls</a>)</strong></td>
+    <td><a href="https://colonize.rs/0.6.0/">https://colonize.rs/0.6.0/</td>
   </tr>
   <tr>
     <td colspan="2">
@@ -65,6 +65,7 @@ the terrain with new parameters.
     - Frequency (+/- 0.001): I/J
     - Lacunarity (+/- 0.1): O/K
     - Persistence (+/- 0.1): P/L
+- Slicing: -/= to increase/decrease the Y-Level
 - Misc:
     - Spawn 10 more dwarves: T
 

@@ -291,9 +291,9 @@ fn hide_y_levels_system(
 ) {
     // Increase/decrease the Y-level by 1 if the player pressed `<` or `>`.
     let old_y_level = terrain_res.y_level;
-    if keyboard_input.just_pressed(KeyCode::Minus) {
+    if keyboard_input.pressed(KeyCode::Minus) {
         terrain_res.y_level.decrement();
-    } else if keyboard_input.just_pressed(KeyCode::Equals) {
+    } else if keyboard_input.pressed(KeyCode::Equals) {
         terrain_res.y_level.increment();
     }
 

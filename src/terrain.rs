@@ -10,8 +10,8 @@
 //! is (384, 384, 384).
 use std::collections::{BTreeMap, HashMap};
 
-use bevy::{ecs::Query, render::pipeline::PrimitiveTopology};
 use bevy::tasks::ComputeTaskPool;
+use bevy::{ecs::Query, prelude::debug, render::pipeline::PrimitiveTopology};
 use bevy::{
     ecs::{Commands, Entity, IntoSystem, Res, ResMut},
     input::Input,
@@ -113,7 +113,7 @@ fn setup(mut res: ResMut<TerrainResource>, mut materials: ResMut<Assets<Standard
     );
 }
 
-#[derive(Clone, Copy, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 struct YLevel(i32);
 
 impl YLevel {
@@ -283,6 +283,33 @@ fn modify_config(
     }
 }
 
+// Rounds down `num` to the nearest multiple of `multiple`.
+// This is used for finding the Y position of a chunk from a Y position
+// within that chunk. For example:
+//
+//      rnd(-33, 32) = -64
+//      rnd(-32, 32) = -32
+//      rnd(-1, 32) = -32
+//      rnd(0, 32) = 0
+//      rnd(31, 32) = 0
+//      rnd(32, 32) = 32
+fn round_down_to_nearest_multiple(num: i32, multiple: i32) -> i32 {
+    if multiple == 0 {
+        return num;
+    }
+
+    let rem = i32::abs(num) % multiple;
+    if rem == 0 {
+        return num;
+    }
+
+    if num < 0 {
+        -(i32::abs(num) - rem) - multiple
+    } else {
+        num - rem
+    }
+}
+
 fn hide_y_levels_system(
     keyboard_input: Res<Input<KeyCode>>,
     mut terrain_res: ResMut<TerrainResource>,
@@ -291,64 +318,59 @@ fn hide_y_levels_system(
     mut visible_query: Query<&mut Visible>,
 ) {
     // Increase/decrease the Y-level by 1 if the player pressed `<` or `>`.
-    let y_level_changed;
+    let old_y_level = terrain_res.y_level;
     if keyboard_input.pressed(KeyCode::Minus) {
         terrain_res.y_level.decrement();
-        y_level_changed = true;
-    } else if keyboard_input.pressed(KeyCode::Plus) {
+    } else if keyboard_input.pressed(KeyCode::Equals) {
         terrain_res.y_level.increment();
-        y_level_changed = true;
-    } else {
-        y_level_changed = false;
     }
 
-    if y_level_changed {
-        // Get the list of all entities associated with a terrain mesh.
-        let mut transparent_mesh_entities = Vec::new();
-        for (chunk_pos, mesh_entities) in &mesh_res.meshes {
+    if old_y_level != terrain_res.y_level {
+        // Find and disable all the meshes at the old y-level.
+        for (_chunk_pos, mesh_entities) in &mesh_res.meshes {
             for (entity, _mesh) in mesh_entities {
                 if let Ok(y_level) = y_level_query.get(*entity) {
-                    transparent_mesh_entities.push((chunk_pos, *y_level, entity));
-                }
-            }
-        }
-        let mut transparent_meshes = BTreeMap::new();
-        for (chunk_pos, y_level, entity) in transparent_mesh_entities {
-            if let Ok(mut visible) = visible_query.get_mut(*entity) {
-                // For each terrain mesh, mark it as visible/invisible depending on if it falls
-                // below/above the y-level watermark.
-                if y_level <= terrain_res.y_level {
-                    visible.is_visible = true;
-
-                    // If the mesh is a visible transparent mesh, save it for further processing.
-                    if visible.is_transparent {
-                        // We're interested in transparent layers above one another _within_ a single chunk, so we
-                        // reduce the chunk coordinates to XZ and key on that.
-                        let chunk_pos = chunk_pos.xz().0;
-                        if !transparent_meshes.contains_key(&chunk_pos) {
-                            transparent_meshes.insert(chunk_pos, BTreeMap::new());
+                    if y_level == &old_y_level {
+                        if let Ok(mut visible) = visible_query.get_mut(*entity) {
+                            visible.is_visible = false;
                         }
-                        let chunk_transparent_meshes = transparent_meshes.get_mut(&chunk_pos).unwrap();
-
-                        chunk_transparent_meshes.insert(y_level, *entity);
                     }
-                } else {
-                    visible.is_visible = false;
                 }
             }
         }
 
-        for (_chunk_pos, mut chunk_transparent_meshes) in transparent_meshes {
-            // Remove the top transparent mesh of each chunk from consideration.
-            if let Some(max_y_level) = chunk_transparent_meshes.keys().last().cloned() {
-                chunk_transparent_meshes.remove(&max_y_level);
+        // Find and enable all the meshes at the current y-level.
+        for (_chunk_pos, mesh_entities) in &mesh_res.meshes {
+            for (entity, _mesh) in mesh_entities {
+                if let Ok(y_level) = y_level_query.get(*entity) {
+                    if y_level == &terrain_res.y_level {
+                        if let Ok(mut visible) = visible_query.get_mut(*entity) {
+                            visible.is_visible = true;
+                        }
+                    }
+                }
             }
+        }
 
-            // For the remaining transparent meshes, mark them as not visible since there's already a
-            // transparent mesh above them.
-            for transparent_mesh_entity in chunk_transparent_meshes.values() {
-                if let Ok(mut visible) = visible_query.get_mut(*transparent_mesh_entity) {
-                    visible.is_visible = false;
+        // If the previous y-level was the top of a chunk, and we went up over a chunk boundary,
+        // go back and re-enable those meshes.
+        //let old_chunk_y = round_down_to_nearest_multiple(old_y_level.0, CHUNK_SIZE as i32);
+        for (chunk_pos, mesh_entities) in &mesh_res.meshes {
+            if old_y_level.0 == chunk_pos.y() + CHUNK_SIZE as i32 - 1
+                && terrain_res.y_level.0 == chunk_pos.y() + CHUNK_SIZE as i32
+            {
+                debug!(
+                    "Found mesh entities for chunk {:?} with old y-level {:?}",
+                    chunk_pos, old_y_level
+                );
+                for (entity, _mesh) in mesh_entities {
+                    if let Ok(y_level) = y_level_query.get(*entity) {
+                        if y_level == &old_y_level {
+                            if let Ok(mut visible) = visible_query.get_mut(*entity) {
+                                visible.is_visible = true;
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -444,9 +466,11 @@ fn generate_meshes(
         if let (p, Some(layers_map)) = chunk {
             let entities = layers_map
                 .into_iter()
-                .flat_map(|(y_level, material_meshes)| material_meshes
-                    .into_iter()
-                    .map(move |(material, mesh)| (y_level, material, mesh)))
+                .flat_map(|(y_level, material_meshes)| {
+                    material_meshes
+                        .into_iter()
+                        .map(move |(material, mesh)| (y_level, material, mesh))
+                })
                 .map(|(y_level, material, mesh)| {
                     generate_mesh_entity(
                         mesh,
@@ -460,6 +484,7 @@ fn generate_meshes(
                 })
                 .collect::<Vec<_>>();
             //trace!("Inserting {:?} into the mesh map", p);
+            trace!("Inserting {:?} entities for chunk {:?}", p, entities.len());
             mesh_res.meshes.insert(p, entities);
         } else if let (p, None) = chunk {
             // Insert points with no associated mesh into the hash map.
@@ -475,20 +500,28 @@ fn generate_meshes(
 async fn generate_mesh(
     map_ref: &CompressibleChunkMap3<CubeVoxel>,
     chunk_key: &Point3i,
-) -> (Point3i, Option<HashMap<YLevel, HashMap<CubeVoxel, PosNormMesh>>>) {
+) -> (
+    Point3i,
+    Option<HashMap<YLevel, HashMap<CubeVoxel, PosNormMesh>>>,
+) {
     trace!("Generating mesh for chunk at {:?}", chunk_key);
     let local_cache = LocalChunkCache3::new();
     let chunk_extent = map_ref.indexer.extent_for_chunk_at_key(*chunk_key);
     let padded_chunk_extent = padded_greedy_quads_chunk_extent(&chunk_extent);
 
-    // Create a mesh for each 1 y-level slice of the chunk.
+    // Create a mesh for each possible size of the chunk.
     let mut padded_layer_extent = padded_chunk_extent;
     *padded_layer_extent.shape.y_mut() = 3;
     let mut padded_layer_extents = Vec::new();
     while padded_layer_extent.max().y() <= padded_chunk_extent.max().y() {
         padded_layer_extents.push(padded_layer_extent);
-        *padded_layer_extent.minimum.y_mut() += 1;
+        *padded_layer_extent.shape.y_mut() += 1;
     }
+    trace!(
+        "Generating {} padded layers for chunk {:?}",
+        padded_layer_extents.len(),
+        chunk_key
+    );
 
     let reader = map_ref.storage().reader(&local_cache);
     let reader_map = DEFAULT_BUILDER.build_with_read_storage(reader);
@@ -498,7 +531,11 @@ async fn generate_mesh(
         // Don't replace the top layer of air in the padded layer, because we need a layer of air above the mesh
         // for the surfaces to appear.
         let extent_to_copy = padded_layer_extent.add_to_shape(PointN([0, -1, 0]));
-        trace!("Copying extent {:?} for layer {:?}", extent_to_copy, padded_layer_extent);
+        trace!(
+            "Copying extent {:?} for layer {:?}",
+            extent_to_copy,
+            padded_layer_extent
+        );
         copy_extent(&extent_to_copy, &reader_map, &mut padded_layer);
 
         // TODO bevy: we could avoid re-allocating the buffers on every call if we had
@@ -523,7 +560,7 @@ async fn generate_mesh(
         );
 
         if !layer_is_empty {
-            layer_meshes.insert(YLevel(padded_layer_extent.minimum.y()), meshes);
+            layer_meshes.insert(YLevel(padded_layer_extent.max().y() - 1), meshes);
         }
     }
 

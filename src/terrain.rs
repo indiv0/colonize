@@ -8,10 +8,10 @@
 //! The origin point (0, 0, 0) is in the middle of the map. This means that
 //! the minimum point on the map is (-384, -384, -384) and the maximum point
 //! is (384, 384, 384).
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 
 use bevy::tasks::ComputeTaskPool;
-use bevy::{ecs::Query, prelude::debug, render::pipeline::PrimitiveTopology};
+use bevy::{ecs::Query, render::pipeline::PrimitiveTopology};
 use bevy::{
     ecs::{Commands, Entity, IntoSystem, Res, ResMut},
     input::Input,
@@ -283,92 +283,68 @@ fn modify_config(
     }
 }
 
-// Rounds down `num` to the nearest multiple of `multiple`.
-// This is used for finding the Y position of a chunk from a Y position
-// within that chunk. For example:
-//
-//      rnd(-33, 32) = -64
-//      rnd(-32, 32) = -32
-//      rnd(-1, 32) = -32
-//      rnd(0, 32) = 0
-//      rnd(31, 32) = 0
-//      rnd(32, 32) = 32
-fn round_down_to_nearest_multiple(num: i32, multiple: i32) -> i32 {
-    if multiple == 0 {
-        return num;
-    }
-
-    let rem = i32::abs(num) % multiple;
-    if rem == 0 {
-        return num;
-    }
-
-    if num < 0 {
-        -(i32::abs(num) - rem) - multiple
-    } else {
-        num - rem
-    }
-}
-
 fn hide_y_levels_system(
     keyboard_input: Res<Input<KeyCode>>,
     mut terrain_res: ResMut<TerrainResource>,
     mesh_res: ResMut<MeshResource>,
-    y_level_query: Query<&YLevel>,
-    mut visible_query: Query<&mut Visible>,
+    mut mesh_query: Query<(Option<&FullDetailMesh>, &YLevel, &mut Visible)>,
 ) {
     // Increase/decrease the Y-level by 1 if the player pressed `<` or `>`.
     let old_y_level = terrain_res.y_level;
-    if keyboard_input.pressed(KeyCode::Minus) {
+    if keyboard_input.just_pressed(KeyCode::Minus) {
         terrain_res.y_level.decrement();
-    } else if keyboard_input.pressed(KeyCode::Equals) {
+    } else if keyboard_input.just_pressed(KeyCode::Equals) {
         terrain_res.y_level.increment();
     }
 
     if old_y_level != terrain_res.y_level {
         // Find and disable all the meshes at the old y-level.
-        for (_chunk_pos, mesh_entities) in &mesh_res.meshes {
+        for (chunk_pos, mesh_entities) in &mesh_res.meshes {
             for (entity, _mesh) in mesh_entities {
-                if let Ok(y_level) = y_level_query.get(*entity) {
+                if let Ok((_, y_level, mut visible)) = mesh_query.get_mut(*entity) {
                     if y_level == &old_y_level {
-                        if let Ok(mut visible) = visible_query.get_mut(*entity) {
-                            visible.is_visible = false;
-                        }
+                        trace!(
+                            "Disabled mesh at y-level {:?} for chunk {:?}",
+                            y_level,
+                            chunk_pos
+                        );
+                        visible.is_visible = false;
                     }
                 }
             }
         }
 
-        // Find and enable all the meshes at the current y-level.
-        for (_chunk_pos, mesh_entities) in &mesh_res.meshes {
+        // Find and enable all the meshes at the current y-level (that aren't full-detail meshes).
+        for (chunk_pos, mesh_entities) in &mesh_res.meshes {
             for (entity, _mesh) in mesh_entities {
-                if let Ok(y_level) = y_level_query.get(*entity) {
+                if let Ok((None, y_level, mut visible)) = mesh_query.get_mut(*entity) {
                     if y_level == &terrain_res.y_level {
-                        if let Ok(mut visible) = visible_query.get_mut(*entity) {
-                            visible.is_visible = true;
-                        }
+                        trace!(
+                            "Enabled mesh at y-level {:?} for chunk {:?}",
+                            y_level,
+                            chunk_pos
+                        );
+                        visible.is_visible = true;
                     }
                 }
             }
         }
 
         // If the previous y-level was the top of a chunk, and we went up over a chunk boundary,
-        // go back and re-enable those meshes.
-        //let old_chunk_y = round_down_to_nearest_multiple(old_y_level.0, CHUNK_SIZE as i32);
+        // go back and re-enable the full-detail meshes for that chunk.
         for (chunk_pos, mesh_entities) in &mesh_res.meshes {
             if old_y_level.0 == chunk_pos.y() + CHUNK_SIZE as i32 - 1
                 && terrain_res.y_level.0 == chunk_pos.y() + CHUNK_SIZE as i32
             {
-                debug!(
-                    "Found mesh entities for chunk {:?} with old y-level {:?}",
-                    chunk_pos, old_y_level
-                );
                 for (entity, _mesh) in mesh_entities {
-                    if let Ok(y_level) = y_level_query.get(*entity) {
+                    if let Ok((Some(_), y_level, mut visible)) = mesh_query.get_mut(*entity) {
                         if y_level == &old_y_level {
-                            if let Ok(mut visible) = visible_query.get_mut(*entity) {
-                                visible.is_visible = true;
-                            }
+                            trace!(
+                                "Re-enabled mesh at y-level {:?} for chunk {:?}",
+                                y_level,
+                                chunk_pos
+                            );
+                            visible.is_visible = true;
                         }
                     }
                 }
@@ -466,25 +442,26 @@ fn generate_meshes(
         if let (p, Some(layers_map)) = chunk {
             let entities = layers_map
                 .into_iter()
-                .flat_map(|(y_level, material_meshes)| {
+                .flat_map(|((y_level, full_detail), material_meshes)| {
                     material_meshes
                         .into_iter()
-                        .map(move |(material, mesh)| (y_level, material, mesh))
+                        .map(move |(material, mesh)| (y_level, full_detail, material, mesh))
                 })
-                .map(|(y_level, material, mesh)| {
+                .map(|(y_level, full_detail, material, mesh)| {
                     generate_mesh_entity(
                         mesh,
-                        material.collidable(),
+                        // Only treat the mesh as collidable if it's the "full detail" mesh for the chunk.
+                        // The rest are for rendering only.
+                        full_detail && material.collidable(),
                         commands,
                         terrain.materials.get(&material).unwrap().0.clone(),
                         !material.is_opaque(),
                         &mut mesh_assets,
                         y_level,
+                        full_detail,
                     )
                 })
                 .collect::<Vec<_>>();
-            //trace!("Inserting {:?} into the mesh map", p);
-            trace!("Inserting {:?} entities for chunk {:?}", p, entities.len());
             mesh_res.meshes.insert(p, entities);
         } else if let (p, None) = chunk {
             // Insert points with no associated mesh into the hash map.
@@ -497,12 +474,14 @@ fn generate_meshes(
     }
 }
 
+struct FullDetailMesh;
+
 async fn generate_mesh(
     map_ref: &CompressibleChunkMap3<CubeVoxel>,
     chunk_key: &Point3i,
 ) -> (
     Point3i,
-    Option<HashMap<YLevel, HashMap<CubeVoxel, PosNormMesh>>>,
+    Option<HashMap<(YLevel, bool), HashMap<CubeVoxel, PosNormMesh>>>,
 ) {
     trace!("Generating mesh for chunk at {:?}", chunk_key);
     let local_cache = LocalChunkCache3::new();
@@ -525,17 +504,32 @@ async fn generate_mesh(
 
     let reader = map_ref.storage().reader(&local_cache);
     let reader_map = DEFAULT_BUILDER.build_with_read_storage(reader);
-    let mut layer_meshes: HashMap<YLevel, HashMap<CubeVoxel, PosNormMesh>> = HashMap::new();
-    for padded_layer_extent in padded_layer_extents {
-        let mut padded_layer = Array3::fill(padded_layer_extent, CubeVoxel::Air);
-        // Don't replace the top layer of air in the padded layer, because we need a layer of air above the mesh
-        // for the surfaces to appear.
-        let extent_to_copy = padded_layer_extent.add_to_shape(PointN([0, -1, 0]));
+    let mut layer_meshes: HashMap<(YLevel, bool), HashMap<CubeVoxel, PosNormMesh>> = HashMap::new();
+    // Iterate over the slice extents in reverse order. The first extent will be the "full" extent of the
+    // chunk. This is a special case because we want to generate both a sliced (i.e. "pretend there's only air
+    // above us") mesh and a full-detail one (no air padding above).
+    let mut extents = Vec::new();
+    for padded_layer_extent in padded_layer_extents.into_iter().rev() {
+        if extents.is_empty() {
+            // For the first (full size) extent, generate a mesh for it twice. Once with a layer of
+            // air padding, and once without. We need both versions for if we're viewing the top of the mesh
+            // or if the top of the mesh is obscured by the chunk above it.
+            extents.push((true, padded_layer_extent, padded_layer_extent));
+        }
+        extents.push((
+            false,
+            padded_layer_extent,
+            padded_layer_extent.add_to_shape(PointN([0, -1, 0])),
+        ));
+    }
+
+    for (full_detail, padded_layer_extent, extent_to_copy) in extents {
         trace!(
             "Copying extent {:?} for layer {:?}",
             extent_to_copy,
             padded_layer_extent
         );
+        let mut padded_layer = Array3::fill(padded_layer_extent, CubeVoxel::Air);
         copy_extent(&extent_to_copy, &reader_map, &mut padded_layer);
 
         // TODO bevy: we could avoid re-allocating the buffers on every call if we had
@@ -559,9 +553,17 @@ async fn generate_mesh(
             |acc, (_material, mesh)| if acc { acc } else { mesh.is_empty() },
         );
 
-        if !layer_is_empty {
-            layer_meshes.insert(YLevel(padded_layer_extent.max().y() - 1), meshes);
+        if layer_is_empty {
+            // If the layer is empty, don't bother inserting the mesh (just discard it), and we can also
+            // break out of the loop since if a bigger cut of the chunk was empty then any subsets of that
+            // cut will also be empty.
+            break;
         }
+
+        layer_meshes.insert(
+            (YLevel(padded_layer_extent.max().y() - 1), full_detail),
+            meshes,
+        );
     }
 
     // If all the meshes of all the layers are empty, don't return anything.
@@ -580,6 +582,7 @@ fn generate_mesh_entity(
     is_transparent: bool,
     meshes: &mut Assets<Mesh>,
     y_level: YLevel,
+    full_detail: bool,
 ) -> (Entity, Handle<Mesh>) {
     assert_eq!(mesh.positions.len(), mesh.normals.len());
     let num_vertices = mesh.positions.len();
@@ -617,20 +620,24 @@ fn generate_mesh_entity(
 
     let mesh_handle = meshes.add(render_mesh);
 
-    let entity = commands
+    let mut commands = commands
         .spawn(PbrBundle {
             mesh: mesh_handle.clone_weak(),
             material,
             visible: Visible {
-                is_visible: true,
+                // Only the full-detail meshes of each chunk are visible to start with.
+                // Slices of chunks become visible as the player lowers the y-level.
+                is_visible: full_detail,
                 is_transparent,
             },
             ..Default::default()
         })
         .with(Chunk)
-        .with(y_level)
-        .current_entity()
-        .unwrap();
+        .with(y_level);
+    if full_detail {
+        commands = commands.with(FullDetailMesh);
+    }
+    let entity = commands.current_entity().unwrap();
     if let (Some(rigid_body), Some(mut collider)) = (rigid_body, collider) {
         collider = collider.user_data(entity.to_bits() as u128);
         commands.insert(entity, (rigid_body, collider));

@@ -112,6 +112,7 @@ fn setup(mut res: ResMut<TerrainResource>, mut materials: ResMut<Assets<Standard
     );
 }
 
+#[derive(Clone, Copy, Eq, Hash, PartialEq)]
 struct YLevel(i32);
 
 impl YLevel {
@@ -373,11 +374,14 @@ fn generate_meshes(
             s.spawn(generate_mesh(map_ref, chunk_key))
         }
     });
-    for mesh in meshes.into_iter() {
-        if let (p, Some(meshes_map)) = mesh {
-            let entities = meshes_map
+    for chunk in meshes.into_iter() {
+        if let (p, Some(layers_map)) = chunk {
+            let entities = layers_map
                 .into_iter()
-                .map(|(material, mesh)| {
+                .flat_map(|(y_level, material_meshes)| material_meshes
+                    .into_iter()
+                    .map(move |(material, mesh)| (y_level, material, mesh)))
+                .map(|(y_level, material, mesh)| {
                     generate_mesh_entity(
                         mesh,
                         material.collidable(),
@@ -385,12 +389,13 @@ fn generate_meshes(
                         terrain.materials.get(&material).unwrap().0.clone(),
                         !material.is_opaque(),
                         &mut mesh_assets,
+                        y_level,
                     )
                 })
                 .collect::<Vec<_>>();
             //trace!("Inserting {:?} into the mesh map", p);
             mesh_res.meshes.insert(p, entities);
-        } else if let (p, None) = mesh {
+        } else if let (p, None) = chunk {
             // Insert points with no associated mesh into the hash map.
             // We use the presence of the chunk key in the hash map as a flag on
             // whether or not to generate the mesh. Chunks without meshes (i.e.
@@ -404,42 +409,63 @@ fn generate_meshes(
 async fn generate_mesh(
     map_ref: &CompressibleChunkMap3<CubeVoxel>,
     chunk_key: &Point3i,
-) -> (Point3i, Option<HashMap<CubeVoxel, PosNormMesh>>) {
+) -> (Point3i, Option<HashMap<YLevel, HashMap<CubeVoxel, PosNormMesh>>>) {
     trace!("Generating mesh for chunk at {:?}", chunk_key);
     let local_cache = LocalChunkCache3::new();
-    let padded_chunk_extent =
-        padded_greedy_quads_chunk_extent(&map_ref.indexer.extent_for_chunk_at_key(*chunk_key));
+    let chunk_extent = map_ref.indexer.extent_for_chunk_at_key(*chunk_key);
+    let padded_chunk_extent = padded_greedy_quads_chunk_extent(&chunk_extent);
 
-    let mut padded_chunk = Array3::fill(padded_chunk_extent, CubeVoxel::Air);
+    // Create a mesh for each 1 y-level slice of the chunk.
+    let mut padded_layer_extent = padded_chunk_extent;
+    *padded_layer_extent.shape.y_mut() = 3;
+    let mut padded_layer_extents = Vec::new();
+    while padded_layer_extent.max().y() <= padded_chunk_extent.max().y() {
+        padded_layer_extents.push(padded_layer_extent);
+        *padded_layer_extent.minimum.y_mut() += 1;
+    }
+
     let reader = map_ref.storage().reader(&local_cache);
     let reader_map = DEFAULT_BUILDER.build_with_read_storage(reader);
-    copy_extent(&padded_chunk_extent, &reader_map, &mut padded_chunk);
+    let mut layer_meshes: HashMap<YLevel, HashMap<CubeVoxel, PosNormMesh>> = HashMap::new();
+    for padded_layer_extent in padded_layer_extents {
+        let mut padded_layer = Array3::fill(padded_layer_extent, CubeVoxel::Air);
+        // Don't replace the top layer of air in the padded layer, because we need a layer of air above the mesh
+        // for the surfaces to appear.
+        let extent_to_copy = padded_layer_extent.add_to_shape(PointN([0, -1, 0]));
+        trace!("Copying extent {:?} for layer {:?}", extent_to_copy, padded_layer_extent);
+        copy_extent(&extent_to_copy, &reader_map, &mut padded_layer);
 
-    // TODO bevy: we could avoid re-allocating the buffers on every call if we had
-    // thread-local storage accessible from this task
-    let mut buffer = GreedyQuadsBuffer::new(padded_chunk_extent);
-    greedy_quads(&padded_chunk, &padded_chunk_extent, &mut buffer);
+        // TODO bevy: we could avoid re-allocating the buffers on every call if we had
+        // thread-local storage accessible from this task
+        let mut buffer = GreedyQuadsBuffer::new(padded_layer_extent);
+        greedy_quads(&padded_layer, &padded_layer_extent, &mut buffer);
 
-    // Separate the meshes by material, so that we can render each voxel type with a different color.
-    let mut meshes: HashMap<CubeVoxel, PosNormMesh> = HashMap::new();
-    for group in buffer.quad_groups.iter() {
-        for quad in group.quads.iter() {
-            let material = reader_map.get(&quad.minimum);
-            let mesh = meshes.entry(material).or_insert_with(PosNormMesh::default);
-            group.face.add_quad_to_pos_norm_mesh(&quad, mesh);
+        // Separate the meshes by material, so that we can render each voxel type with a different color.
+        let mut meshes: HashMap<CubeVoxel, PosNormMesh> = HashMap::new();
+        for group in buffer.quad_groups.iter() {
+            for quad in group.quads.iter() {
+                let material = reader_map.get(&quad.minimum);
+                let mesh = meshes.entry(material).or_insert_with(PosNormMesh::default);
+                group.face.add_quad_to_pos_norm_mesh(&quad, mesh);
+            }
+        }
+
+        // If all the meshes are empty, don't return anything.
+        let layer_is_empty = meshes.iter().fold(
+            false,
+            |acc, (_material, mesh)| if acc { acc } else { mesh.is_empty() },
+        );
+
+        if !layer_is_empty {
+            layer_meshes.insert(YLevel(padded_layer_extent.minimum.y()), meshes);
         }
     }
 
-    // If all the meshes are empty, don't return anything.
-    let all_are_empty = meshes.iter().fold(
-        false,
-        |acc, (_material, mesh)| if acc { acc } else { mesh.is_empty() },
-    );
-
-    if all_are_empty {
+    // If all the meshes of all the layers are empty, don't return anything.
+    if layer_meshes.is_empty() {
         (*chunk_key, None)
     } else {
-        (*chunk_key, Some(meshes))
+        (*chunk_key, Some(layer_meshes))
     }
 }
 
@@ -450,6 +476,7 @@ fn generate_mesh_entity(
     material: Handle<StandardMaterial>,
     is_transparent: bool,
     meshes: &mut Assets<Mesh>,
+    y_level: YLevel,
 ) -> (Entity, Handle<Mesh>) {
     assert_eq!(mesh.positions.len(), mesh.normals.len());
     let num_vertices = mesh.positions.len();
@@ -498,6 +525,7 @@ fn generate_mesh_entity(
             ..Default::default()
         })
         .with(Chunk)
+        .with(y_level)
         .current_entity()
         .unwrap();
     if let (Some(rigid_body), Some(mut collider)) = (rigid_body, collider) {

@@ -48,6 +48,9 @@ wasm = [
 [profile.dev]
 opt-level = 3
 
+[profile.dev.package.bevy_mod_picking]
+debug-assertions = false
+
 [profile.release]
 debug = true
 debug-assertions = true

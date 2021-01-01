@@ -8,9 +8,9 @@
 //! The origin point (0, 0, 0) is in the middle of the map. This means that
 //! the minimum point on the map is (-384, -384, -384) and the maximum point
 //! is (384, 384, 384).
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
-use bevy::render::pipeline::PrimitiveTopology;
+use bevy::{ecs::Query, render::pipeline::PrimitiveTopology};
 use bevy::tasks::ComputeTaskPool;
 use bevy::{
     ecs::{Commands, Entity, IntoSystem, Res, ResMut},
@@ -81,6 +81,7 @@ impl Plugin for TerrainPlugin {
             .add_startup_system(setup.system())
             .add_startup_system_to_stage(TERRAIN, generate_voxels.system())
             .add_system(generate_meshes.system())
+            .add_system(hide_y_levels_system.system())
             .add_system(modify_config.system());
     }
 }
@@ -112,7 +113,7 @@ fn setup(mut res: ResMut<TerrainResource>, mut materials: ResMut<Assets<Standard
     );
 }
 
-#[derive(Clone, Copy, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Eq, Hash, Ord, PartialEq, PartialOrd)]
 struct YLevel(i32);
 
 impl YLevel {
@@ -277,15 +278,80 @@ fn modify_config(
         reset_flag = true;
     }
 
-    // Increase/decrease the Y-level by 1 if the player pressed `<` or `>`.
-    if keyboard_input.just_pressed(KeyCode::Minus) {
-        terrain_res.y_level.decrement();
-    } else if keyboard_input.just_pressed(KeyCode::Plus) {
-        terrain_res.y_level.increment();
-    }
-
     if reset_flag {
         reset_world(commands, &mut mesh_assets, &mut terrain_res, &mut mesh_res);
+    }
+}
+
+fn hide_y_levels_system(
+    keyboard_input: Res<Input<KeyCode>>,
+    mut terrain_res: ResMut<TerrainResource>,
+    mesh_res: ResMut<MeshResource>,
+    y_level_query: Query<&YLevel>,
+    mut visible_query: Query<&mut Visible>,
+) {
+    // Increase/decrease the Y-level by 1 if the player pressed `<` or `>`.
+    let y_level_changed;
+    if keyboard_input.pressed(KeyCode::Minus) {
+        terrain_res.y_level.decrement();
+        y_level_changed = true;
+    } else if keyboard_input.pressed(KeyCode::Plus) {
+        terrain_res.y_level.increment();
+        y_level_changed = true;
+    } else {
+        y_level_changed = false;
+    }
+
+    if y_level_changed {
+        // Get the list of all entities associated with a terrain mesh.
+        let mut transparent_mesh_entities = Vec::new();
+        for (chunk_pos, mesh_entities) in &mesh_res.meshes {
+            for (entity, _mesh) in mesh_entities {
+                if let Ok(y_level) = y_level_query.get(*entity) {
+                    transparent_mesh_entities.push((chunk_pos, *y_level, entity));
+                }
+            }
+        }
+        let mut transparent_meshes = BTreeMap::new();
+        for (chunk_pos, y_level, entity) in transparent_mesh_entities {
+            if let Ok(mut visible) = visible_query.get_mut(*entity) {
+                // For each terrain mesh, mark it as visible/invisible depending on if it falls
+                // below/above the y-level watermark.
+                if y_level <= terrain_res.y_level {
+                    visible.is_visible = true;
+
+                    // If the mesh is a visible transparent mesh, save it for further processing.
+                    if visible.is_transparent {
+                        // We're interested in transparent layers above one another _within_ a single chunk, so we
+                        // reduce the chunk coordinates to XZ and key on that.
+                        let chunk_pos = chunk_pos.xz().0;
+                        if !transparent_meshes.contains_key(&chunk_pos) {
+                            transparent_meshes.insert(chunk_pos, BTreeMap::new());
+                        }
+                        let chunk_transparent_meshes = transparent_meshes.get_mut(&chunk_pos).unwrap();
+
+                        chunk_transparent_meshes.insert(y_level, *entity);
+                    }
+                } else {
+                    visible.is_visible = false;
+                }
+            }
+        }
+
+        for (_chunk_pos, mut chunk_transparent_meshes) in transparent_meshes {
+            // Remove the top transparent mesh of each chunk from consideration.
+            if let Some(max_y_level) = chunk_transparent_meshes.keys().last().cloned() {
+                chunk_transparent_meshes.remove(&max_y_level);
+            }
+
+            // For the remaining transparent meshes, mark them as not visible since there's already a
+            // transparent mesh above them.
+            for transparent_mesh_entity in chunk_transparent_meshes.values() {
+                if let Ok(mut visible) = visible_query.get_mut(*transparent_mesh_entity) {
+                    visible.is_visible = false;
+                }
+            }
+        }
     }
 }
 

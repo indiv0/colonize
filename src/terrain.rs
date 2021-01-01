@@ -10,7 +10,6 @@
 //! is (384, 384, 384).
 use std::collections::HashMap;
 
-use bevy::log::trace;
 use bevy::render::pipeline::PrimitiveTopology;
 use bevy::tasks::ComputeTaskPool;
 use bevy::{
@@ -20,9 +19,11 @@ use bevy::{
     prelude::{AppBuilder, Assets, Color, Handle, KeyCode, Mesh, Plugin, StandardMaterial},
     render::mesh::{Indices, VertexAttributeValues},
 };
+use bevy::{log::trace, prelude::Visible};
 use bevy_rapier3d::rapier::{dynamics::RigidBodyBuilder, geometry::ColliderBuilder, math::Point};
 use building_blocks::{
     core::Point3,
+    mesh::IsOpaque,
     storage::{Array3, ForEach, Snappy},
 };
 use building_blocks::{
@@ -382,6 +383,7 @@ fn generate_meshes(
                         material.collidable(),
                         commands,
                         terrain.materials.get(&material).unwrap().0.clone(),
+                        !material.is_opaque(),
                         &mut mesh_assets,
                     )
                 })
@@ -446,6 +448,7 @@ fn generate_mesh_entity(
     collidable: bool,
     commands: &mut Commands,
     material: Handle<StandardMaterial>,
+    is_transparent: bool,
     meshes: &mut Assets<Mesh>,
 ) -> (Entity, Handle<Mesh>) {
     assert_eq!(mesh.positions.len(), mesh.normals.len());
@@ -488,6 +491,10 @@ fn generate_mesh_entity(
         .spawn(PbrBundle {
             mesh: mesh_handle.clone_weak(),
             material,
+            visible: Visible {
+                is_visible: true,
+                is_transparent,
+            },
             ..Default::default()
         })
         .with(Chunk)

@@ -10,16 +10,28 @@
 //! is (384, 384, 384).
 use std::collections::HashMap;
 
-use bevy::tasks::ComputeTaskPool;
 use bevy::{ecs::Query, render::pipeline::PrimitiveTopology};
 use bevy::{
     ecs::{Commands, Entity, IntoSystem, Res, ResMut},
     input::Input,
     pbr::PbrBundle,
     prelude::{AppBuilder, Assets, Color, Handle, KeyCode, Mesh, Plugin, StandardMaterial},
-    render::mesh::{Indices, VertexAttributeValues},
+    reflect::TypeUuid,
+    render::{
+        mesh::{Indices, VertexAttributeValues},
+        renderer::RenderResources,
+    },
 };
 use bevy::{log::trace, prelude::Visible};
+use bevy::{
+    prelude::{AddAsset, AssetServer, RenderPipelines, Shader},
+    render::{
+        pipeline::{PipelineDescriptor, RenderPipeline},
+        render_graph::{base, AssetRenderResourcesNode, RenderGraph},
+        shader::ShaderStages,
+    },
+    tasks::ComputeTaskPool,
+};
 use bevy_rapier3d::rapier::{dynamics::RigidBodyBuilder, geometry::ColliderBuilder, math::Point};
 use building_blocks::{
     core::Point3,
@@ -76,7 +88,8 @@ pub struct TerrainPlugin;
 
 impl Plugin for TerrainPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.add_resource(TerrainResource::default())
+        app.add_asset::<MeshMaterial>()
+            .add_resource(TerrainResource::default())
             .add_resource(MeshResource::default())
             .add_startup_system(setup.system())
             .add_startup_system_to_stage(TERRAIN, generate_voxels.system())
@@ -86,31 +99,58 @@ impl Plugin for TerrainPlugin {
     }
 }
 
-fn setup(mut res: ResMut<TerrainResource>, mut materials: ResMut<Assets<StandardMaterial>>) {
+fn setup(
+    mut res: ResMut<TerrainResource>,
+    mut materials: ResMut<Assets<MeshMaterial>>,
+    asset_server: ResMut<AssetServer>,
+    mut pipelines: ResMut<Assets<PipelineDescriptor>>,
+    mut render_graph: ResMut<RenderGraph>,
+) {
     res.materials.insert(
         CubeVoxel::Stone,
-        MeshMaterial(
-            materials.add(Color::rgb(0.5, 0.5, 0.5).into()), // Stone
-        ),
+        materials.add(MeshMaterial {
+            color: Color::rgb(0.5, 0.5, 0.5).into(), // Stone
+        }),
     );
     res.materials.insert(
         CubeVoxel::Grass,
-        MeshMaterial(
-            materials.add(Color::rgb(0.376, 0.502, 0.22).into()), // Grass
-        ),
+        materials.add(MeshMaterial {
+            color: Color::rgb(0.376, 0.502, 0.22).into(), // Grass
+        }),
     );
     res.materials.insert(
         CubeVoxel::Gold,
-        MeshMaterial(
-            materials.add(Color::rgb(1.0, 0.843, 0.).into()), // Gold
-        ),
+        materials.add(MeshMaterial {
+            color: Color::rgb(1.0, 0.843, 0.).into(), // Gold
+        }),
     );
     res.materials.insert(
         CubeVoxel::Water,
-        MeshMaterial(
-            materials.add(Color::rgba(0.0, 0.0, 0.5, 0.5).into()), // Water
-        ),
+        materials.add(MeshMaterial {
+            color: Color::rgba(0.0, 0.0, 0.5, 0.5).into(), // Water
+        }),
     );
+
+    // Watch for changes
+    asset_server.watch_for_changes().unwrap();
+
+    // Create a new shader pipeline with shaders loaded from the asset directory
+    let pipeline_handle = pipelines.add(PipelineDescriptor::default_config(ShaderStages {
+        vertex: asset_server.load::<Shader, _>("shaders/hot.vert"),
+        fragment: Some(asset_server.load::<Shader, _>("shaders/hot.frag")),
+    }));
+    res.pipeline_handle = Some(pipeline_handle);
+
+    // Add an AssetRenderResourcesNode to our Render Graph. This will bind MeshMaterial resources to our shader
+    render_graph.add_system_node(
+        "mesh_material",
+        AssetRenderResourcesNode::<MeshMaterial>::new(true),
+    );
+
+    // Add a Render Graph edge connecting our new "mesh_material" node to the main pass node. This ensures "mesh_material" runs before the main pass
+    render_graph
+        .add_node_edge("mesh_material", base::node::MAIN_PASS)
+        .unwrap();
 }
 
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -135,13 +175,14 @@ impl Default for YLevel {
 }
 
 pub(crate) struct TerrainResource {
-    materials: HashMap<CubeVoxel, MeshMaterial>,
+    materials: HashMap<CubeVoxel, Handle<MeshMaterial>>,
     noise: RidgedMulti,
     chunks: CompressibleChunkMap3<CubeVoxel>,
     generated_voxels: bool,
     sea_level: f64,
     y_offset: f64,
     y_level: YLevel,
+    pipeline_handle: Option<Handle<PipelineDescriptor>>,
 }
 
 impl TerrainResource {
@@ -205,6 +246,7 @@ impl Default for TerrainResource {
             sea_level: 100.,
             y_offset: 10.,
             y_level: YLevel::default(),
+            pipeline_handle: None,
         }
     }
 }
@@ -221,8 +263,11 @@ impl Default for MeshResource {
     }
 }
 
-#[derive(Default)]
-pub struct MeshMaterial(pub Handle<StandardMaterial>);
+#[derive(Default, RenderResources, TypeUuid)]
+#[uuid = "3bf9e364-f29d-4d6c-92cf-93298466c620"]
+pub struct MeshMaterial {
+    color: Color,
+}
 
 fn modify_config(
     commands: &mut Commands,
@@ -454,7 +499,8 @@ fn generate_meshes(
                         // The rest are for rendering only.
                         full_detail && material.collidable(),
                         commands,
-                        terrain.materials.get(&material).unwrap().0.clone(),
+                        terrain.pipeline_handle.as_ref().unwrap().clone(),
+                        terrain.materials.get(&material).unwrap().clone(),
                         !material.is_opaque(),
                         &mut mesh_assets,
                         y_level,
@@ -578,7 +624,8 @@ fn generate_mesh_entity(
     mesh: PosNormMesh,
     collidable: bool,
     commands: &mut Commands,
-    material: Handle<StandardMaterial>,
+    pipeline_handle: Handle<PipelineDescriptor>,
+    material: Handle<MeshMaterial>,
     is_transparent: bool,
     meshes: &mut Assets<Mesh>,
     y_level: YLevel,
@@ -623,7 +670,9 @@ fn generate_mesh_entity(
     let mut commands = commands
         .spawn(PbrBundle {
             mesh: mesh_handle.clone_weak(),
-            material,
+            render_pipelines: RenderPipelines::from_pipelines(vec![RenderPipeline::new(
+                pipeline_handle,
+            )]),
             visible: Visible {
                 // Only the full-detail meshes of each chunk are visible to start with.
                 // Slices of chunks become visible as the player lowers the y-level.
@@ -632,6 +681,7 @@ fn generate_mesh_entity(
             },
             ..Default::default()
         })
+        .with(material)
         .with(Chunk)
         .with(y_level);
     if full_detail {

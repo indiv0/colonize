@@ -50,7 +50,7 @@ layout(std140) uniform StandardMaterial_albedo { // set = 3, binding = 0
     vec4 Albedo;
 };
 
-layout(std140) uniform YLevel { // set = 1, binding = 1
+layout(std140) uniform YLevel { // set = 4, binding = 4
     vec3 YLevelValue;
 };
 

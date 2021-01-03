@@ -4,8 +4,8 @@ A Dwarf Fortress/Rimworld-like game written in Rust.
 
 <table>
   <tr>
-    <td><strong>Live Demo (v0.6.0; <a href="https://github.com/indiv0/colonize#controls">Controls</a>)</strong></td>
-    <td><a href="https://colonize.rs/0.6.0/">https://colonize.rs/0.6.0/</td>
+    <td><strong>Live Demo (v0.7.0; <a href="https://github.com/indiv0/colonize#controls">Controls</a>)</strong></td>
+    <td><a href="https://colonize.rs/0.7.0/">https://colonize.rs/0.7.0/</td>
   </tr>
   <tr>
     <td colspan="2">

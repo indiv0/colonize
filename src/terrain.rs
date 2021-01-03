@@ -10,7 +10,7 @@
 //! is (384, 384, 384).
 use std::collections::HashMap;
 
-use bevy::prelude::PbrBundle as BevyPbrBundle;
+use bevy::pbr::PbrBundle;
 use bevy::{ecs::Query, render::pipeline::PrimitiveTopology};
 use bevy::{
     ecs::{Commands, Entity, IntoSystem, Res, ResMut},
@@ -25,10 +25,7 @@ use bevy::{
 use bevy::{log::trace, prelude::Visible};
 use bevy::{
     prelude::AddAsset,
-    render::{
-        pipeline::PipelineDescriptor,
-        render_graph::RenderGraph,
-    },
+    render::{pipeline::PipelineDescriptor, render_graph::RenderGraph},
     tasks::ComputeTaskPool,
 };
 use bevy_rapier3d::rapier::{dynamics::RigidBodyBuilder, geometry::ColliderBuilder, math::Point};
@@ -53,15 +50,15 @@ use building_blocks::{
     },
 };
 use colonize_noise::Noise2d;
-use colonize_pbr::{prelude::StandardMaterial, PbrBundle, YLevel};
+use colonize_pbr::{pbr_bundle, prelude::StandardMaterial, YLevel};
 use noise::{MultiFractal, RidgedMulti, Seedable};
 use rand::{thread_rng, Rng};
 
 use colonize_common::CubeVoxel;
 
 const CHUNK_SIZE: usize = 128;
-const REGION_SIZE: usize = 512; // CHUNK_SIZE * NUM_CHUNKS
-                                // 512 underground blocks, plus 256 blocks above sea level.
+const REGION_SIZE: usize = 64; // CHUNK_SIZE * NUM_CHUNKS
+                               // 512 underground blocks, plus 256 blocks above sea level.
 const REGION_HEIGHT: i32 = 256;
 const REGION_MIN_3D: Point3i = PointN([-(REGION_SIZE as i32 / 2), -128, -(REGION_SIZE as i32 / 2)]);
 const REGION_SHAPE_3D: Point3i = PointN([REGION_SIZE as i32, REGION_HEIGHT, REGION_SIZE as i32]);
@@ -629,14 +626,14 @@ fn generate_mesh_entity(
                     is_visible: full_detail,
                     is_transparent,
                 },
-                ..Default::default()
+                ..pbr_bundle()
             })
             .with(Chunk)
             .with(y_level)
             .with(FullDetailMesh)
     } else {
         commands
-            .spawn(BevyPbrBundle {
+            .spawn(PbrBundle {
                 mesh: mesh_handle.clone_weak(),
                 material: material.0,
                 visible: Visible {
@@ -645,7 +642,7 @@ fn generate_mesh_entity(
                     is_visible: full_detail,
                     is_transparent,
                 },
-                ..Default::default()
+                ..PbrBundle::default()
             })
             .with(Chunk)
             .with(y_level)

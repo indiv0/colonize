@@ -16,6 +16,7 @@ use bevy::{
     ecs::{Commands, IntoSystem, Res, ResMut, SystemStage},
     input::Input,
     math::Vec3,
+    pbr::LightBundle,
     prelude::{App, Camera3dBundle, KeyCode, Transform},
     window::Windows,
     DefaultPlugins,
@@ -24,7 +25,7 @@ use bevy_mod_picking::{DebugPickingPlugin, InteractablePickingPlugin, PickSource
 use bevy_rapier3d::physics::RapierPhysicsPlugin;
 
 use camera::fps::{CameraMovementPlugin, CameraState};
-use colonize_pbr::{LightBundle, PbrPlugin};
+use colonize_pbr::PbrPlugin;
 use dwarf::{DwarfPlugin, DWARVES};
 use terrain::{TerrainPlugin, TERRAIN};
 

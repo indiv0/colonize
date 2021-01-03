@@ -4,7 +4,7 @@ mod y_level_node;
 
 use bevy::{
     ecs::Resources,
-    prelude::{Assets, GlobalTransform, Shader},
+    prelude::{AssetServer, Assets, GlobalTransform},
     render::{
         pipeline::PipelineDescriptor,
         render_graph::{base, AssetRenderResourcesNode, RenderGraph, RenderResourcesNode},
@@ -41,11 +41,11 @@ pub(crate) fn add_pbr_graph(graph: &mut RenderGraph, resources: &Resources) {
     );
     graph.add_system_node(node::LIGHTS, LightsNode::new(10));
     graph.add_system_node(node::Y_LEVEL, YLevelNode::new());
-    let mut shaders = resources.get_mut::<Assets<Shader>>().unwrap();
     let mut pipelines = resources.get_mut::<Assets<PipelineDescriptor>>().unwrap();
+    let mut asset_server = resources.get_mut::<AssetServer>().unwrap();
     pipelines.set_untracked(
         FORWARD_PIPELINE_HANDLE,
-        build_forward_pipeline(&mut shaders),
+        build_forward_pipeline(&mut asset_server),
     );
 
     // TODO: replace these with "autowire" groups

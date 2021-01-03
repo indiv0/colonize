@@ -1,4 +1,4 @@
-use bevy::prelude::{Assets, HandleUntyped};
+use bevy::prelude::{AssetServer, HandleUntyped};
 use bevy::reflect::TypeUuid;
 use bevy::{
     prelude::Shader,
@@ -8,7 +8,7 @@ use bevy::{
             CompareFunction, CullMode, DepthStencilStateDescriptor, FrontFace, PipelineDescriptor,
             RasterizationStateDescriptor, StencilStateDescriptor, StencilStateFaceDescriptor,
         },
-        shader::{ShaderStage, ShaderStages},
+        shader::ShaderStages,
         texture::TextureFormat,
     },
 };
@@ -16,7 +16,7 @@ use bevy::{
 pub const FORWARD_PIPELINE_HANDLE: HandleUntyped =
     HandleUntyped::weak_from_u64(PipelineDescriptor::TYPE_UUID, 13148362314012771390);
 
-pub(crate) fn build_forward_pipeline(shaders: &mut Assets<Shader>) -> PipelineDescriptor {
+pub(crate) fn build_forward_pipeline(asset_server: &mut AssetServer) -> PipelineDescriptor {
     PipelineDescriptor {
         rasterization_state: Some(RasterizationStateDescriptor {
             front_face: FrontFace::Ccw,
@@ -52,14 +52,8 @@ pub(crate) fn build_forward_pipeline(shaders: &mut Assets<Shader>) -> PipelineDe
             write_mask: ColorWrite::ALL,
         }],
         ..PipelineDescriptor::new(ShaderStages {
-            vertex: shaders.add(Shader::from_glsl(
-                ShaderStage::Vertex,
-                include_str!("forward.vert"),
-            )),
-            fragment: Some(shaders.add(Shader::from_glsl(
-                ShaderStage::Fragment,
-                include_str!("forward.frag"),
-            ))),
+            vertex: asset_server.load::<Shader, _>("shaders/forward.vert"),
+            fragment: Some(asset_server.load::<Shader, _>("shaders/forward.frag")),
         })
     }
 }

@@ -68,7 +68,7 @@ void main() {
     o_Target = output_color;
 
     // discard any fragments above the y-level
-    if (v_Position.y > YLevelValue) {
+    if (v_Position.y > YLevelValue + 0.00001) {
         discard;
     }
 }

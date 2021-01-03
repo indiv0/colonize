@@ -1,29 +1,10 @@
 use bevy::{
     core::Byteable,
-    prelude::{Color, GlobalTransform},
-    reflect::{Reflect, ReflectComponent},
+    prelude::GlobalTransform,
     render::camera::{CameraProjection, PerspectiveProjection},
 };
-use std::ops::Range;
 
-/// A point light
-#[derive(Debug, Reflect)]
-#[reflect(Component)]
-pub struct Light {
-    pub color: Color,
-    pub fov: f32,
-    pub depth: Range<f32>,
-}
-
-impl Default for Light {
-    fn default() -> Self {
-        Light {
-            color: Color::rgb(1.0, 1.0, 1.0),
-            depth: 0.1..50.0,
-            fov: f32::to_radians(60.0),
-        }
-    }
-}
+pub use bevy::pbr::{AmbientLight, Light};
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
@@ -50,20 +31,6 @@ impl LightRaw {
             proj: proj.to_cols_array_2d(),
             pos: [x, y, z, 1.0],
             color: light.color.into(),
-        }
-    }
-}
-
-// Ambient light color.
-#[derive(Debug)]
-pub struct AmbientLight {
-    pub color: Color,
-}
-
-impl Default for AmbientLight {
-    fn default() -> Self {
-        Self {
-            color: Color::rgb(0.05, 0.05, 0.05),
         }
     }
 }

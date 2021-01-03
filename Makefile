@@ -1,8 +1,8 @@
 debug:
-	RUST_BACKTRACE=1 RUST_LOG=colonize=trace cargo run
+	RUST_BACKTRACE=1 RUST_LOG=colonize=debug cargo run
 
 release:
-	RUST_BACKTRACE=1 RUST_LOG=colonize=trace cargo run --release
+	RUST_BACKTRACE=1 RUST_LOG=colonize=debug cargo run --release
 
 test:
 	RUST_BACKTRACE=1 cargo test --all
@@ -23,12 +23,12 @@ serve:
 	python3 -m http.server
 
 deploy_debug:
-	aws s3 cp index.html s3://dev.colonize.rs/index.html
+	aws s3 cp release.index.html s3://dev.colonize.rs/index.html
 	aws s3 cp target-wasm/colonize.js s3://dev.colonize.rs/target/colonize.js
 	aws s3 cp target-wasm/colonize_bg_opt.wasm s3://dev.colonize.rs/target/colonize_bg_opt.wasm
 
 deploy:
-	aws s3 cp index.html s3://colonize.rs/index.html
+	aws s3 cp release.index.html s3://colonize.rs/index.html
 	aws s3 cp target-wasm/colonize.js s3://colonize.rs/target/colonize.js
 	aws s3 cp target-wasm/colonize_bg_opt.wasm s3://colonize.rs/target/colonize_bg_opt.wasm
 

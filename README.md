@@ -114,10 +114,14 @@ Please read [CONTRIBUTING.md][contributing] before you start contributing.
 
 # License
 
+Portions of the code come from MIT-licenced projects.
+Where possible, the original copyright notices and licenses are included as headers in those files.
+All **modifications** to these works are licensed under the GPLv3 terms below.
+
 Colonize is distributed under the terms of the GPLv3 license or later.
 
 ```
-Copyright (C) 2016-2020 Nikita Pekin and colonize contributors
+Copyright (C) 2016-2021 Nikita Pekin and colonize contributors
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

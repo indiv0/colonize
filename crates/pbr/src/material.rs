@@ -1,43 +1,22 @@
+// MIT License
+//
+// Copyright (c) 2020 Carter Anderson
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 pub use bevy::prelude::StandardMaterial;
-
-//use bevy::{prelude::Handle, reflect::TypeUuid, render::{color::Color, renderer::RenderResources, shader::ShaderDefs, texture::Texture}};
-//
-///// A material with "standard" properties used in PBR lighting
-//#[derive(Debug, RenderResources, ShaderDefs, TypeUuid)]
-//#[uuid = "dace545e-4bc6-4595-a79d-c224fc694976"]
-//pub struct StandardMaterial {
-//    pub albedo: Color,
-//    #[shader_def]
-//    pub albedo_texture: Option<Handle<Texture>>,
-//    #[render_resources(ignore)]
-//    #[shader_def]
-//    pub shaded: bool,
-//}
-//
-//impl Default for StandardMaterial {
-//    fn default() -> Self {
-//        StandardMaterial {
-//            albedo: Color::rgb(1.0, 1.0, 1.0),
-//            albedo_texture: None,
-//            shaded: true,
-//        }
-//    }
-//}
-//
-//impl From<Color> for StandardMaterial {
-//    fn from(color: Color) -> Self {
-//        StandardMaterial {
-//            albedo: color,
-//            ..Default::default()
-//        }
-//    }
-//}
-//
-//impl From<Handle<Texture>> for StandardMaterial {
-//    fn from(texture: Handle<Texture>) -> Self {
-//        StandardMaterial {
-//            albedo_texture: Some(texture),
-//            ..Default::default()
-//        }
-//    }
-//}

@@ -12,11 +12,11 @@ mod dwarf;
 mod terrain;
 
 use bevy::{
-    app::startup_stage,
+    app::{startup_stage, PluginGroupBuilder},
     ecs::{Commands, IntoSystem, SystemStage},
     math::Vec3,
     pbr::LightBundle,
-    prelude::{App, Camera3dBundle, Transform},
+    prelude::{App, Camera3dBundle, PluginGroup, Transform},
 };
 use bevy_mod_picking::{DebugPickingPlugin, InteractablePickingPlugin, PickSource, PickingPlugin};
 use bevy_rapier3d::physics::RapierPhysicsPlugin;
@@ -26,11 +26,52 @@ use colonize_pbr::PbrPlugin;
 use dwarf::{DwarfPlugin, DWARVES};
 use terrain::{TerrainPlugin, TERRAIN};
 
+pub struct DefaultPlugins;
+
+impl PluginGroup for DefaultPlugins {
+    fn build(&mut self, group: &mut PluginGroupBuilder) {
+        group.add(bevy::log::LogPlugin::default());
+        group.add(bevy::reflect::ReflectPlugin::default());
+        group.add(bevy::core::CorePlugin::default());
+        group.add(bevy::transform::TransformPlugin::default());
+        group.add(bevy::diagnostic::DiagnosticsPlugin::default());
+        group.add(bevy::input::InputPlugin::default());
+        group.add(bevy::window::WindowPlugin::default());
+        group.add(bevy::asset::AssetPlugin::default());
+        group.add(bevy::scene::ScenePlugin::default());
+
+        group.add(bevy::render::RenderPlugin::default());
+
+        group.add(bevy::sprite::SpritePlugin::default());
+
+        group.add(bevy::pbr::PbrPlugin::default());
+
+        group.add(bevy::ui::UiPlugin::default());
+
+        group.add(bevy::text::TextPlugin::default());
+
+        #[cfg(not(target_arch = "wasm32"))]
+        group.add(bevy::audio::AudioPlugin::default());
+
+        #[cfg(not(target_arch = "wasm32"))]
+        group.add(bevy_gilrs::GilrsPlugin::default());
+
+        group.add(bevy::gltf::GltfPlugin::default());
+
+        group.add(bevy::winit::WinitPlugin::default());
+
+        #[cfg(not(target_arch = "wasm32"))]
+        group.add(bevy::wgpu::WgpuPlugin::default());
+
+        group.add(PbrPlugin);
+
+        #[cfg(target_arch = "wasm32")]
+        group.add(bevy_webgl2::WebGL2Plugin);
+    }
+}
+
 fn main() {
-    #[cfg(not(target_arch = "wasm32"))]
-    let default_plugins = bevy::DefaultPlugins;
-    #[cfg(target_arch = "wasm32")]
-    let default_plugins = bevy_webgl2::DefaultPlugins;
+    let default_plugins = DefaultPlugins;
 
     #[cfg(not(target_arch = "wasm32"))]
     {
@@ -47,7 +88,6 @@ fn main() {
             .add_system(toggle_cursor.system())
             .add_plugin(TerrainPlugin)
             .add_plugin(RapierPhysicsPlugin)
-            .add_plugin(PbrPlugin)
             .run();
     }
     #[cfg(target_arch = "wasm32")]
@@ -64,7 +104,6 @@ fn main() {
             .add_startup_system(setup.system())
             .add_plugin(TerrainPlugin)
             .add_plugin(RapierPhysicsPlugin)
-            .add_plugin(PbrPlugin)
             .run();
     }
 }

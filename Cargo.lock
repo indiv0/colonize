@@ -1064,6 +1064,7 @@ name = "colonize"
 version = "0.7.0"
 dependencies = [
  "bevy",
+ "bevy_gilrs",
  "bevy_mod_picking",
  "bevy_rapier3d",
  "bevy_webgl2",

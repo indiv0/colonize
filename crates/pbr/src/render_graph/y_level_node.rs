@@ -1,7 +1,7 @@
 use crate::YLevel;
 use bevy::{
+    core::AsBytes,
     ecs::{Commands, IntoSystem, Local, Res, ResMut, Resources, System, World},
-    prelude::debug,
     render::{
         render_graph::{CommandQueue, Node, ResourceSlots, SystemNode},
         renderer::{
@@ -66,15 +66,18 @@ pub(crate) fn y_level_node_system(
     mut render_resource_bindings: ResMut<RenderResourceBindings>,
     y_level: Res<YLevel>,
 ) {
-    debug!("YLevelNodeState: {:?}", *state);
     let state = &mut state;
     let render_resource_context = &**render_resource_context;
+
+    // Why do we need an [f32; 4] to store a vec3?
+    let y_level: [f32; 4] = [y_level.value as f32; 4];
+    let y_level_size = std::mem::size_of::<[f32; 4]>();
+    let size = y_level_size;
 
     let staging_buffer = if let Some(staging_buffer) = state.staging_buffer {
         render_resource_context.map_buffer(staging_buffer);
         staging_buffer
     } else {
-        let size = std::mem::size_of::<f32>();
         let buffer = render_resource_context.create_buffer(BufferInfo {
             size,
             buffer_usage: BufferUsage::COPY_DST | BufferUsage::UNIFORM,
@@ -100,25 +103,17 @@ pub(crate) fn y_level_node_system(
         staging_buffer
     };
 
-    let y_level_size = std::mem::size_of::<f32>();
-
-    let y_level = y_level.value as f32;
-    //debug!("y_level: {:?}, {:?}", y_level, y_level.to_ne_bytes());
     render_resource_context.write_mapped_buffer(
         staging_buffer,
-        0..y_level_size as u64,
+        0..size as u64,
         &mut |data, _renderer| {
-            data[0..y_level_size].copy_from_slice(&y_level.to_ne_bytes());
+            data[0..size].copy_from_slice(y_level.as_bytes());
         },
     );
     render_resource_context.unmap_buffer(staging_buffer);
 
     let y_level_buffer = state.y_level_buffer.unwrap();
-    state.command_queue.copy_buffer_to_buffer(
-        staging_buffer,
-        0,
-        y_level_buffer,
-        0,
-        y_level_size as u64,
-    );
+    state
+        .command_queue
+        .copy_buffer_to_buffer(staging_buffer, 0, y_level_buffer, 0, size as u64);
 }

@@ -1,6 +1,7 @@
+#version 300 es
 // MIT License
 // 
-// Copyright (c) 2020 Carter Anderson
+// Copyright (c) 2020 Mariusz Kryński
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,7 +20,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-#version 450
+precision highp float;
 
 const int MAX_LIGHTS = 10;
 
@@ -29,44 +30,54 @@ struct Light {
     vec4 color;
 };
 
-layout(location = 0) in vec3 v_Position;
-layout(location = 1) in vec3 v_Normal;
-layout(location = 2) in vec2 v_Uv;
+in vec3 v_Position;
+in vec3 v_Normal;
+in vec2 v_Uv;
 
-layout(location = 0) out vec4 o_Target;
+out vec4 o_Target;
 
-layout(set = 0, binding = 0) uniform Camera {
+layout(std140) uniform Camera {
     mat4 ViewProj;
 };
 
-layout(set = 1, binding = 0) uniform Lights {
+layout(std140) uniform Lights {  // set = 1, binding = 0
     vec3 AmbientColor;
     uvec4 NumLights;
     Light SceneLights[MAX_LIGHTS];
 };
 
-layout(set = 3, binding = 0) uniform StandardMaterial_albedo {
+layout(std140) uniform StandardMaterial_albedo { // set = 3, binding = 0
     vec4 Albedo;
 };
 
-layout(set = 1, binding = 1) uniform YLevel {
+layout(std140) uniform YLevel { // set = 1, binding = 1
     vec3 YLevelValue;
 };
 
-# ifdef STANDARDMATERIAL_ALBEDO_TEXTURE
-layout(set = 3, binding = 1) uniform texture2D StandardMaterial_albedo_texture;
-layout(set = 3, binding = 2) uniform sampler StandardMaterial_albedo_texture_sampler;
-# endif
+#ifdef STANDARDMATERIAL_ALBEDO_TEXTURE
+uniform sampler2D StandardMaterial_albedo_texture;  // set = 3, binding = 1
+#endif
+
+vec4 encodeSRGB(vec4 linearRGB_in)
+{
+    vec3 linearRGB = linearRGB_in.rgb;
+    vec3 a = 12.92 * linearRGB;
+    vec3 b = 1.055 * pow(linearRGB, vec3(1.0 / 2.4)) - 0.055;
+    vec3 c = step(vec3(0.0031308), linearRGB);
+    return vec4(mix(a, b, c), linearRGB_in.a);
+}
 
 void main() {
     vec4 output_color = Albedo;
-# ifdef STANDARDMATERIAL_ALBEDO_TEXTURE
-    output_color *= texture(
-        sampler2D(StandardMaterial_albedo_texture, StandardMaterial_albedo_texture_sampler),
-        v_Uv);
-# endif
 
-# ifdef STANDARDMATERIAL_SHADED
+#ifdef STANDARDMATERIAL_ALBEDO_TEXTURE
+    output_color *= texture(
+        StandardMaterial_albedo_texture,
+        v_Uv
+    );
+#endif
+
+#ifdef STANDARDMATERIAL_SHADED
     vec3 normal = normalize(v_Normal);
     // accumulate color
     vec3 color = AmbientColor;
@@ -78,15 +89,11 @@ void main() {
         // add light contribution
         color += diffuse * light.color.xyz;
     }
-
-    // average the lights so that we will never get something with > 1.0
-    color /= max(float(NumLights.x), 1.0);
-
     output_color.xyz *= color;
-# endif
-
+#endif
     // multiply the light by material color
-    o_Target = output_color;
+    o_Target = encodeSRGB(output_color);
+    // o_Target = output_color;
 
     // discard any fragments above the y-level
     if (v_Position.y > YLevelValue.x + 0.00001) {

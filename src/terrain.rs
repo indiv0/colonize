@@ -274,10 +274,10 @@ fn hide_y_levels_system(
 ) {
     // Increase/decrease the Y-level by 1 if the player pressed `<` or `>`.
     let old_y_level = *y_level;
-    if keyboard_input.pressed(KeyCode::N) {
+    if keyboard_input.pressed(KeyCode::Minus) {
         y_level.value = i32::max(y_level.value - 1, REGION_MIN_3D.y());
         trace!("Decremented y-level to {:?}", y_level.value);
-    } else if keyboard_input.pressed(KeyCode::M) {
+    } else if keyboard_input.pressed(KeyCode::Equals) {
         y_level.value = i32::min(y_level.value + 1, REGION_MAX_3D.y());
         trace!("Incremented y-level to {:?}", y_level.value);
     }

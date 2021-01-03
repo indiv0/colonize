@@ -13,13 +13,10 @@ mod terrain;
 
 use bevy::{
     app::startup_stage,
-    ecs::{Commands, IntoSystem, Res, ResMut, SystemStage},
-    input::Input,
+    ecs::{Commands, IntoSystem, SystemStage},
     math::Vec3,
     pbr::LightBundle,
-    prelude::{App, Camera3dBundle, KeyCode, Transform},
-    window::Windows,
-    DefaultPlugins,
+    prelude::{App, Camera3dBundle, Transform},
 };
 use bevy_mod_picking::{DebugPickingPlugin, InteractablePickingPlugin, PickSource, PickingPlugin};
 use bevy_rapier3d::physics::RapierPhysicsPlugin;
@@ -31,7 +28,7 @@ use terrain::{TerrainPlugin, TERRAIN};
 
 fn main() {
     #[cfg(not(target_arch = "wasm32"))]
-    let default_plugins = DefaultPlugins;
+    let default_plugins = bevy::DefaultPlugins;
     #[cfg(target_arch = "wasm32")]
     let default_plugins = bevy_webgl2::DefaultPlugins;
 
@@ -90,6 +87,14 @@ fn setup(commands: &mut Commands) {
         .with(CameraState::default())
         .with(PickSource::default());
 }
+
+#[cfg(not(target_arch = "wasm32"))]
+use bevy::{
+    ecs::{Res, ResMut},
+    input::Input,
+    prelude::KeyCode,
+    window::Windows,
+};
 
 #[cfg(not(target_arch = "wasm32"))]
 /// Toggles the cursor's visibility and lock mode when the space bar is pressed.

@@ -1071,6 +1071,7 @@ dependencies = [
  "colonize_common",
  "colonize_core",
  "colonize_noise",
+ "colonize_pbr",
  "noise",
  "rand 0.7.3",
 ]
@@ -1097,6 +1098,13 @@ version = "0.1.0"
 dependencies = [
  "colonize_core",
  "noise",
+]
+
+[[package]]
+name = "colonize_pbr"
+version = "0.1.0"
+dependencies = [
+ "bevy",
 ]
 
 [[package]]

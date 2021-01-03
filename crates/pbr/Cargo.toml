@@ -1,0 +1,20 @@
+[package]
+name = "colonize_pbr"
+version = "0.1.0"
+edition = "2018"
+authors = ["Nikita Pekin <nikita@frecency.com>"]
+publish = false
+
+[dependencies]
+bevy = { version = "0.4.0", default-features = false, features = ["bevy_gltf", "bevy_winit", "png", "render"] }
+
+[features]
+default = [
+    "bevy/bevy_audio",
+    "bevy/bevy_dynamic_plugin",
+    "bevy/bevy_gilrs",
+    "bevy/bevy_wgpu",
+    "bevy/hdr",
+    "bevy/mp3",
+    "bevy/x11"
+]

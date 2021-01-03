@@ -10,12 +10,12 @@
 //! is (384, 384, 384).
 use std::collections::HashMap;
 
+use bevy::prelude::PbrBundle as BevyPbrBundle;
 use bevy::{ecs::Query, render::pipeline::PrimitiveTopology};
 use bevy::{
     ecs::{Commands, Entity, IntoSystem, Res, ResMut},
     input::Input,
-    pbr::PbrBundle,
-    prelude::{AppBuilder, Assets, Color, Handle, KeyCode, Mesh, Plugin, StandardMaterial},
+    prelude::{AppBuilder, Assets, Color, Handle, KeyCode, Mesh, Plugin},
     reflect::TypeUuid,
     render::{
         mesh::{Indices, VertexAttributeValues},
@@ -24,11 +24,10 @@ use bevy::{
 };
 use bevy::{log::trace, prelude::Visible};
 use bevy::{
-    prelude::{AddAsset, AssetServer, RenderPipelines, Shader},
+    prelude::AddAsset,
     render::{
-        pipeline::{PipelineDescriptor, RenderPipeline},
-        render_graph::{base, AssetRenderResourcesNode, RenderGraph},
-        shader::ShaderStages,
+        pipeline::PipelineDescriptor,
+        render_graph::RenderGraph,
     },
     tasks::ComputeTaskPool,
 };
@@ -54,16 +53,17 @@ use building_blocks::{
     },
 };
 use colonize_noise::Noise2d;
+use colonize_pbr::{prelude::StandardMaterial, PbrBundle, YLevel};
 use noise::{MultiFractal, RidgedMulti, Seedable};
 use rand::{thread_rng, Rng};
 
 use colonize_common::CubeVoxel;
 
-const CHUNK_SIZE: usize = 32;
-const REGION_SIZE: usize = 128; // CHUNK_SIZE * NUM_CHUNKS
+const CHUNK_SIZE: usize = 128;
+const REGION_SIZE: usize = 512; // CHUNK_SIZE * NUM_CHUNKS
                                 // 512 underground blocks, plus 256 blocks above sea level.
-const REGION_HEIGHT: i32 = 128;
-const REGION_MIN_3D: Point3i = PointN([-(REGION_SIZE as i32 / 2), -64, -(REGION_SIZE as i32 / 2)]);
+const REGION_HEIGHT: i32 = 256;
+const REGION_MIN_3D: Point3i = PointN([-(REGION_SIZE as i32 / 2), -128, -(REGION_SIZE as i32 / 2)]);
 const REGION_SHAPE_3D: Point3i = PointN([REGION_SIZE as i32, REGION_HEIGHT, REGION_SIZE as i32]);
 const REGION_MAX_3D: Point3i = PointN([
     REGION_MIN_3D.0[0] + REGION_SHAPE_3D.0[0],
@@ -91,6 +91,9 @@ impl Plugin for TerrainPlugin {
         app.add_asset::<MeshMaterial>()
             .add_resource(TerrainResource::default())
             .add_resource(MeshResource::default())
+            .add_resource(YLevel {
+                value: REGION_MAX_3D.y(),
+            })
             .add_startup_system(setup.system())
             .add_startup_system_to_stage(TERRAIN, generate_voxels.system())
             .add_system(generate_meshes.system())
@@ -101,88 +104,34 @@ impl Plugin for TerrainPlugin {
 
 fn setup(
     mut res: ResMut<TerrainResource>,
-    mut materials: ResMut<Assets<MeshMaterial>>,
-    asset_server: ResMut<AssetServer>,
-    mut pipelines: ResMut<Assets<PipelineDescriptor>>,
-    mut render_graph: ResMut<RenderGraph>,
+    mut standard_materials: ResMut<Assets<StandardMaterial>>,
+    _mesh_materials: ResMut<Assets<MeshMaterial>>,
+    _pipelines: ResMut<Assets<PipelineDescriptor>>,
+    _render_graph: ResMut<RenderGraph>,
 ) {
-    res.materials.insert(
-        CubeVoxel::Stone,
-        materials.add(MeshMaterial {
-            color: Color::rgb(0.5, 0.5, 0.5).into(), // Stone
-        }),
-    );
-    res.materials.insert(
-        CubeVoxel::Grass,
-        materials.add(MeshMaterial {
-            color: Color::rgb(0.376, 0.502, 0.22).into(), // Grass
-        }),
-    );
-    res.materials.insert(
-        CubeVoxel::Gold,
-        materials.add(MeshMaterial {
-            color: Color::rgb(1.0, 0.843, 0.).into(), // Gold
-        }),
-    );
-    res.materials.insert(
-        CubeVoxel::Water,
-        materials.add(MeshMaterial {
-            color: Color::rgba(0.0, 0.0, 0.5, 0.5).into(), // Water
-        }),
-    );
-
-    // Watch for changes
-    asset_server.watch_for_changes().unwrap();
-
-    // Create a new shader pipeline with shaders loaded from the asset directory
-    let pipeline_handle = pipelines.add(PipelineDescriptor::default_config(ShaderStages {
-        vertex: asset_server.load::<Shader, _>("shaders/hot.vert"),
-        fragment: Some(asset_server.load::<Shader, _>("shaders/hot.frag")),
-    }));
-    res.pipeline_handle = Some(pipeline_handle);
-
-    // Add an AssetRenderResourcesNode to our Render Graph. This will bind MeshMaterial resources to our shader
-    render_graph.add_system_node(
-        "mesh_material",
-        AssetRenderResourcesNode::<MeshMaterial>::new(true),
-    );
-
-    // Add a Render Graph edge connecting our new "mesh_material" node to the main pass node. This ensures "mesh_material" runs before the main pass
-    render_graph
-        .add_node_edge("mesh_material", base::node::MAIN_PASS)
-        .unwrap();
-}
-
-#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-struct YLevel(i32);
-
-impl YLevel {
-    fn increment(&mut self) {
-        self.0 = i32::min(self.0 + 1, REGION_MAX_3D.y());
-        trace!("Incremented y-level to {:?}", self.0);
-    }
-
-    fn decrement(&mut self) {
-        self.0 = i32::max(self.0 - 1, REGION_MIN_3D.y());
-        trace!("Decremented y-level to {:?}", self.0);
-    }
-}
-
-impl Default for YLevel {
-    fn default() -> Self {
-        Self(REGION_MAX_3D.y())
+    for (voxel_type, color) in &[
+        (CubeVoxel::Stone, Color::rgb(0.5, 0.5, 0.5)),
+        (CubeVoxel::Grass, Color::rgb(0.376, 0.502, 0.22)),
+        (CubeVoxel::Gold, Color::rgb(1.0, 0.843, 0.)),
+        (CubeVoxel::Water, Color::rgba(0.0, 0.0, 0.5, 0.5)),
+    ] {
+        res.materials.insert(
+            *voxel_type,
+            (
+                standard_materials.add((*color).into()),
+                HatMaterial(standard_materials.add((*color).into())),
+            ),
+        );
     }
 }
 
 pub(crate) struct TerrainResource {
-    materials: HashMap<CubeVoxel, Handle<MeshMaterial>>,
+    materials: HashMap<CubeVoxel, (Handle<StandardMaterial>, HatMaterial)>,
     noise: RidgedMulti,
     chunks: CompressibleChunkMap3<CubeVoxel>,
     generated_voxels: bool,
     sea_level: f64,
     y_offset: f64,
-    y_level: YLevel,
-    pipeline_handle: Option<Handle<PipelineDescriptor>>,
 }
 
 impl TerrainResource {
@@ -211,15 +160,6 @@ impl TerrainResource {
         let local_cache = LocalChunkCache::new();
         let reader = self.chunks.storage().reader(&local_cache);
         let reader_map = DEFAULT_BUILDER.build_with_read_storage(reader);
-        //for chunk_key in self.chunks.indexer.chunk_keys_for_extent(&query_extent) {
-        //    if let Some(chunk) = reader.get(&chunk_key) {
-        //        chunk.array.for_each(&query_extent.clone(), |p: Point3i, value| f(p, value));
-        //    } else {
-        //        let chunk_extent = self.chunks.indexer.extent_for_chunk_at_key(chunk_key);
-        //        AmbientExtent::new(self.chunks.ambient_value())
-        //            .for_each(&query_extent.intersection(&chunk_extent), |p, value| f(p, value));
-        //    }
-        //}
         let f = |p: Point3i, value| {
             if value == CubeVoxel::Gold {
                 gold_loc.replace(p);
@@ -235,7 +175,6 @@ impl Default for TerrainResource {
         let store = CompressibleChunkStorage::new(Snappy);
         Self {
             materials: HashMap::new(),
-            //noise: Fbm::new().set_frequency(0.008).set_octaves(8),
             noise: RidgedMulti::new()
                 .set_frequency(0.001)
                 .set_lacunarity(4.0)
@@ -245,8 +184,6 @@ impl Default for TerrainResource {
             generated_voxels: false,
             sea_level: 100.,
             y_offset: 10.,
-            y_level: YLevel::default(),
-            pipeline_handle: None,
         }
     }
 }
@@ -262,6 +199,9 @@ impl Default for MeshResource {
         }
     }
 }
+
+#[derive(Clone, Default)]
+pub struct HatMaterial(pub Handle<StandardMaterial>);
 
 #[derive(Default, RenderResources, TypeUuid)]
 #[uuid = "3bf9e364-f29d-4d6c-92cf-93298466c620"]
@@ -330,24 +270,27 @@ fn modify_config(
 
 fn hide_y_levels_system(
     keyboard_input: Res<Input<KeyCode>>,
-    mut terrain_res: ResMut<TerrainResource>,
+    _terrain_res: ResMut<TerrainResource>,
     mesh_res: ResMut<MeshResource>,
     mut mesh_query: Query<(Option<&FullDetailMesh>, &YLevel, &mut Visible)>,
+    mut y_level: ResMut<YLevel>,
 ) {
     // Increase/decrease the Y-level by 1 if the player pressed `<` or `>`.
-    let old_y_level = terrain_res.y_level;
+    let old_y_level = *y_level;
     if keyboard_input.pressed(KeyCode::Minus) {
-        terrain_res.y_level.decrement();
+        y_level.value = i32::max(y_level.value - 1, REGION_MIN_3D.y());
+        trace!("Decremented y-level to {:?}", y_level.value);
     } else if keyboard_input.pressed(KeyCode::Equals) {
-        terrain_res.y_level.increment();
+        y_level.value = i32::min(y_level.value + 1, REGION_MAX_3D.y());
+        trace!("Incremented y-level to {:?}", y_level.value);
     }
 
-    if old_y_level != terrain_res.y_level {
+    if old_y_level != *y_level {
         // Find and disable all the meshes at the old y-level.
         for (chunk_pos, mesh_entities) in &mesh_res.meshes {
             for (entity, _mesh) in mesh_entities {
-                if let Ok((_, y_level, mut visible)) = mesh_query.get_mut(*entity) {
-                    if y_level == &old_y_level {
+                if let Ok((None, mesh_y_level, mut visible)) = mesh_query.get_mut(*entity) {
+                    if mesh_y_level == &old_y_level {
                         trace!(
                             "Disabled mesh at y-level {:?} for chunk {:?}",
                             y_level,
@@ -362,8 +305,8 @@ fn hide_y_levels_system(
         // Find and enable all the meshes at the current y-level (that aren't full-detail meshes).
         for (chunk_pos, mesh_entities) in &mesh_res.meshes {
             for (entity, _mesh) in mesh_entities {
-                if let Ok((None, y_level, mut visible)) = mesh_query.get_mut(*entity) {
-                    if y_level == &terrain_res.y_level {
+                if let Ok((None, mesh_y_level, mut visible)) = mesh_query.get_mut(*entity) {
+                    if mesh_y_level == &*y_level {
                         trace!(
                             "Enabled mesh at y-level {:?} for chunk {:?}",
                             y_level,
@@ -378,12 +321,12 @@ fn hide_y_levels_system(
         // If the previous y-level was the top of a chunk, and we went up over a chunk boundary,
         // go back and re-enable the full-detail meshes for that chunk.
         for (chunk_pos, mesh_entities) in &mesh_res.meshes {
-            if old_y_level.0 == chunk_pos.y() + CHUNK_SIZE as i32 - 1
-                && terrain_res.y_level.0 == chunk_pos.y() + CHUNK_SIZE as i32
+            if old_y_level.value == chunk_pos.y() + CHUNK_SIZE as i32 - 1
+                && y_level.value == chunk_pos.y() + CHUNK_SIZE as i32
             {
                 for (entity, _mesh) in mesh_entities {
-                    if let Ok((Some(_), y_level, mut visible)) = mesh_query.get_mut(*entity) {
-                        if y_level == &old_y_level {
+                    if let Ok((Some(_), mesh_y_level, mut visible)) = mesh_query.get_mut(*entity) {
+                        if mesh_y_level == &old_y_level {
                             trace!(
                                 "Re-enabled mesh at y-level {:?} for chunk {:?}",
                                 y_level,
@@ -499,8 +442,11 @@ fn generate_meshes(
                         // The rest are for rendering only.
                         full_detail && material.collidable(),
                         commands,
-                        terrain.pipeline_handle.as_ref().unwrap().clone(),
-                        terrain.materials.get(&material).unwrap().clone(),
+                        terrain
+                            .materials
+                            .get(&material)
+                            .expect("failed to get material")
+                            .clone(),
                         !material.is_opaque(),
                         &mut mesh_assets,
                         y_level,
@@ -540,8 +486,9 @@ async fn generate_mesh(
     let mut padded_layer_extents = Vec::new();
     while padded_layer_extent.max().y() <= padded_chunk_extent.max().y() {
         padded_layer_extents.push(padded_layer_extent);
-        *padded_layer_extent.shape.y_mut() += 1;
+        *padded_layer_extent.minimum.y_mut() += 1;
     }
+    padded_layer_extents.push(padded_chunk_extent);
     trace!(
         "Generating {} padded layers for chunk {:?}",
         padded_layer_extents.len(),
@@ -607,7 +554,12 @@ async fn generate_mesh(
         }
 
         layer_meshes.insert(
-            (YLevel(padded_layer_extent.max().y() - 1), full_detail),
+            (
+                YLevel {
+                    value: padded_layer_extent.max().y() - 1,
+                },
+                full_detail,
+            ),
             meshes,
         );
     }
@@ -624,8 +576,7 @@ fn generate_mesh_entity(
     mesh: PosNormMesh,
     collidable: bool,
     commands: &mut Commands,
-    pipeline_handle: Handle<PipelineDescriptor>,
-    material: Handle<MeshMaterial>,
+    material: (Handle<StandardMaterial>, HatMaterial),
     is_transparent: bool,
     meshes: &mut Assets<Mesh>,
     y_level: YLevel,
@@ -667,27 +618,41 @@ fn generate_mesh_entity(
 
     let mesh_handle = meshes.add(render_mesh);
 
-    let mut commands = commands
-        .spawn(PbrBundle {
-            mesh: mesh_handle.clone_weak(),
-            render_pipelines: RenderPipelines::from_pipelines(vec![RenderPipeline::new(
-                pipeline_handle,
-            )]),
-            visible: Visible {
-                // Only the full-detail meshes of each chunk are visible to start with.
-                // Slices of chunks become visible as the player lowers the y-level.
-                is_visible: full_detail,
-                is_transparent,
-            },
-            ..Default::default()
-        })
-        .with(material)
-        .with(Chunk)
-        .with(y_level);
-    if full_detail {
-        commands = commands.with(FullDetailMesh);
-    }
-    let entity = commands.current_entity().unwrap();
+    let commands = if full_detail {
+        commands
+            .spawn(PbrBundle {
+                mesh: mesh_handle.clone_weak(),
+                material: material.0,
+                visible: Visible {
+                    // Only the full-detail meshes of each chunk are visible to start with.
+                    // Slices of chunks become visible as the player lowers the y-level.
+                    is_visible: full_detail,
+                    is_transparent,
+                },
+                ..Default::default()
+            })
+            .with(Chunk)
+            .with(y_level)
+            .with(FullDetailMesh)
+    } else {
+        commands
+            .spawn(BevyPbrBundle {
+                mesh: mesh_handle.clone_weak(),
+                material: material.0,
+                visible: Visible {
+                    // Only the full-detail meshes of each chunk are visible to start with.
+                    // Slices of chunks become visible as the player lowers the y-level.
+                    is_visible: full_detail,
+                    is_transparent,
+                },
+                ..Default::default()
+            })
+            .with(Chunk)
+            .with(y_level)
+    };
+    let entity = commands
+        .current_entity()
+        .expect("failed to get current entity");
     if let (Some(rigid_body), Some(mut collider)) = (rigid_body, collider) {
         collider = collider.user_data(entity.to_bits() as u128);
         commands.insert(entity, (rigid_body, collider));

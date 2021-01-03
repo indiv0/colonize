@@ -11,11 +11,20 @@ mod camera;
 mod dwarf;
 mod terrain;
 
-use bevy::{app::startup_stage, prelude::*};
-use bevy_mod_picking::*;
+use bevy::{
+    app::startup_stage,
+    ecs::{Commands, IntoSystem, Res, ResMut, SystemStage},
+    input::Input,
+    math::Vec3,
+    prelude::{App, Camera3dBundle, KeyCode, Transform},
+    window::Windows,
+    DefaultPlugins,
+};
+use bevy_mod_picking::{DebugPickingPlugin, InteractablePickingPlugin, PickSource, PickingPlugin};
 use bevy_rapier3d::physics::RapierPhysicsPlugin;
 
 use camera::fps::{CameraMovementPlugin, CameraState};
+use colonize_pbr::{LightBundle, PbrPlugin};
 use dwarf::{DwarfPlugin, DWARVES};
 use terrain::{TerrainPlugin, TERRAIN};
 
@@ -40,6 +49,7 @@ fn main() {
             .add_system(toggle_cursor.system())
             .add_plugin(TerrainPlugin)
             .add_plugin(RapierPhysicsPlugin)
+            .add_plugin(PbrPlugin)
             .run();
     }
     #[cfg(target_arch = "wasm32")]
@@ -56,6 +66,7 @@ fn main() {
             .add_startup_system(setup.system())
             .add_plugin(TerrainPlugin)
             .add_plugin(RapierPhysicsPlugin)
+            .add_plugin(PbrPlugin)
             .run();
     }
 }

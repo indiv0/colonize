@@ -2,11 +2,10 @@ use bevy::{
     ecs::{Entity, Query, Res, ResMut},
     input::Input,
     math::Vec3,
-    pbr::PbrBundle,
     prelude::Assets,
     prelude::{
         shape, trace, AppBuilder, Color, Commands, IntoSystem, KeyCode, Mesh, MouseButton, Plugin,
-        StandardMaterial, Transform,
+        Transform,
     },
 };
 use bevy_mod_picking::{
@@ -21,6 +20,7 @@ use bevy_rapier3d::{
     },
 };
 use building_blocks::core::PointN;
+use colonize_pbr::{prelude::StandardMaterial, PbrBundle};
 use rand::{thread_rng, Rng};
 
 use crate::terrain::{Chunk, TerrainResource};

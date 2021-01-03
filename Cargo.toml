@@ -28,6 +28,7 @@ building-blocks = { git = "https://github.com/bonsairobo/building-blocks", rev =
 colonize_common = { path = "crates/common" }
 colonize_core = { path = "crates/core" }
 colonize_noise = { path = "crates/noise" }
+colonize_pbr = { path = "crates/pbr", default-features = false }
 noise = { version = "0.6.0", default-features = false }
 rand = "0.7.3"
 
@@ -39,7 +40,8 @@ default = [
     "bevy/bevy_wgpu",
     "bevy/hdr",
     "bevy/mp3",
-    "bevy/x11"
+    "bevy/x11",
+    "colonize_pbr/default"
 ]
 wasm = [
     "bevy_webgl2"
@@ -52,7 +54,7 @@ opt-level = 3
 debug-assertions = false
 
 [profile.release]
-debug = true
-debug-assertions = true
-overflow-checks = true
+#debug = true
+#debug-assertions = true
+#overflow-checks = true
 #lto = true

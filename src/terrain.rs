@@ -54,7 +54,7 @@ use colonize_pbr::{pbr_bundle, prelude::StandardMaterial, YLevel};
 use noise::{MultiFractal, RidgedMulti, Seedable};
 use rand::{thread_rng, Rng};
 
-use colonize_common::CubeVoxel;
+use colonize_common::VoxelType;
 
 const CHUNK_SIZE: usize = 128;
 const REGION_SIZE: usize = 512; // CHUNK_SIZE * NUM_CHUNKS
@@ -70,9 +70,9 @@ const REGION_MAX_3D: Point3i = PointN([
 
 const SEA_LEVEL: i32 = 0;
 
-const DEFAULT_BUILDER: ChunkMapBuilder3<CubeVoxel> = ChunkMapBuilder {
+const DEFAULT_BUILDER: ChunkMapBuilder3<VoxelType> = ChunkMapBuilder {
     chunk_shape: PointN([CHUNK_SIZE as i32; 3]),
-    ambient_value: CubeVoxel::Air,
+    ambient_value: VoxelType::Air,
     default_chunk_metadata: (),
 };
 
@@ -107,10 +107,10 @@ fn setup(
     _render_graph: ResMut<RenderGraph>,
 ) {
     for (voxel_type, color) in &[
-        (CubeVoxel::Stone, Color::rgb(0.5, 0.5, 0.5)),
-        (CubeVoxel::Grass, Color::rgb(0.376, 0.502, 0.22)),
-        (CubeVoxel::Gold, Color::rgb(1.0, 0.843, 0.)),
-        (CubeVoxel::Water, Color::rgba(0.0, 0.0, 0.5, 0.5)),
+        (VoxelType::Stone, Color::rgb(0.5, 0.5, 0.5)),
+        (VoxelType::Grass, Color::rgb(0.376, 0.502, 0.22)),
+        (VoxelType::Gold, Color::rgb(1.0, 0.843, 0.)),
+        (VoxelType::Water, Color::rgba(0.0, 0.0, 0.5, 0.5)),
     ] {
         res.materials.insert(
             *voxel_type,
@@ -123,9 +123,9 @@ fn setup(
 }
 
 pub(crate) struct TerrainResource {
-    materials: HashMap<CubeVoxel, (Handle<StandardMaterial>, HatMaterial)>,
+    materials: HashMap<VoxelType, (Handle<StandardMaterial>, HatMaterial)>,
     noise: RidgedMulti,
-    chunks: CompressibleChunkMap3<CubeVoxel>,
+    chunks: CompressibleChunkMap3<VoxelType>,
     generated_voxels: bool,
     sea_level: f64,
     y_offset: f64,
@@ -141,7 +141,7 @@ impl TerrainResource {
         for y in (min_y..bounding_extent.max().y()).rev() {
             let location = PointN([column.x(), y, column.y()]);
             let value = reader_map.get(&location);
-            if value != CubeVoxel::Air {
+            if value != VoxelType::Air {
                 return y;
             }
         }
@@ -158,7 +158,7 @@ impl TerrainResource {
         let reader = self.chunks.storage().reader(&local_cache);
         let reader_map = DEFAULT_BUILDER.build_with_read_storage(reader);
         let f = |p: Point3i, value| {
-            if value == CubeVoxel::Gold {
+            if value == VoxelType::Gold {
                 gold_loc.replace(p);
             }
         };
@@ -480,11 +480,11 @@ fn generate_meshes(
 struct FullDetailMesh;
 
 async fn generate_mesh(
-    map_ref: &CompressibleChunkMap3<CubeVoxel>,
+    map_ref: &CompressibleChunkMap3<VoxelType>,
     chunk_key: &Point3i,
 ) -> (
     Point3i,
-    Option<HashMap<(YLevel, bool), HashMap<CubeVoxel, PosNormMesh>>>,
+    Option<HashMap<(YLevel, bool), HashMap<VoxelType, PosNormMesh>>>,
 ) {
     trace!("Generating mesh for chunk at {:?}", chunk_key);
     let local_cache = LocalChunkCache3::new();
@@ -506,7 +506,7 @@ async fn generate_mesh(
         chunk_key
     );
 
-    let mut layer_meshes: HashMap<(YLevel, bool), HashMap<CubeVoxel, PosNormMesh>> = HashMap::new();
+    let mut layer_meshes: HashMap<(YLevel, bool), HashMap<VoxelType, PosNormMesh>> = HashMap::new();
     // Iterate over the slice extents in reverse order. The first extent will be the "full" extent of the
     // chunk. This is a special case because we want to generate both a sliced (i.e. "pretend there's only air
     // above us") mesh and a full-detail one (no air padding above).
@@ -568,12 +568,12 @@ async fn generate_mesh(
 }
 
 fn generate_mesh_for_extent(
-    map_ref: &CompressibleChunkMap3<CubeVoxel>,
+    map_ref: &CompressibleChunkMap3<VoxelType>,
     chunk_key: &Point3i,
-    local_cache: &LocalChunkCache3<CubeVoxel>,
+    local_cache: &LocalChunkCache3<VoxelType>,
     padded_extent: Extent3i,
     extent_to_copy: &Extent3i,
-) -> Option<HashMap<CubeVoxel, PosNormMesh>> {
+) -> Option<HashMap<VoxelType, PosNormMesh>> {
     trace!("Generating mesh for chunk at {:?}", chunk_key);
     let reader = map_ref.storage().reader(&local_cache);
     let reader_map = DEFAULT_BUILDER.build_with_read_storage(reader);
@@ -582,7 +582,7 @@ fn generate_mesh_for_extent(
         extent_to_copy,
         padded_extent
     );
-    let mut padded_array = Array3::fill(padded_extent, CubeVoxel::Air);
+    let mut padded_array = Array3::fill(padded_extent, VoxelType::Air);
     copy_extent(&extent_to_copy, &reader_map, &mut padded_array);
 
     // TODO bevy: we could avoid re-allocating the buffers on every call if we had
@@ -591,7 +591,7 @@ fn generate_mesh_for_extent(
     greedy_quads(&padded_array, &padded_extent, &mut buffer);
 
     // Separate the meshes by material, so that we can render each voxel type with a different color.
-    let mut meshes: HashMap<CubeVoxel, PosNormMesh> = HashMap::new();
+    let mut meshes: HashMap<VoxelType, PosNormMesh> = HashMap::new();
     for group in buffer.quad_groups.iter() {
         for quad in group.quads.iter() {
             let material = reader_map.get(&quad.minimum);

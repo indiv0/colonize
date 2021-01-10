@@ -4,7 +4,7 @@ use building_blocks::{
 };
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub enum CubeVoxel {
+pub enum VoxelType {
     Air,
     Stone,
     Grass,
@@ -12,16 +12,16 @@ pub enum CubeVoxel {
     Water,
 }
 
-impl CubeVoxel {
+impl VoxelType {
     pub fn collidable(&self) -> bool {
         match self {
-            CubeVoxel::Air | CubeVoxel::Water => false,
-            CubeVoxel::Stone | CubeVoxel::Grass | CubeVoxel::Gold => true,
+            VoxelType::Air | VoxelType::Water => false,
+            VoxelType::Stone | VoxelType::Grass | VoxelType::Gold => true,
         }
     }
 }
 
-impl MergeVoxel for CubeVoxel {
+impl MergeVoxel for VoxelType {
     type VoxelValue = Self;
 
     fn voxel_merge_value(&self) -> Self::VoxelValue {
@@ -29,20 +29,20 @@ impl MergeVoxel for CubeVoxel {
     }
 }
 
-impl IsOpaque for CubeVoxel {
+impl IsOpaque for VoxelType {
     fn is_opaque(&self) -> bool {
         match self {
-            CubeVoxel::Air | CubeVoxel::Water => false,
-            CubeVoxel::Stone | CubeVoxel::Grass | CubeVoxel::Gold => true,
+            VoxelType::Air | VoxelType::Water => false,
+            VoxelType::Stone | VoxelType::Grass | VoxelType::Gold => true,
         }
     }
 }
 
-impl IsEmpty for CubeVoxel {
+impl IsEmpty for VoxelType {
     fn is_empty(&self) -> bool {
         match self {
-            CubeVoxel::Air => true,
-            CubeVoxel::Stone | CubeVoxel::Grass | CubeVoxel::Gold | CubeVoxel::Water => false,
+            VoxelType::Air => true,
+            VoxelType::Stone | VoxelType::Grass | VoxelType::Gold | VoxelType::Water => false,
         }
     }
 }

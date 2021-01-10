@@ -5,7 +5,7 @@ use building_blocks::{
     core::{Extent2i, Extent3i, Point3i, PointN},
     storage::{Array2, Array3, ForEachMut, Get, GetMut},
 };
-use colonize_common::CubeVoxel;
+use colonize_common::VoxelType;
 
 use crate::array_int_to_float;
 
@@ -15,7 +15,7 @@ pub fn generate_map<H, D>(
     sea_level: i32,
     minimum: Point3i,
     shape: Point3i,
-) -> Array3<CubeVoxel>
+) -> Array3<VoxelType>
 where
     D: Sample<[f64; 2], f64>,
     H: Sample<[f64; 2], f64>,
@@ -34,7 +34,7 @@ where
     // Generate the 3D strata map from the height map.
     let total_extent = Extent3i::from_min_and_shape(minimum, shape);
     trace!("Generating 3D strata map for extent {:?}", total_extent);
-    let mut strata_array = Array3::fill(total_extent, CubeVoxel::Air);
+    let mut strata_array = Array3::fill(total_extent, VoxelType::Air);
     // Construct an iterator over 1x1-sized columns of the entire map.
     // We need to do this because we calculate once per columns: dirt thickness,
     // dirt transition, and stone transition.
@@ -58,11 +58,11 @@ where
         let stone_transition = dirt_transition - dirt_thickness;
         strata_array.for_each_mut(&c, |point: Point3i, value| {
             if point.y() <= stone_transition {
-                *value = CubeVoxel::Stone
+                *value = VoxelType::Stone
             } else if point.y() <= dirt_transition {
-                *value = CubeVoxel::Grass
+                *value = VoxelType::Grass
             } else {
-                *value = CubeVoxel::Air
+                *value = VoxelType::Air
             }
         })
     });
@@ -90,8 +90,8 @@ struct WaterGenerator {
     min_y: i32,
     min_z: i32,
     max_z: i32,
-    src: CubeVoxel,
-    dst: CubeVoxel,
+    src: VoxelType,
+    dst: VoxelType,
 }
 
 impl WaterGenerator {
@@ -103,19 +103,19 @@ impl WaterGenerator {
             min_y,
             min_z,
             max_z,
-            src: CubeVoxel::Air,
-            dst: CubeVoxel::Water,
+            src: VoxelType::Air,
+            dst: VoxelType::Water,
         }
     }
 
-    pub fn flood_fill(&self, array: &mut Array3<CubeVoxel>) {
+    pub fn flood_fill(&self, array: &mut Array3<VoxelType>) {
         self.flood_fill_horizontal(array, self.min_x, self.min_z);
         self.flood_fill_horizontal(array, self.min_x, self.max_z - 1);
         self.flood_fill_horizontal(array, self.max_x - 1, self.min_z);
         self.flood_fill_horizontal(array, self.max_x - 1, self.max_z - 1);
     }
 
-    fn flood_fill_horizontal(&self, array: &mut Array3<CubeVoxel>, x: i32, z: i32) {
+    fn flood_fill_horizontal(&self, array: &mut Array3<VoxelType>, x: i32, z: i32) {
         let location = PointN([x, self.sea_level - 1, z]);
         let voxel = array.get_mut(&location);
         if *voxel != self.src {

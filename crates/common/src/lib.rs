@@ -1,3 +1,3 @@
 mod terrain;
 
-pub use terrain::CubeVoxel;
+pub use terrain::VoxelType;

@@ -12,23 +12,22 @@ wasm_release:
 	wasm-bindgen --out-dir target-wasm --target web target-wasm/wasm32-unknown-unknown/release/colonize.wasm
 	wasm-opt -Oz target-wasm/colonize_bg.wasm -o target-wasm/colonize_bg_opt.wasm
 	sed -i 's/_bg\.wasm/_bg_opt\.wasm/g' target-wasm/colonize.js
+	cp target-wasm/colonize.js publish/colonize.js
+	cp target-wasm/colonize_bg_opt.wasm publish/colonize_bg_opt.wasm
 
 wasm_debug:
 	CARGO_TARGET_DIR=./target-wasm cargo build --target wasm32-unknown-unknown --no-default-features --features wasm
 	wasm-bindgen --out-dir target-wasm --target web target-wasm/wasm32-unknown-unknown/debug/colonize.wasm
 	wasm-opt --debuginfo -Oz target-wasm/colonize_bg.wasm -o target-wasm/colonize_bg_opt.wasm
 	sed -i 's/_bg\.wasm/_bg_opt\.wasm/g' target-wasm/colonize.js
+	cp target-wasm/colonize.js publish/colonize.js
+	cp target-wasm/colonize_bg_opt.wasm publish/colonize_bg_opt.wasm
 
 serve:
-	python3 -m http.server
+	(cd publish && python3 -m http.server)
 
 deploy_debug:
-	aws s3 cp release.index.html s3://dev.colonize.rs/index.html
-	aws s3 cp target-wasm/colonize.js s3://dev.colonize.rs/target/colonize.js
-	aws s3 cp target-wasm/colonize_bg_opt.wasm s3://dev.colonize.rs/target/colonize_bg_opt.wasm
+	(cd publish && aws s3 sync . s3://dev.colonize.rs/)
 
 deploy:
-	aws s3 cp release.index.html s3://colonize.rs/index.html
-	aws s3 cp target-wasm/colonize.js s3://colonize.rs/target/colonize.js
-	aws s3 cp target-wasm/colonize_bg_opt.wasm s3://colonize.rs/target/colonize_bg_opt.wasm
-
+	(cd publish && aws s3 sync . s3://colonize.rs/)

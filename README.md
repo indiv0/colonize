@@ -98,10 +98,13 @@ Build & run:
 ```
 cargo build --release --target wasm32-unknown-unknown --no-default-features --features wasm
 wasm-bindgen --out-dir target --target web target/wasm32-unknown-unknown/release/colonize.wasm
+# Build the CSS (which uses TailwindCSS)
+yarn install
+make styles
 ```
 Serve project dir to browser. i.e.
 ```
-python3 -m http.server
+make serve
 ```
 
 # Contributing

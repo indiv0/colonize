@@ -2,31 +2,33 @@
 <html>
   <head>
     <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Colonize</title>
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/>
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"/>
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"/>
-    <style>
-      body {
-        background: linear-gradient(
-          135deg,
-          white 0%,
-          white 49%,
-          black 49%,
-          black 51%,
-          white 51%,
-          white 100%
-        );
-        background-repeat: repeat;
-        background-size: 20px 20px;
-      }
-      canvas {
-        background-color: white;
-      }
-    </style>
+    <link rel="stylesheet" href="/normalize.css">
+    <link rel="stylesheet" href="/style.css">
   </head>
   <body>
-    <canvas id="bevy-canvas"></canvas>
+    <header class="bg-white shadow">
+      <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <h1 class="text-3xl font-bold leading-tight text-gray-900">
+          Colonize
+        </h1>
+      </div>
+    </header>
+    <main>
+      <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="flex flex-col justify-items-auto">
+          <div class="px-4 py-6 sm:px-0">
+            <div class="border-4 border-dashed border-gray-200 rounded-lg h-auto max-w-max m-auto">
+              <canvas id="bevy-canvas"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
     <script type="module">
       import init from './colonize.js'
       init()

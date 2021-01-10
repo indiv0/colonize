@@ -23,6 +23,12 @@ wasm_debug:
 	cp target-wasm/colonize.js publish/colonize.js
 	cp target-wasm/colonize_bg_opt.wasm publish/colonize_bg_opt.wasm
 
+styles:
+	(cd www && NODE_ENV=production yarn run tailwindcss build style.css -o ../publish/style.css)
+
+styles_debug:
+	(cd www && NODE_ENV=development yarn run tailwindcss build style.css -o ../publish/style.css)
+
 serve:
 	(cd publish && python3 -m http.server)
 

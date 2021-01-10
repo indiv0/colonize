@@ -21,7 +21,7 @@ use bevy::{
 use bevy_mod_picking::{DebugPickingPlugin, InteractablePickingPlugin, PickSource, PickingPlugin};
 use bevy_rapier3d::physics::RapierPhysicsPlugin;
 #[cfg(target_arch = "wasm32")]
-use bevy::log::{Level, LogSettings};
+use bevy::{log::{Level, LogSettings}, window::WindowDescriptor};
 
 use camera::fps::{CameraMovementPlugin, CameraState};
 use colonize_pbr::PbrPlugin;
@@ -99,6 +99,12 @@ fn main() {
             .add_resource(LogSettings {
                 filter: "bevy_webgl2=warn".into(),
                 level: Level::INFO,
+            })
+            .add_resource(WindowDescriptor {
+                width: 720.,
+                height: 480.,
+                canvas: Some("#bevy-canvas".to_string()),
+                ..Default::default()
             })
             .add_startup_stage_after(startup_stage::STARTUP, TERRAIN, SystemStage::parallel())
             .add_startup_stage_after(TERRAIN, DWARVES, SystemStage::parallel())

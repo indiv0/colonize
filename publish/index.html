@@ -20,11 +20,24 @@
     </header>
     <main>
       <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div class="flex flex-col justify-items-auto">
+        <div class="grid grid-cols-1 justify-items-center">
           <div class="px-4 py-6 sm:px-0">
-            <div class="border-4 border-dashed border-gray-200 rounded-lg h-auto max-w-max m-auto">
-              <canvas id="bevy-canvas"></canvas>
+            <div class="border-4 border-dashed border-gray-200 rounded-lg h-auto">
+              <canvas class="w-720px" id="bevy-canvas"></canvas>
             </div>
+          </div>
+          <div class="px-4 py-6 bg-white shadow sm:rounded-lg w-720px">
+            <p>The canvas will be blank for a few seconds while the game loads.</p>
+            <br/>
+            <p>Controls:</p>
+            <ul class="list-disc list-inside">
+              <li>Move around: W A S D Q E</li>
+              <li>Look around: arrow keys or numpad arrows</li>
+              <li>Slice terrain: - =</li>
+              <li>Spawn 10 dwarves: T</li>
+              <li>Select a dwarf: left mouse button</li>
+              <li>Move a selected dwarf: Z X C V B N</li>
+            </ul>
           </div>
         </div>
       </div>

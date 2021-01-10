@@ -17,6 +17,5 @@ body {
 }
 canvas {
   background-color: white;
-  width: 720px;
   height: 480px;
 }

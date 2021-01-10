@@ -266,10 +266,12 @@ fn modify_config(
 }
 
 fn hide_y_levels_system(
+    commands: &mut Commands,
     keyboard_input: Res<Input<KeyCode>>,
-    _terrain_res: ResMut<TerrainResource>,
-    mesh_res: ResMut<MeshResource>,
-    mut mesh_query: Query<(Option<&FullDetailMesh>, &YLevel, &mut Visible)>,
+    terrain_res: ResMut<TerrainResource>,
+    mut mesh_res: ResMut<MeshResource>,
+    mesh_query: Query<(Entity, Option<&FullDetailMesh>, &YLevel)>,
+    mut mesh_assets: ResMut<Assets<Mesh>>,
     mut y_level: ResMut<YLevel>,
 ) {
     // Increase/decrease the Y-level by 1 if the player pressed `<` or `>`.
@@ -284,54 +286,66 @@ fn hide_y_levels_system(
 
     if old_y_level != *y_level {
         // Find and disable all the meshes at the old y-level.
-        for (chunk_pos, mesh_entities) in &mesh_res.meshes {
+        let mut to_remove = Vec::new();
+        for (_chunk_pos, mesh_entities) in mesh_res.meshes.iter() {
             for (entity, _mesh) in mesh_entities {
-                if let Ok((None, mesh_y_level, mut visible)) = mesh_query.get_mut(*entity) {
-                    if mesh_y_level == &old_y_level {
-                        trace!(
-                            "Disabled mesh at y-level {:?} for chunk {:?}",
-                            y_level,
-                            chunk_pos
-                        );
-                        visible.is_visible = false;
+                if let Ok((mesh_entity, None, mesh_y_level)) = mesh_query.get(*entity) {
+                    if mesh_y_level != &*y_level {
+                        to_remove.push(mesh_entity);
                     }
                 }
             }
         }
-
-        // Find and enable all the meshes at the current y-level (that aren't full-detail meshes).
-        for (chunk_pos, mesh_entities) in &mesh_res.meshes {
-            for (entity, _mesh) in mesh_entities {
-                if let Ok((None, mesh_y_level, mut visible)) = mesh_query.get_mut(*entity) {
-                    if mesh_y_level == &*y_level {
-                        trace!(
-                            "Enabled mesh at y-level {:?} for chunk {:?}",
-                            y_level,
-                            chunk_pos
-                        );
-                        visible.is_visible = true;
-                    }
-                }
-            }
+        for entity in to_remove {
+            commands.despawn(entity);
         }
 
-        // If the previous y-level was the top of a chunk, and we went up over a chunk boundary,
-        // go back and re-enable the full-detail meshes for that chunk.
-        for (chunk_pos, mesh_entities) in &mesh_res.meshes {
-            if old_y_level.value == chunk_pos.y() + CHUNK_SIZE as i32 - 1
-                && y_level.value == chunk_pos.y() + CHUNK_SIZE as i32
-            {
-                for (entity, _mesh) in mesh_entities {
-                    if let Ok((Some(_), mesh_y_level, mut visible)) = mesh_query.get_mut(*entity) {
-                        if mesh_y_level == &old_y_level {
-                            trace!(
-                                "Re-enabled mesh at y-level {:?} for chunk {:?}",
-                                y_level,
-                                chunk_pos
-                            );
-                            visible.is_visible = true;
-                        }
-                    }
+        let local_cache = LocalChunkCache3::new();
+        for (chunk_pos, mesh_entities) in mesh_res.meshes.iter_mut() {
+            // Generate a new mesh for the current y-level for each chunk.
+            if y_level.value < chunk_pos.y() || y_level.value > chunk_pos.y() + CHUNK_SIZE as i32 {
+                // If the y-level does not intersect this chunk, there's nothing to generate.
+                continue;
+            }
+            let chunk_extent = terrain_res
+                .chunks
+                .indexer
+                .extent_for_chunk_at_key(*chunk_pos);
+            let padded_chunk_extent = padded_greedy_quads_chunk_extent(&chunk_extent);
+            let mut padded_layer_extent = padded_chunk_extent;
+            *padded_layer_extent.shape.y_mut() = 3;
+            *padded_layer_extent.minimum.y_mut() = y_level.value - 1;
+            let extent_to_copy = padded_layer_extent.add_to_shape(PointN([0, -1, 0]));
+            trace!(
+                "Generating padded layers for extent {:?} for chunk {:?}",
+                padded_layer_extent,
+                chunk_pos
+            );
+            let meshes = generate_mesh_for_extent(
+                &terrain_res.chunks,
+                &chunk_pos,
+                &local_cache,
+                padded_layer_extent,
+                &extent_to_copy,
+            );
+            if let Some(meshes) = meshes {
+                for (material, pos_norm_mesh) in meshes {
+                    let (entity, mesh) = generate_mesh_entity(
+                        pos_norm_mesh,
+                        // Y-level meshes are not collidable. They're for rendering only.
+                        false,
+                        commands,
+                        terrain_res
+                            .materials
+                            .get(&material)
+                            .expect("failed to get material")
+                            .clone(),
+                        !material.is_opaque(),
+                        &mut mesh_assets,
+                        *y_level,
+                        false,
+                    );
+                    mesh_entities.push((entity, mesh));
                 }
             }
         }
@@ -492,8 +506,6 @@ async fn generate_mesh(
         chunk_key
     );
 
-    let reader = map_ref.storage().reader(&local_cache);
-    let reader_map = DEFAULT_BUILDER.build_with_read_storage(reader);
     let mut layer_meshes: HashMap<(YLevel, bool), HashMap<CubeVoxel, PosNormMesh>> = HashMap::new();
     // Iterate over the slice extents in reverse order. The first extent will be the "full" extent of the
     // chunk. This is a special case because we want to generate both a sliced (i.e. "pretend there's only air
@@ -514,51 +526,37 @@ async fn generate_mesh(
     }
 
     for (full_detail, padded_layer_extent, extent_to_copy) in extents {
+        if !full_detail {
+            continue;
+        }
         trace!(
             "Copying extent {:?} for layer {:?}",
             extent_to_copy,
             padded_layer_extent
         );
-        let mut padded_layer = Array3::fill(padded_layer_extent, CubeVoxel::Air);
-        copy_extent(&extent_to_copy, &reader_map, &mut padded_layer);
-
-        // TODO bevy: we could avoid re-allocating the buffers on every call if we had
-        // thread-local storage accessible from this task
-        let mut buffer = GreedyQuadsBuffer::new(padded_layer_extent);
-        greedy_quads(&padded_layer, &padded_layer_extent, &mut buffer);
-
-        // Separate the meshes by material, so that we can render each voxel type with a different color.
-        let mut meshes: HashMap<CubeVoxel, PosNormMesh> = HashMap::new();
-        for group in buffer.quad_groups.iter() {
-            for quad in group.quads.iter() {
-                let material = reader_map.get(&quad.minimum);
-                let mesh = meshes.entry(material).or_insert_with(PosNormMesh::default);
-                group.face.add_quad_to_pos_norm_mesh(&quad, mesh);
-            }
-        }
-
-        // If all the meshes are empty, don't return anything.
-        let layer_is_empty = meshes.iter().fold(
-            false,
-            |acc, (_material, mesh)| if acc { acc } else { mesh.is_empty() },
+        let meshes = generate_mesh_for_extent(
+            map_ref,
+            chunk_key,
+            &local_cache,
+            padded_layer_extent,
+            &extent_to_copy,
         );
-
-        if layer_is_empty {
+        if let Some(meshes) = meshes {
+            layer_meshes.insert(
+                (
+                    YLevel {
+                        value: padded_layer_extent.max().y() - 1,
+                    },
+                    full_detail,
+                ),
+                meshes,
+            );
+        } else {
             // If the layer is empty, don't bother inserting the mesh (just discard it), and we can also
             // break out of the loop since if a bigger cut of the chunk was empty then any subsets of that
             // cut will also be empty.
             break;
         }
-
-        layer_meshes.insert(
-            (
-                YLevel {
-                    value: padded_layer_extent.max().y() - 1,
-                },
-                full_detail,
-            ),
-            meshes,
-        );
     }
 
     // If all the meshes of all the layers are empty, don't return anything.
@@ -566,6 +564,52 @@ async fn generate_mesh(
         (*chunk_key, None)
     } else {
         (*chunk_key, Some(layer_meshes))
+    }
+}
+
+fn generate_mesh_for_extent(
+    map_ref: &CompressibleChunkMap3<CubeVoxel>,
+    chunk_key: &Point3i,
+    local_cache: &LocalChunkCache3<CubeVoxel>,
+    padded_extent: Extent3i,
+    extent_to_copy: &Extent3i,
+) -> Option<HashMap<CubeVoxel, PosNormMesh>> {
+    trace!("Generating mesh for chunk at {:?}", chunk_key);
+    let reader = map_ref.storage().reader(&local_cache);
+    let reader_map = DEFAULT_BUILDER.build_with_read_storage(reader);
+    trace!(
+        "Copying extent {:?} for padded extent {:?}",
+        extent_to_copy,
+        padded_extent
+    );
+    let mut padded_array = Array3::fill(padded_extent, CubeVoxel::Air);
+    copy_extent(&extent_to_copy, &reader_map, &mut padded_array);
+
+    // TODO bevy: we could avoid re-allocating the buffers on every call if we had
+    // thread-local storage accessible from this task
+    let mut buffer = GreedyQuadsBuffer::new(padded_extent);
+    greedy_quads(&padded_array, &padded_extent, &mut buffer);
+
+    // Separate the meshes by material, so that we can render each voxel type with a different color.
+    let mut meshes: HashMap<CubeVoxel, PosNormMesh> = HashMap::new();
+    for group in buffer.quad_groups.iter() {
+        for quad in group.quads.iter() {
+            let material = reader_map.get(&quad.minimum);
+            let mesh = meshes.entry(material).or_insert_with(PosNormMesh::default);
+            group.face.add_quad_to_pos_norm_mesh(&quad, mesh);
+        }
+    }
+
+    // If all the meshes are empty, don't return anything.
+    let layer_is_empty = meshes.iter().fold(
+        false,
+        |acc, (_material, mesh)| if acc { acc } else { mesh.is_empty() },
+    );
+
+    if layer_is_empty {
+        None
+    } else {
+        Some(meshes)
     }
 }
 
@@ -639,7 +683,7 @@ fn generate_mesh_entity(
                 visible: Visible {
                     // Only the full-detail meshes of each chunk are visible to start with.
                     // Slices of chunks become visible as the player lowers the y-level.
-                    is_visible: full_detail,
+                    is_visible: true,
                     is_transparent,
                 },
                 ..PbrBundle::default()

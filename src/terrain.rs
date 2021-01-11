@@ -29,13 +29,9 @@ use bevy::{
     tasks::ComputeTaskPool,
 };
 use bevy_rapier3d::rapier::{dynamics::RigidBodyBuilder, geometry::ColliderBuilder, math::Point};
+use building_blocks::{core::Point3, mesh::{IsOpaque, SurfaceNetsBuffer, surface_nets}, storage::{Array, Array3, ChunkMap, CompressibleChunkStorageReader, ForEach, GetUncheckedRelease, IsEmpty, Local, Snappy, Stride, TransformMap}};
 use building_blocks::{
-    core::Point3,
-    mesh::IsOpaque,
-    storage::{Array3, ChunkMap, CompressibleChunkStorageReader, ForEach, Snappy, TransformMap},
-};
-use building_blocks::{
-    core::{Extent3i, Point2i, Point3i, PointN},
+    core::{Extent3i, Point2i, Point3i, PointN, Neighborhoods},
     storage::Get,
 };
 use building_blocks::{
@@ -54,10 +50,10 @@ use colonize_pbr::{pbr_bundle, prelude::StandardMaterial, YLevel};
 use noise::{MultiFractal, RidgedMulti, Seedable};
 use rand::{thread_rng, Rng};
 
-use colonize_common::{Voxel, VoxelType, EMPTY_VOXEL};
+use colonize_common::{EMPTY_VOXEL, NUM_VOXEL_TYPES, Voxel, VoxelType};
 
 const CHUNK_SIZE: usize = 128;
-const REGION_SIZE: usize = 512; // CHUNK_SIZE * NUM_CHUNKS
+const REGION_SIZE: usize = 2048; // CHUNK_SIZE * NUM_CHUNKS
                                 // 512 underground blocks, plus 256 blocks above sea level.
 const REGION_HEIGHT: i32 = 256;
 const REGION_MIN_3D: Point3i = PointN([-(REGION_SIZE as i32 / 2), -128, -(REGION_SIZE as i32 / 2)]);
@@ -107,6 +103,9 @@ fn setup(
     _render_graph: ResMut<RenderGraph>,
 ) {
     for (voxel_type, color) in &[
+        // Technically we don't use the "air" material ever, since air is transparent, but we still need it to
+        // ensure these indices match up with the ones provided by VoxelType::index.
+        (VoxelType::Air, Color::rgb(0.5, 0.5, 0.5)),
         (VoxelType::Stone, Color::rgb(0.5, 0.5, 0.5)),
         (VoxelType::Grass, Color::rgb(0.376, 0.502, 0.22)),
         (VoxelType::Gold, Color::rgb(1.0, 0.843, 0.)),
@@ -321,7 +320,7 @@ fn hide_y_levels_system(
                 padded_layer_extent,
                 chunk_pos
             );
-            let meshes = generate_mesh_for_extent_with_greedy_quads(
+            let meshes = generate_mesh_for_extent_with_surface_nets(
                 &terrain_res.chunks,
                 &chunk_pos,
                 &local_cache,
@@ -534,7 +533,7 @@ async fn generate_mesh(
             extent_to_copy,
             padded_layer_extent
         );
-        let meshes = generate_mesh_for_extent_with_greedy_quads(
+        let meshes = generate_mesh_for_extent_with_surface_nets(
             map_ref,
             chunk_key,
             &local_cache,
@@ -618,6 +617,95 @@ fn generate_mesh_for_extent_with_greedy_quads(
     } else {
         Some(meshes)
     }
+}
+
+fn generate_mesh_for_extent_with_surface_nets(
+    map_ref: &CompressibleChunkMap3<Voxel>,
+    chunk_key: &Point3i,
+    local_cache: &LocalChunkCache3<Voxel>,
+    padded_extent: Extent3i,
+    extent_to_copy: &Extent3i,
+) -> Option<HashMap<VoxelType, PosNormMesh>> {
+    trace!("Generating mesh for chunk at {:?}", chunk_key);
+    let reader = map_ref.storage().reader(&local_cache);
+    let reader_map: ChunkMap<
+        [i32; 3],
+        Voxel,
+        (),
+        CompressibleChunkStorageReader<[i32; 3], Voxel, (), Snappy>,
+    > = DEFAULT_BUILDER.build_with_read_storage(reader);
+    trace!(
+        "Copying extent {:?} for padded extent {:?}",
+        extent_to_copy,
+        padded_extent
+    );
+    let mut padded_array = Array3::fill(padded_extent, EMPTY_VOXEL);
+    copy_extent(&extent_to_copy, &reader_map, &mut padded_array);
+
+    // TODO bevy: we could avoid re-allocating the buffers on every call if we had
+    // thread-local storage accessible from this task
+    let mut buffer = SurfaceNetsBuffer::default();
+    surface_nets(&padded_array, &padded_extent, &mut buffer);
+
+    if buffer.mesh.is_empty() {
+        return None;
+    }
+
+    let SurfaceNetsBuffer {
+        mesh,
+        surface_strides,
+        ..
+    } = buffer;
+
+    let lookup = |v: Voxel| *v.voxel_type();
+    let voxel_types = TransformMap::new(&padded_array, lookup);
+    let material_counts = count_adjacent_materials(&voxel_types, &surface_strides);
+
+    // Separate the meshes by material, so that we can render each voxel type with a different color.
+    let mut meshes: HashMap<VoxelType, PosNormMesh> = HashMap::new();
+    // TODO: surface nets meshes don't have a material
+    meshes.insert(VoxelType::Gold, mesh);
+
+    Some(meshes)
+}
+
+pub trait TypedVoxel {
+    fn voxel_type(&self) -> VoxelType;
+}
+
+impl TypedVoxel for VoxelType {
+    fn voxel_type(&self) -> VoxelType {
+        *self
+    }
+}
+
+/// Uses a kernel to count the adjacent materials for each surface point. This is necessary because we used dual contouring to
+/// construct the mesh, so a given vertex has 8 adjacent voxels, some of which may be empty. This also assumes that the material
+/// layer can only be one of 0..NUM_VOXEL_TYPES.
+fn count_adjacent_materials<A, V>(voxels: &A, surface_strides: &[Stride]) -> Vec<[u8; NUM_VOXEL_TYPES]>
+where
+    A: Array<[i32; 3]> + GetUncheckedRelease<Stride, V>,
+    V: IsEmpty + TypedVoxel,
+{
+    let mut corner_offsets = [Stride(0); 8];
+    voxels.strides_from_local_points(
+        &Local::localize_points(&Point3i::corner_offsets()),
+        &mut corner_offsets,
+    );
+    let mut material_counts = vec![[0; NUM_VOXEL_TYPES]; surface_strides.len()];
+    for (stride, counts) in surface_strides.iter().zip(material_counts.iter_mut()) {
+        for corner in corner_offsets.iter() {
+            let corner_voxel = voxels.get(*stride + *corner);
+            // Only add weights from non-empty voxels.
+            if !corner_voxel.is_empty() {
+                let material = corner_voxel.voxel_type();
+                debug_assert!(material != VoxelType::Air);
+                counts[material.index()] += 1;
+            }
+        }
+    }
+
+    material_counts
 }
 
 fn generate_mesh_entity(

@@ -1,12 +1,11 @@
-use building_blocks::{
-    mesh::{IsOpaque, MergeVoxel},
-    storage::IsEmpty,
-};
+use building_blocks::{mesh::{IsOpaque, MergeVoxel, SignedDistance}, storage::IsEmpty};
 
 pub const EMPTY_VOXEL: Voxel = Voxel {
     voxel_type: VoxelType::Air,
     distance: VoxelDistance(1),
 };
+
+pub const NUM_VOXEL_TYPES: usize = 5;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Voxel {
@@ -28,6 +27,12 @@ impl Voxel {
     }
 }
 
+impl SignedDistance for Voxel {
+    fn distance(&self) -> f32 {
+        self.distance.0 as f32
+    }
+}
+
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum VoxelType {
     Air,
@@ -38,6 +43,16 @@ pub enum VoxelType {
 }
 
 impl VoxelType {
+    pub fn index(&self) -> usize {
+        match self {
+            VoxelType::Air => 0,
+            VoxelType::Stone => 1,
+            VoxelType::Grass => 2,
+            VoxelType::Gold => 3,
+            VoxelType::Water => 4,
+        }
+    }
+
     pub fn collidable(&self) -> bool {
         match self {
             VoxelType::Air | VoxelType::Water => false,

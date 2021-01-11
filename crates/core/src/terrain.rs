@@ -103,7 +103,7 @@ where
             // Compute the SDF value as the distance of the voxel from the surface of the map.
             // This assumes that the terrain can be described as a 2D height map. That is,
             // there are no 3D features like caves.
-            let distance = i32::clamp(height - point.y(), i8::MIN as i32, i8::MAX as i32) as i8;
+            let distance = i32::clamp(point.y() - height, i8::MIN as i32, i8::MAX as i32) as i8;
             *value = Voxel::new(strata_array.get(&point), VoxelDistance(distance));
         })
     });

@@ -5,7 +5,7 @@ use building_blocks::{
     core::{Extent2i, Extent3i, Point3i, PointN},
     storage::{Array2, Array3, ForEachMut, Get, GetMut},
 };
-use colonize_common::VoxelType;
+use colonize_common::{Voxel, VoxelType, EMPTY_VOXEL};
 
 use crate::array_int_to_float;
 
@@ -15,7 +15,7 @@ pub fn generate_map<H, D>(
     sea_level: i32,
     minimum: Point3i,
     shape: Point3i,
-) -> Array3<VoxelType>
+) -> Array3<Voxel>
 where
     D: Sample<[f64; 2], f64>,
     H: Sample<[f64; 2], f64>,
@@ -80,7 +80,31 @@ where
     );
     water_generator.flood_fill(&mut strata_array);
 
-    strata_array
+    // Copy the 3D terrain map to a 3D density map. This is effectively an SDF map where the
+    // signed distance is the distance of the voxel from the surface of the heightmap.
+    let mut sdf_array = Array3::fill(total_extent, EMPTY_VOXEL);
+    let column_extents = (total_extent.minimum.z()..=total_extent.max().z())
+        .flat_map(move |z| (total_extent.minimum.x()..=total_extent.max().x()).map(move |x| (x, z)))
+        .map(move |(x, z)| {
+            let column_minimum = PointN([x, total_extent.minimum.y(), z]);
+            let column_shape = PointN([1, shape.y(), 1]);
+            Extent3i::from_min_and_shape(column_minimum, column_shape)
+        });
+    column_extents.for_each(|c| {
+        let _height = (total_extent.minimum.y()..(total_extent.minimum.y() + shape.y()))
+            .take_while(|y| {
+                let p = PointN([c.minimum.x(), *y, c.minimum.z()]);
+                let voxel_type = strata_array.get(&p);
+                voxel_type != VoxelType::Air
+            })
+            .last()
+            .unwrap();
+        sdf_array.for_each_mut(&c, |point: Point3i, value| {
+            *value = Voxel::new(strata_array.get(&point));
+        })
+    });
+
+    sdf_array
 }
 
 struct WaterGenerator {

@@ -18,10 +18,13 @@ use bevy::{
     pbr::LightBundle,
     prelude::{App, Camera3dBundle, PluginGroup, Transform},
 };
+#[cfg(target_arch = "wasm32")]
+use bevy::{
+    log::{Level, LogSettings},
+    window::WindowDescriptor,
+};
 use bevy_mod_picking::{DebugPickingPlugin, InteractablePickingPlugin, PickSource, PickingPlugin};
 use bevy_rapier3d::physics::RapierPhysicsPlugin;
-#[cfg(target_arch = "wasm32")]
-use bevy::{log::{Level, LogSettings}, window::WindowDescriptor};
 
 use camera::fps::{CameraMovementPlugin, CameraState};
 use colonize_pbr::PbrPlugin;

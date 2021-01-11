@@ -32,7 +32,7 @@ use bevy_rapier3d::rapier::{dynamics::RigidBodyBuilder, geometry::ColliderBuilde
 use building_blocks::{
     core::Point3,
     mesh::IsOpaque,
-    storage::{Array3, ForEach, Snappy},
+    storage::{Array3, ChunkMap, CompressibleChunkStorageReader, ForEach, Snappy, TransformMap},
 };
 use building_blocks::{
     core::{Extent3i, Point2i, Point3i, PointN},
@@ -54,11 +54,11 @@ use colonize_pbr::{pbr_bundle, prelude::StandardMaterial, YLevel};
 use noise::{MultiFractal, RidgedMulti, Seedable};
 use rand::{thread_rng, Rng};
 
-use colonize_common::VoxelType;
+use colonize_common::{Voxel, VoxelType, EMPTY_VOXEL};
 
 const CHUNK_SIZE: usize = 128;
 const REGION_SIZE: usize = 512; // CHUNK_SIZE * NUM_CHUNKS
-                               // 512 underground blocks, plus 256 blocks above sea level.
+                                // 512 underground blocks, plus 256 blocks above sea level.
 const REGION_HEIGHT: i32 = 256;
 const REGION_MIN_3D: Point3i = PointN([-(REGION_SIZE as i32 / 2), -128, -(REGION_SIZE as i32 / 2)]);
 const REGION_SHAPE_3D: Point3i = PointN([REGION_SIZE as i32, REGION_HEIGHT, REGION_SIZE as i32]);
@@ -70,9 +70,9 @@ const REGION_MAX_3D: Point3i = PointN([
 
 const SEA_LEVEL: i32 = 0;
 
-const DEFAULT_BUILDER: ChunkMapBuilder3<VoxelType> = ChunkMapBuilder {
+const DEFAULT_BUILDER: ChunkMapBuilder3<Voxel> = ChunkMapBuilder {
     chunk_shape: PointN([CHUNK_SIZE as i32; 3]),
-    ambient_value: VoxelType::Air,
+    ambient_value: EMPTY_VOXEL,
     default_chunk_metadata: (),
 };
 
@@ -125,7 +125,7 @@ fn setup(
 pub(crate) struct TerrainResource {
     materials: HashMap<VoxelType, (Handle<StandardMaterial>, HatMaterial)>,
     noise: RidgedMulti,
-    chunks: CompressibleChunkMap3<VoxelType>,
+    chunks: CompressibleChunkMap3<Voxel>,
     generated_voxels: bool,
     sea_level: f64,
     y_offset: f64,
@@ -141,7 +141,7 @@ impl TerrainResource {
         for y in (min_y..bounding_extent.max().y()).rev() {
             let location = PointN([column.x(), y, column.y()]);
             let value = reader_map.get(&location);
-            if value != VoxelType::Air {
+            if *value.voxel_type() != VoxelType::Air {
                 return y;
             }
         }
@@ -157,8 +157,8 @@ impl TerrainResource {
         let local_cache = LocalChunkCache::new();
         let reader = self.chunks.storage().reader(&local_cache);
         let reader_map = DEFAULT_BUILDER.build_with_read_storage(reader);
-        let f = |p: Point3i, value| {
-            if value == VoxelType::Gold {
+        let f = |p: Point3i, value: Voxel| {
+            if *value.voxel_type() == VoxelType::Gold {
                 gold_loc.replace(p);
             }
         };
@@ -480,7 +480,7 @@ fn generate_meshes(
 struct FullDetailMesh;
 
 async fn generate_mesh(
-    map_ref: &CompressibleChunkMap3<VoxelType>,
+    map_ref: &CompressibleChunkMap3<Voxel>,
     chunk_key: &Point3i,
 ) -> (
     Point3i,
@@ -568,33 +568,40 @@ async fn generate_mesh(
 }
 
 fn generate_mesh_for_extent(
-    map_ref: &CompressibleChunkMap3<VoxelType>,
+    map_ref: &CompressibleChunkMap3<Voxel>,
     chunk_key: &Point3i,
-    local_cache: &LocalChunkCache3<VoxelType>,
+    local_cache: &LocalChunkCache3<Voxel>,
     padded_extent: Extent3i,
     extent_to_copy: &Extent3i,
 ) -> Option<HashMap<VoxelType, PosNormMesh>> {
     trace!("Generating mesh for chunk at {:?}", chunk_key);
     let reader = map_ref.storage().reader(&local_cache);
-    let reader_map = DEFAULT_BUILDER.build_with_read_storage(reader);
+    let reader_map: ChunkMap<
+        [i32; 3],
+        Voxel,
+        (),
+        CompressibleChunkStorageReader<[i32; 3], Voxel, (), Snappy>,
+    > = DEFAULT_BUILDER.build_with_read_storage(reader);
     trace!(
         "Copying extent {:?} for padded extent {:?}",
         extent_to_copy,
         padded_extent
     );
-    let mut padded_array = Array3::fill(padded_extent, VoxelType::Air);
+    let mut padded_array = Array3::fill(padded_extent, EMPTY_VOXEL);
     copy_extent(&extent_to_copy, &reader_map, &mut padded_array);
+    let lookup = |v: Voxel| *v.voxel_type();
+    let voxel_types = TransformMap::new(&padded_array, lookup);
 
     // TODO bevy: we could avoid re-allocating the buffers on every call if we had
     // thread-local storage accessible from this task
     let mut buffer = GreedyQuadsBuffer::new(padded_extent);
-    greedy_quads(&padded_array, &padded_extent, &mut buffer);
+    greedy_quads(&voxel_types, &padded_extent, &mut buffer);
 
     // Separate the meshes by material, so that we can render each voxel type with a different color.
     let mut meshes: HashMap<VoxelType, PosNormMesh> = HashMap::new();
     for group in buffer.quad_groups.iter() {
         for quad in group.quads.iter() {
-            let material = reader_map.get(&quad.minimum);
+            let material = *reader_map.get(&quad.minimum).voxel_type();
             let mesh = meshes.entry(material).or_insert_with(PosNormMesh::default);
             group.face.add_quad_to_pos_norm_mesh(&quad, mesh);
         }

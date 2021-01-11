@@ -1,3 +1,3 @@
 mod terrain;
 
-pub use terrain::VoxelType;
+pub use terrain::{Voxel, VoxelType, EMPTY_VOXEL};

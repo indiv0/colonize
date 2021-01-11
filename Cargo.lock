@@ -860,7 +860,7 @@ checksum = "0d8c1fef690941d3e7788d328517591fecc684c084084702d6ff1641e993699a"
 [[package]]
 name = "building-blocks"
 version = "0.4.3"
-source = "git+https://github.com/bonsairobo/building-blocks?rev=bf95c77450a1a118502b3c12c1d712fc215c0f86#bf95c77450a1a118502b3c12c1d712fc215c0f86"
+source = "git+https://github.com/bonsairobo/building-blocks?rev=339cd43028b0501cbeda714d24d115afcb121540#339cd43028b0501cbeda714d24d115afcb121540"
 dependencies = [
  "building_blocks_core",
  "building_blocks_mesh",
@@ -870,7 +870,7 @@ dependencies = [
 [[package]]
 name = "building_blocks_core"
 version = "0.4.3"
-source = "git+https://github.com/bonsairobo/building-blocks?rev=bf95c77450a1a118502b3c12c1d712fc215c0f86#bf95c77450a1a118502b3c12c1d712fc215c0f86"
+source = "git+https://github.com/bonsairobo/building-blocks?rev=339cd43028b0501cbeda714d24d115afcb121540#339cd43028b0501cbeda714d24d115afcb121540"
 dependencies = [
  "itertools",
  "num",
@@ -880,7 +880,7 @@ dependencies = [
 [[package]]
 name = "building_blocks_mesh"
 version = "0.4.3"
-source = "git+https://github.com/bonsairobo/building-blocks?rev=bf95c77450a1a118502b3c12c1d712fc215c0f86#bf95c77450a1a118502b3c12c1d712fc215c0f86"
+source = "git+https://github.com/bonsairobo/building-blocks?rev=339cd43028b0501cbeda714d24d115afcb121540#339cd43028b0501cbeda714d24d115afcb121540"
 dependencies = [
  "building_blocks_core",
  "building_blocks_storage",
@@ -890,7 +890,7 @@ dependencies = [
 [[package]]
 name = "building_blocks_storage"
 version = "0.4.3"
-source = "git+https://github.com/bonsairobo/building-blocks?rev=bf95c77450a1a118502b3c12c1d712fc215c0f86#bf95c77450a1a118502b3c12c1d712fc215c0f86"
+source = "git+https://github.com/bonsairobo/building-blocks?rev=339cd43028b0501cbeda714d24d115afcb121540#339cd43028b0501cbeda714d24d115afcb121540"
 dependencies = [
  "bincode",
  "building_blocks_core",

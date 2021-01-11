@@ -25,7 +25,7 @@ bevy_gilrs = { version = "0.4.0", default-features = false, optional = true }
 bevy_mod_picking = { version = "0.3.1", default-features = false }
 bevy_rapier3d = { version = "0.7.0", default-features = false, features = ["dim3"] }
 bevy_webgl2 = { version = "0.4.1", optional = true }
-building-blocks = { git = "https://github.com/bonsairobo/building-blocks", rev = "bf95c77450a1a118502b3c12c1d712fc215c0f86", default-features = false, features = ["mesh", "snappy"] }
+building-blocks = { git = "https://github.com/bonsairobo/building-blocks", rev = "339cd43028b0501cbeda714d24d115afcb121540", default-features = false, features = ["mesh", "snappy"] }
 colonize_common = { path = "crates/common" }
 colonize_core = { path = "crates/core" }
 colonize_noise = { path = "crates/noise" }

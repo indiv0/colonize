@@ -1,4 +1,5 @@
 use building_blocks::{mesh::{IsOpaque, MergeVoxel, SignedDistance}, storage::IsEmpty};
+use building_blocks::storage;
 
 pub const EMPTY_VOXEL: Voxel = Voxel {
     voxel_type: VoxelType::Air,

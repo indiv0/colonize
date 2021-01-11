@@ -1,5 +1,5 @@
 debug:
-	RUST_BACKTRACE=1 RUST_LOG=colonize=debug cargo run
+	RUST_BACKTRACE=1 RUST_LOG=colonize=trace cargo run
 
 release:
 	RUST_BACKTRACE=1 RUST_LOG=colonize=debug cargo run --release

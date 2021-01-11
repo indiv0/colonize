@@ -29,7 +29,7 @@ use bevy::{
     tasks::ComputeTaskPool,
 };
 use bevy_rapier3d::rapier::{dynamics::RigidBodyBuilder, geometry::ColliderBuilder, math::Point};
-use building_blocks::{core::Point3, mesh::{IsOpaque, SurfaceNetsBuffer, surface_nets}, storage::{Array, Array3, ChunkMap, CompressibleChunkStorageReader, ForEach, GetUncheckedRelease, IsEmpty, Local, Snappy, Stride, TransformMap}};
+use building_blocks::{core::Point3, mesh::{AdfDualContourBuffer, IsOpaque, SignedDistance, SurfaceNetsBuffer, adf_dual_contour, surface_nets}, storage::{Adf, Array, Array3, ChunkMap, CompressibleChunkStorageReader, ForEach, GetUncheckedRelease, IsEmpty, Local, Snappy, Stride, TransformMap, padded_adf_chunk_extent}};
 use building_blocks::{
     core::{Extent3i, Point2i, Point3i, PointN, Neighborhoods},
     storage::Get,
@@ -53,10 +53,10 @@ use rand::{thread_rng, Rng};
 use colonize_common::{EMPTY_VOXEL, NUM_VOXEL_TYPES, Voxel, VoxelType};
 
 const CHUNK_SIZE: usize = 128;
-const REGION_SIZE: usize = 2048; // CHUNK_SIZE * NUM_CHUNKS
+const REGION_SIZE: usize = 512; // CHUNK_SIZE * NUM_CHUNKS
                                 // 512 underground blocks, plus 256 blocks above sea level.
-const REGION_HEIGHT: i32 = 256;
-const REGION_MIN_3D: Point3i = PointN([-(REGION_SIZE as i32 / 2), -128, -(REGION_SIZE as i32 / 2)]);
+const REGION_HEIGHT: i32 = 512;
+const REGION_MIN_3D: Point3i = PointN([-(REGION_SIZE as i32 / 2), -256, -(REGION_SIZE as i32 / 2)]);
 const REGION_SHAPE_3D: Point3i = PointN([REGION_SIZE as i32, REGION_HEIGHT, REGION_SIZE as i32]);
 const REGION_MAX_3D: Point3i = PointN([
     REGION_MIN_3D.0[0] + REGION_SHAPE_3D.0[0],
@@ -320,7 +320,7 @@ fn hide_y_levels_system(
                 padded_layer_extent,
                 chunk_pos
             );
-            let meshes = generate_mesh_for_extent_with_surface_nets(
+            let meshes = METHOD.generate_mesh_for_extent(
                 &terrain_res.chunks,
                 &chunk_pos,
                 &local_cache,
@@ -488,7 +488,10 @@ async fn generate_mesh(
     trace!("Generating mesh for chunk at {:?}", chunk_key);
     let local_cache = LocalChunkCache3::new();
     let chunk_extent = map_ref.indexer.extent_for_chunk_at_key(*chunk_key);
-    let padded_chunk_extent = padded_greedy_quads_chunk_extent(&chunk_extent);
+    let padded_chunk_extent = match METHOD {
+        MeshGenerationMethod::AdfDualContour => padded_adf_chunk_extent(&chunk_extent),
+        MeshGenerationMethod::GreedyQuads | MeshGenerationMethod::SurfaceNets => padded_greedy_quads_chunk_extent(&chunk_extent),
+    };
 
     // Create a mesh for each possible size of the chunk.
     let mut padded_layer_extent = padded_chunk_extent;
@@ -533,7 +536,7 @@ async fn generate_mesh(
             extent_to_copy,
             padded_layer_extent
         );
-        let meshes = generate_mesh_for_extent_with_surface_nets(
+        let meshes = METHOD.generate_mesh_for_extent(
             map_ref,
             chunk_key,
             &local_cache,
@@ -563,6 +566,31 @@ async fn generate_mesh(
         (*chunk_key, None)
     } else {
         (*chunk_key, Some(layer_meshes))
+    }
+}
+
+const METHOD: MeshGenerationMethod = MeshGenerationMethod::AdfDualContour;
+
+enum MeshGenerationMethod {
+    GreedyQuads,
+    SurfaceNets,
+    AdfDualContour,
+}
+
+impl MeshGenerationMethod {
+    fn generate_mesh_for_extent(
+        &self,
+        map_ref: &CompressibleChunkMap3<Voxel>,
+        chunk_key: &Point3i,
+        local_cache: &LocalChunkCache3<Voxel>,
+        padded_extent: Extent3i,
+        extent_to_copy: &Extent3i,
+    ) -> Option<HashMap<VoxelType, PosNormMesh>> {
+        match *self {
+            MeshGenerationMethod::GreedyQuads => generate_mesh_for_extent_with_greedy_quads(map_ref, chunk_key, local_cache, padded_extent, extent_to_copy),
+            MeshGenerationMethod::SurfaceNets => generate_mesh_for_extent_with_surface_nets(map_ref, chunk_key, local_cache, padded_extent, extent_to_copy),
+            MeshGenerationMethod::AdfDualContour => generate_mesh_for_extent_with_adf_dual_contour(map_ref, chunk_key, local_cache, padded_extent, extent_to_copy),
+        }
     }
 }
 
@@ -617,6 +645,57 @@ fn generate_mesh_for_extent_with_greedy_quads(
     } else {
         Some(meshes)
     }
+}
+
+fn generate_mesh_for_extent_with_adf_dual_contour(
+    map_ref: &CompressibleChunkMap3<Voxel>,
+    chunk_key: &Point3i,
+    local_cache: &LocalChunkCache3<Voxel>,
+    padded_extent: Extent3i,
+    extent_to_copy: &Extent3i,
+) -> Option<HashMap<VoxelType, PosNormMesh>> {
+    trace!("Generating mesh for chunk at {:?}", chunk_key);
+    let reader = map_ref.storage().reader(&local_cache);
+    let reader_map: ChunkMap<
+        [i32; 3],
+        Voxel,
+        (),
+        CompressibleChunkStorageReader<[i32; 3], Voxel, (), Snappy>,
+    > = DEFAULT_BUILDER.build_with_read_storage(reader);
+    trace!(
+        "Copying extent {:?} for padded extent {:?}",
+        extent_to_copy,
+        padded_extent
+    );
+    let mut padded_array = Array3::fill(padded_extent, EMPTY_VOXEL);
+    copy_extent(&extent_to_copy, &reader_map, &mut padded_array);
+
+    let lookup = |v: Voxel| SignedDistance::distance(&v);
+    let voxel_types = TransformMap::new(&padded_array, lookup);
+
+    trace!("Creating ADF from Array3 with extent: {:?}", voxel_types.extent());
+    let iter_extent = *voxel_types.extent();
+    let adf = Adf::from_array3(&voxel_types, iter_extent, 1.0, 0.2);
+    // TODO bevy: we could avoid re-allocating the buffers on every call if we had
+    // thread-local storage accessible from this task
+    let mut buffer = AdfDualContourBuffer::default();
+    adf_dual_contour(&adf, &mut buffer);
+
+    if buffer.mesh.is_empty() {
+        return None;
+    }
+
+    let AdfDualContourBuffer {
+        mesh,
+        ..
+    } = buffer;
+
+    // Separate the meshes by material, so that we can render each voxel type with a different color.
+    let mut meshes: HashMap<VoxelType, PosNormMesh> = HashMap::new();
+    // TODO: surface nets meshes don't have a material
+    meshes.insert(VoxelType::Gold, mesh);
+
+    Some(meshes)
 }
 
 fn generate_mesh_for_extent_with_surface_nets(

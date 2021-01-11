@@ -5,20 +5,26 @@ use building_blocks::{
 
 pub const EMPTY_VOXEL: Voxel = Voxel {
     voxel_type: VoxelType::Air,
+    distance: VoxelDistance(1),
 };
 
 #[derive(Clone, Copy, Debug)]
 pub struct Voxel {
     voxel_type: VoxelType,
+    distance: VoxelDistance,
 }
 
 impl Voxel {
-    pub fn new(voxel_type: VoxelType) -> Self {
-        Self { voxel_type }
+    pub fn new(voxel_type: VoxelType, distance: VoxelDistance) -> Self {
+        Self { voxel_type, distance }
     }
 
     pub fn voxel_type(&self) -> &VoxelType {
         &self.voxel_type
+    }
+
+    pub fn distance(&self) -> &VoxelDistance {
+        &self.distance
     }
 }
 
@@ -65,3 +71,6 @@ impl IsEmpty for VoxelType {
         }
     }
 }
+
+#[derive(Clone, Copy, Debug)]
+pub struct VoxelDistance(pub i8);

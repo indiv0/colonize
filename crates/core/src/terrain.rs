@@ -5,7 +5,7 @@ use building_blocks::{
     core::{Extent2i, Extent3i, Point3i, PointN},
     storage::{Array2, Array3, ForEachMut, Get, GetMut},
 };
-use colonize_common::{Voxel, VoxelType, EMPTY_VOXEL};
+use colonize_common::{EMPTY_VOXEL, Voxel, VoxelDistance, VoxelType};
 
 use crate::array_int_to_float;
 
@@ -91,7 +91,7 @@ where
             Extent3i::from_min_and_shape(column_minimum, column_shape)
         });
     column_extents.for_each(|c| {
-        let _height = (total_extent.minimum.y()..(total_extent.minimum.y() + shape.y()))
+        let height = (total_extent.minimum.y()..(total_extent.minimum.y() + shape.y()))
             .take_while(|y| {
                 let p = PointN([c.minimum.x(), *y, c.minimum.z()]);
                 let voxel_type = strata_array.get(&p);
@@ -100,7 +100,11 @@ where
             .last()
             .unwrap();
         sdf_array.for_each_mut(&c, |point: Point3i, value| {
-            *value = Voxel::new(strata_array.get(&point));
+            // Compute the SDF value as the distance of the voxel from the surface of the map.
+            // This assumes that the terrain can be described as a 2D height map. That is,
+            // there are no 3D features like caves.
+            let distance = i32::clamp(height - point.y(), i8::MIN as i32, i8::MAX as i32) as i8;
+            *value = Voxel::new(strata_array.get(&point), VoxelDistance(distance));
         })
     });
 

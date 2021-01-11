@@ -321,7 +321,7 @@ fn hide_y_levels_system(
                 padded_layer_extent,
                 chunk_pos
             );
-            let meshes = generate_mesh_for_extent(
+            let meshes = generate_mesh_for_extent_with_greedy_quads(
                 &terrain_res.chunks,
                 &chunk_pos,
                 &local_cache,
@@ -534,7 +534,7 @@ async fn generate_mesh(
             extent_to_copy,
             padded_layer_extent
         );
-        let meshes = generate_mesh_for_extent(
+        let meshes = generate_mesh_for_extent_with_greedy_quads(
             map_ref,
             chunk_key,
             &local_cache,
@@ -567,7 +567,7 @@ async fn generate_mesh(
     }
 }
 
-fn generate_mesh_for_extent(
+fn generate_mesh_for_extent_with_greedy_quads(
     map_ref: &CompressibleChunkMap3<Voxel>,
     chunk_key: &Point3i,
     local_cache: &LocalChunkCache3<Voxel>,

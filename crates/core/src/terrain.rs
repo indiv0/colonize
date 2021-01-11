@@ -111,6 +111,102 @@ where
     sdf_array
 }
 
+pub fn generate_precise_map<H, D>(
+    elevation_noise: &H,
+    dirt_thickness_noise: &D,
+    sea_level: i32,
+    minimum: Point3i,
+    shape: Point3i,
+) -> Array3<Voxel>
+where
+    D: Sample<[f64; 2], f64>,
+    H: Sample<[f64; 2], f64>,
+{
+    // Generate the 2D height map.
+    trace!("Generating 2D height map");
+    let extent = Extent2i::from_min_and_shape(minimum.xz(), shape.xz());
+    let filler = |point: &PointN<[i32; 2]>| {
+        const MIN_WATER_LEVEL: f64 = -128.;
+        const MAX_MOUNTAIN_HEIGHT: f64 = 128.;
+        let sample = elevation_noise.get(array_int_to_float(point.0));
+        scale(sample, -1., 1., MIN_WATER_LEVEL, MAX_MOUNTAIN_HEIGHT).round()
+    };
+    let height_array = Array2::fill_with(extent, filler);
+
+    // Generate the 3D strata map from the height map.
+    let total_extent = Extent3i::from_min_and_shape(minimum, shape);
+    trace!("Generating 3D strata map for extent {:?}", total_extent);
+    let mut strata_array = Array3::fill(total_extent, VoxelType::Air);
+    // Construct an iterator over 1x1-sized columns of the entire map.
+    // We need to do this because we calculate once per columns: dirt thickness,
+    // dirt transition, and stone transition.
+    let column_extents = (total_extent.minimum.z()..=total_extent.max().z())
+        .flat_map(move |z| (total_extent.minimum.x()..=total_extent.max().x()).map(move |x| (x, z)))
+        .map(move |(x, z)| {
+            let column_minimum = PointN([x, total_extent.minimum.y(), z]);
+            let column_shape = PointN([1, shape.y(), 1]);
+            Extent3i::from_min_and_shape(column_minimum, column_shape)
+        });
+    column_extents.for_each(|c| {
+        let point = c.minimum.xz().0;
+        let dirt_thickness = scale(
+            dirt_thickness_noise.get(array_int_to_float(point)),
+            -1.,
+            1.,
+            -2.0,
+            5.,
+        );
+        let dirt_transition = height_array.get(&PointN(point));
+        let stone_transition = dirt_transition - dirt_thickness;
+        strata_array.for_each_mut(&c, |point: Point3i, value| {
+            if point.y() as f64 <= stone_transition {
+                *value = VoxelType::Stone
+            } else if point.y() as f64 <= dirt_transition {
+                *value = VoxelType::Grass
+            } else {
+                *value = VoxelType::Air
+            }
+        })
+    });
+
+    // Flood-fill the water on the map.
+    trace!("Flood-filling water on map");
+    let maximum = total_extent.max();
+    let water_generator = WaterGenerator::new(
+        sea_level,
+        minimum.x(),
+        maximum.x() + 1,
+        minimum.y(),
+        minimum.z(),
+        maximum.z() + 1,
+    );
+    water_generator.flood_fill(&mut strata_array);
+
+    // Copy the 3D terrain map to a 3D density map. This is effectively an SDF map where the
+    // signed distance is the distance of the voxel from the surface of the heightmap.
+    let mut sdf_array = Array3::fill(total_extent, EMPTY_VOXEL);
+    let column_extents = (total_extent.minimum.z()..=total_extent.max().z())
+        .flat_map(move |z| (total_extent.minimum.x()..=total_extent.max().x()).map(move |x| (x, z)))
+        .map(move |(x, z)| {
+            let column_minimum = PointN([x, total_extent.minimum.y(), z]);
+            let column_shape = PointN([1, shape.y(), 1]);
+            Extent3i::from_min_and_shape(column_minimum, column_shape)
+        });
+    column_extents.for_each(|c| {
+        let p = PointN([c.minimum.x(), c.minimum.z()]);
+        let height = height_array.get(&p);
+        sdf_array.for_each_mut(&c, |point: Point3i, value| {
+            // Compute the SDF value as the distance of the voxel from the surface of the map.
+            // This assumes that the terrain can be described as a 2D height map. That is,
+            // there are no 3D features like caves.
+            let distance = i32::clamp((point.y() as f64 - height) as i32, i8::MIN as i32, i8::MAX as i32) as i8;
+            *value = Voxel::new(strata_array.get(&point), VoxelDistance(distance));
+        })
+    });
+
+    sdf_array
+}
+
 struct WaterGenerator {
     sea_level: i32,
     min_x: i32,

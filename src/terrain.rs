@@ -394,7 +394,7 @@ fn generate_voxels(mut terrain_res: ResMut<TerrainResource>) {
     let dirt_thickness_noise = Noise2d::new(RidgedMulti::new().set_seed(random_seed()));
     let query = Extent3i::from_min_and_shape(REGION_MIN_3D, REGION_SHAPE_3D);
     trace!("Generating 3D strata map for extent {:?}", query);
-    let strata_array = colonize_core::generate_map(
+    let strata_array = colonize_core::generate_precise_map(
         &elevation_noise,
         &dirt_thickness_noise,
         SEA_LEVEL,

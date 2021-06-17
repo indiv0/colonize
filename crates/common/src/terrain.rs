@@ -1,5 +1,8 @@
-use building_blocks::{mesh::{IsOpaque, MergeVoxel, SignedDistance}, storage::IsEmpty};
 use building_blocks::storage;
+use building_blocks::{
+    mesh::{IsOpaque, MergeVoxel, SignedDistance},
+    storage::IsEmpty,
+};
 
 pub const EMPTY_VOXEL: Voxel = Voxel {
     voxel_type: VoxelType::Air,
@@ -16,7 +19,10 @@ pub struct Voxel {
 
 impl Voxel {
     pub fn new(voxel_type: VoxelType, distance: VoxelDistance) -> Self {
-        Self { voxel_type, distance }
+        Self {
+            voxel_type,
+            distance,
+        }
     }
 
     pub fn voxel_type(&self) -> &VoxelType {

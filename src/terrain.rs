@@ -29,9 +29,19 @@ use bevy::{
     tasks::ComputeTaskPool,
 };
 use bevy_rapier3d::rapier::{dynamics::RigidBodyBuilder, geometry::ColliderBuilder, math::Point};
-use building_blocks::{core::Point3, mesh::{AdfDualContourBuffer, IsOpaque, SignedDistance, SurfaceNetsBuffer, adf_dual_contour, surface_nets}, storage::{Adf, Array, Array3, ChunkMap, CompressibleChunkStorageReader, ForEach, GetUncheckedRelease, IsEmpty, Local, Snappy, Stride, TransformMap, padded_adf_chunk_extent}};
 use building_blocks::{
-    core::{Extent3i, Point2i, Point3i, PointN, Neighborhoods},
+    core::Point3,
+    mesh::{
+        adf_dual_contour, surface_nets, AdfDualContourBuffer, IsOpaque, SignedDistance,
+        SurfaceNetsBuffer,
+    },
+    storage::{
+        padded_adf_chunk_extent, Adf, Array, Array3, ChunkMap, CompressibleChunkStorageReader,
+        ForEach, GetUncheckedRelease, IsEmpty, Local, Snappy, Stride, TransformMap,
+    },
+};
+use building_blocks::{
+    core::{Extent3i, Neighborhoods, Point2i, Point3i, PointN},
     storage::Get,
 };
 use building_blocks::{
@@ -50,7 +60,7 @@ use colonize_pbr::{pbr_bundle, prelude::StandardMaterial, YLevel};
 use noise::{MultiFractal, RidgedMulti, Seedable};
 use rand::{thread_rng, Rng};
 
-use colonize_common::{EMPTY_VOXEL, NUM_VOXEL_TYPES, Voxel, VoxelType};
+use colonize_common::{Voxel, VoxelType, EMPTY_VOXEL, NUM_VOXEL_TYPES};
 
 const CHUNK_SIZE: usize = 128;
 const REGION_SIZE: usize = 512; // CHUNK_SIZE * NUM_CHUNKS
@@ -322,7 +332,7 @@ fn hide_y_levels_system(
             );
             let meshes = METHOD.generate_mesh_for_extent(
                 &terrain_res.chunks,
-                &chunk_pos,
+                chunk_pos,
                 &local_cache,
                 padded_layer_extent,
                 &extent_to_copy,
@@ -428,7 +438,7 @@ fn generate_meshes(
         .into_iter()
         .filter(|k| {
             // If the mesh exists for this chunk, then there's nothing to do.
-            mesh_res.meshes.get(&k).is_none()
+            mesh_res.meshes.get(k).is_none()
         })
         .collect::<Vec<_>>();
     let meshes = (&pool.0).scope(|s| {
@@ -490,7 +500,9 @@ async fn generate_mesh(
     let chunk_extent = map_ref.indexer.extent_for_chunk_at_key(*chunk_key);
     let padded_chunk_extent = match METHOD {
         MeshGenerationMethod::AdfDualContour => padded_adf_chunk_extent(&chunk_extent),
-        MeshGenerationMethod::GreedyQuads | MeshGenerationMethod::SurfaceNets => padded_greedy_quads_chunk_extent(&chunk_extent),
+        MeshGenerationMethod::GreedyQuads | MeshGenerationMethod::SurfaceNets => {
+            padded_greedy_quads_chunk_extent(&chunk_extent)
+        }
     };
 
     // Create a mesh for each possible size of the chunk.
@@ -587,9 +599,27 @@ impl MeshGenerationMethod {
         extent_to_copy: &Extent3i,
     ) -> Option<HashMap<VoxelType, PosNormMesh>> {
         match *self {
-            MeshGenerationMethod::GreedyQuads => generate_mesh_for_extent_with_greedy_quads(map_ref, chunk_key, local_cache, padded_extent, extent_to_copy),
-            MeshGenerationMethod::SurfaceNets => generate_mesh_for_extent_with_surface_nets(map_ref, chunk_key, local_cache, padded_extent, extent_to_copy),
-            MeshGenerationMethod::AdfDualContour => generate_mesh_for_extent_with_adf_dual_contour(map_ref, chunk_key, local_cache, padded_extent, extent_to_copy),
+            MeshGenerationMethod::GreedyQuads => generate_mesh_for_extent_with_greedy_quads(
+                map_ref,
+                chunk_key,
+                local_cache,
+                padded_extent,
+                extent_to_copy,
+            ),
+            MeshGenerationMethod::SurfaceNets => generate_mesh_for_extent_with_surface_nets(
+                map_ref,
+                chunk_key,
+                local_cache,
+                padded_extent,
+                extent_to_copy,
+            ),
+            MeshGenerationMethod::AdfDualContour => generate_mesh_for_extent_with_adf_dual_contour(
+                map_ref,
+                chunk_key,
+                local_cache,
+                padded_extent,
+                extent_to_copy,
+            ),
         }
     }
 }
@@ -602,7 +632,7 @@ fn generate_mesh_for_extent_with_greedy_quads(
     extent_to_copy: &Extent3i,
 ) -> Option<HashMap<VoxelType, PosNormMesh>> {
     trace!("Generating mesh for chunk at {:?}", chunk_key);
-    let reader = map_ref.storage().reader(&local_cache);
+    let reader = map_ref.storage().reader(local_cache);
     let reader_map: ChunkMap<
         [i32; 3],
         Voxel,
@@ -615,7 +645,7 @@ fn generate_mesh_for_extent_with_greedy_quads(
         padded_extent
     );
     let mut padded_array = Array3::fill(padded_extent, EMPTY_VOXEL);
-    copy_extent(&extent_to_copy, &reader_map, &mut padded_array);
+    copy_extent(extent_to_copy, &reader_map, &mut padded_array);
     let lookup = |v: Voxel| *v.voxel_type();
     let voxel_types = TransformMap::new(&padded_array, lookup);
 
@@ -630,7 +660,7 @@ fn generate_mesh_for_extent_with_greedy_quads(
         for quad in group.quads.iter() {
             let material = *reader_map.get(&quad.minimum).voxel_type();
             let mesh = meshes.entry(material).or_insert_with(PosNormMesh::default);
-            group.face.add_quad_to_pos_norm_mesh(&quad, mesh);
+            group.face.add_quad_to_pos_norm_mesh(quad, mesh);
         }
     }
 
@@ -655,7 +685,7 @@ fn generate_mesh_for_extent_with_adf_dual_contour(
     extent_to_copy: &Extent3i,
 ) -> Option<HashMap<VoxelType, PosNormMesh>> {
     trace!("Generating mesh for chunk at {:?}", chunk_key);
-    let reader = map_ref.storage().reader(&local_cache);
+    let reader = map_ref.storage().reader(local_cache);
     let reader_map: ChunkMap<
         [i32; 3],
         Voxel,
@@ -668,12 +698,15 @@ fn generate_mesh_for_extent_with_adf_dual_contour(
         padded_extent
     );
     let mut padded_array = Array3::fill(padded_extent, EMPTY_VOXEL);
-    copy_extent(&extent_to_copy, &reader_map, &mut padded_array);
+    copy_extent(extent_to_copy, &reader_map, &mut padded_array);
 
     let lookup = |v: Voxel| SignedDistance::distance(&v);
     let voxel_types = TransformMap::new(&padded_array, lookup);
 
-    trace!("Creating ADF from Array3 with extent: {:?}", voxel_types.extent());
+    trace!(
+        "Creating ADF from Array3 with extent: {:?}",
+        voxel_types.extent()
+    );
     let iter_extent = *voxel_types.extent();
     let adf = Adf::from_array3(&voxel_types, iter_extent, 1.0, 0.2);
     // TODO bevy: we could avoid re-allocating the buffers on every call if we had
@@ -685,10 +718,7 @@ fn generate_mesh_for_extent_with_adf_dual_contour(
         return None;
     }
 
-    let AdfDualContourBuffer {
-        mesh,
-        ..
-    } = buffer;
+    let AdfDualContourBuffer { mesh, .. } = buffer;
 
     // Separate the meshes by material, so that we can render each voxel type with a different color.
     let mut meshes: HashMap<VoxelType, PosNormMesh> = HashMap::new();
@@ -706,7 +736,7 @@ fn generate_mesh_for_extent_with_surface_nets(
     extent_to_copy: &Extent3i,
 ) -> Option<HashMap<VoxelType, PosNormMesh>> {
     trace!("Generating mesh for chunk at {:?}", chunk_key);
-    let reader = map_ref.storage().reader(&local_cache);
+    let reader = map_ref.storage().reader(local_cache);
     let reader_map: ChunkMap<
         [i32; 3],
         Voxel,
@@ -719,7 +749,7 @@ fn generate_mesh_for_extent_with_surface_nets(
         padded_extent
     );
     let mut padded_array = Array3::fill(padded_extent, EMPTY_VOXEL);
-    copy_extent(&extent_to_copy, &reader_map, &mut padded_array);
+    copy_extent(extent_to_copy, &reader_map, &mut padded_array);
 
     // TODO bevy: we could avoid re-allocating the buffers on every call if we had
     // thread-local storage accessible from this task
@@ -761,7 +791,10 @@ impl TypedVoxel for VoxelType {
 /// Uses a kernel to count the adjacent materials for each surface point. This is necessary because we used dual contouring to
 /// construct the mesh, so a given vertex has 8 adjacent voxels, some of which may be empty. This also assumes that the material
 /// layer can only be one of 0..NUM_VOXEL_TYPES.
-fn count_adjacent_materials<A, V>(voxels: &A, surface_strides: &[Stride]) -> Vec<[u8; NUM_VOXEL_TYPES]>
+fn count_adjacent_materials<A, V>(
+    voxels: &A,
+    surface_strides: &[Stride],
+) -> Vec<[u8; NUM_VOXEL_TYPES]>
 where
     A: Array<[i32; 3]> + GetUncheckedRelease<Stride, V>,
     V: IsEmpty + TypedVoxel,

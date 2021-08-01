@@ -165,7 +165,7 @@ pub fn lights_node_system(
                 .iter()
                 .zip(data[light_count_size..current_light_uniform_size].chunks_exact_mut(size))
             {
-                slot.copy_from_slice(LightRaw::from(&light, &global_transform).as_bytes());
+                slot.copy_from_slice(LightRaw::from(light, global_transform).as_bytes());
             }
         },
     );

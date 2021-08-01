@@ -5,7 +5,7 @@ use building_blocks::{
     core::{Extent2i, Extent3i, Point3i, PointN},
     storage::{Array2, Array3, ForEachMut, Get, GetMut},
 };
-use colonize_common::{EMPTY_VOXEL, Voxel, VoxelDistance, VoxelType};
+use colonize_common::{Voxel, VoxelDistance, VoxelType, EMPTY_VOXEL};
 
 use crate::array_int_to_float;
 
@@ -199,7 +199,11 @@ where
             // Compute the SDF value as the distance of the voxel from the surface of the map.
             // This assumes that the terrain can be described as a 2D height map. That is,
             // there are no 3D features like caves.
-            let distance = i32::clamp((point.y() as f64 - height) as i32, i8::MIN as i32, i8::MAX as i32) as i8;
+            let distance = i32::clamp(
+                (point.y() as f64 - height) as i32,
+                i8::MIN as i32,
+                i8::MAX as i32,
+            ) as i8;
             *value = Voxel::new(strata_array.get(&point), VoxelDistance(distance));
         })
     });

@@ -106,11 +106,11 @@ impl Plugin for TerrainPlugin {
 }
 
 fn setup(
-    mut res: ResMut<TerrainResource>,
-    mut standard_materials: ResMut<Assets<StandardMaterial>>,
-    _mesh_materials: ResMut<Assets<MeshMaterial>>,
-    _pipelines: ResMut<Assets<PipelineDescriptor>>,
-    _render_graph: ResMut<RenderGraph>,
+    mut res: ResMut<'_, TerrainResource>,
+    mut standard_materials: ResMut<'_, Assets<StandardMaterial>>,
+    _mesh_materials: ResMut<'_, Assets<MeshMaterial>>,
+    _pipelines: ResMut<'_, Assets<PipelineDescriptor>>,
+    _render_graph: ResMut<'_, RenderGraph>,
 ) {
     for (voxel_type, color) in &[
         // Technically we don't use the "air" material ever, since air is transparent, but we still need it to
@@ -217,10 +217,10 @@ pub struct MeshMaterial {
 
 fn modify_config(
     commands: &mut Commands,
-    mut mesh_assets: ResMut<Assets<Mesh>>,
-    keyboard_input: Res<Input<KeyCode>>,
-    mut terrain_res: ResMut<TerrainResource>,
-    mut mesh_res: ResMut<MeshResource>,
+    mut mesh_assets: ResMut<'_, Assets<Mesh>>,
+    keyboard_input: Res<'_, Input<KeyCode>>,
+    mut terrain_res: ResMut<'_, TerrainResource>,
+    mut mesh_res: ResMut<'_, MeshResource>,
 ) {
     let mut reset_flag = false;
 
@@ -276,12 +276,12 @@ fn modify_config(
 
 fn hide_y_levels_system(
     commands: &mut Commands,
-    keyboard_input: Res<Input<KeyCode>>,
-    terrain_res: ResMut<TerrainResource>,
-    mut mesh_res: ResMut<MeshResource>,
-    mesh_query: Query<(Entity, Option<&FullDetailMesh>, &YLevel)>,
-    mut mesh_assets: ResMut<Assets<Mesh>>,
-    mut y_level: ResMut<YLevel>,
+    keyboard_input: Res<'_, Input<KeyCode>>,
+    terrain_res: ResMut<'_, TerrainResource>,
+    mut mesh_res: ResMut<'_, MeshResource>,
+    mesh_query: Query<'_, (Entity, Option<&FullDetailMesh>, &YLevel)>,
+    mut mesh_assets: ResMut<'_, Assets<Mesh>>,
+    mut y_level: ResMut<'_, YLevel>,
 ) {
     // Increase/decrease the Y-level by 1 if the player pressed `<` or `>`.
     let old_y_level = *y_level;
@@ -364,9 +364,9 @@ fn hide_y_levels_system(
 /// Removes all voxels & meshes and marks the world for regeneration.
 fn reset_world(
     commands: &mut Commands,
-    mesh_assets: &mut ResMut<Assets<Mesh>>,
-    terrain_res: &mut ResMut<TerrainResource>,
-    mesh_res: &mut ResMut<MeshResource>,
+    mesh_assets: &mut ResMut<'_, Assets<Mesh>>,
+    terrain_res: &mut ResMut<'_, TerrainResource>,
+    mesh_res: &mut ResMut<'_, MeshResource>,
 ) {
     // Delete the voxels associated with the current world.
     let store = CompressibleChunkStorage::new(Snappy);
@@ -387,7 +387,7 @@ fn reset_world(
     terrain_res.generated_voxels = false;
 }
 
-fn generate_voxels(mut terrain_res: ResMut<TerrainResource>) {
+fn generate_voxels(mut terrain_res: ResMut<'_, TerrainResource>) {
     if terrain_res.generated_voxels {
         return;
     }
@@ -426,10 +426,10 @@ fn random_seed() -> u32 {
 
 fn generate_meshes(
     commands: &mut Commands,
-    mut mesh_assets: ResMut<Assets<Mesh>>,
-    terrain: Res<TerrainResource>,
-    mut mesh_res: ResMut<MeshResource>,
-    pool: Res<ComputeTaskPool>,
+    mut mesh_assets: ResMut<'_, Assets<Mesh>>,
+    terrain: Res<'_, TerrainResource>,
+    mut mesh_res: ResMut<'_, MeshResource>,
+    pool: Res<'_, ComputeTaskPool>,
 ) {
     let map_ref = &terrain.chunks;
     let chunk_keys = map_ref
@@ -583,6 +583,7 @@ async fn generate_mesh(
 
 const METHOD: MeshGenerationMethod = MeshGenerationMethod::AdfDualContour;
 
+#[allow(unused)]
 enum MeshGenerationMethod {
     GreedyQuads,
     SurfaceNets,
@@ -637,7 +638,7 @@ fn generate_mesh_for_extent_with_greedy_quads(
         [i32; 3],
         Voxel,
         (),
-        CompressibleChunkStorageReader<[i32; 3], Voxel, (), Snappy>,
+        CompressibleChunkStorageReader<'_, [i32; 3], Voxel, (), Snappy>,
     > = DEFAULT_BUILDER.build_with_read_storage(reader);
     trace!(
         "Copying extent {:?} for padded extent {:?}",
@@ -690,7 +691,7 @@ fn generate_mesh_for_extent_with_adf_dual_contour(
         [i32; 3],
         Voxel,
         (),
-        CompressibleChunkStorageReader<[i32; 3], Voxel, (), Snappy>,
+        CompressibleChunkStorageReader<'_, [i32; 3], Voxel, (), Snappy>,
     > = DEFAULT_BUILDER.build_with_read_storage(reader);
     trace!(
         "Copying extent {:?} for padded extent {:?}",
@@ -741,7 +742,7 @@ fn generate_mesh_for_extent_with_surface_nets(
         [i32; 3],
         Voxel,
         (),
-        CompressibleChunkStorageReader<[i32; 3], Voxel, (), Snappy>,
+        CompressibleChunkStorageReader<'_, [i32; 3], Voxel, (), Snappy>,
     > = DEFAULT_BUILDER.build_with_read_storage(reader);
     trace!(
         "Copying extent {:?} for padded extent {:?}",
@@ -768,6 +769,7 @@ fn generate_mesh_for_extent_with_surface_nets(
 
     let lookup = |v: Voxel| *v.voxel_type();
     let voxel_types = TransformMap::new(&padded_array, lookup);
+    #[allow(unused)]
     let material_counts = count_adjacent_materials(&voxel_types, &surface_strides);
 
     // Separate the meshes by material, so that we can render each voxel type with a different color.

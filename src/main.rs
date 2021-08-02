@@ -1,11 +1,15 @@
-extern crate bevy;
-extern crate bevy_mod_picking;
-extern crate bevy_rapier3d;
+#![deny(
+    rust_2018_compatibility,
+    rust_2018_idioms,
+    nonstandard_style,
+    future_incompatible,
+    unused,
+    unused_extern_crates,
+    clippy::all
+)]
+
 #[cfg(target_arch = "wasm32")]
-extern crate bevy_webgl2;
-extern crate building_blocks;
-extern crate colonize_common;
-extern crate rand;
+use bevy_webgl2;
 
 mod camera;
 mod dwarf;
@@ -153,7 +157,7 @@ use bevy::{
 
 #[cfg(not(target_arch = "wasm32"))]
 /// Toggles the cursor's visibility and lock mode when the space bar is pressed.
-fn toggle_cursor(input: Res<Input<KeyCode>>, mut windows: ResMut<Windows>) {
+fn toggle_cursor(input: Res<'_, Input<KeyCode>>, mut windows: ResMut<'_, Windows>) {
     let window = windows.get_primary_mut().unwrap();
     if input.just_pressed(KeyCode::Space) {
         window.set_cursor_lock_mode(!window.cursor_locked());

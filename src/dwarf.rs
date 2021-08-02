@@ -54,9 +54,9 @@ struct Name(String);
 
 fn add_dwarves(
     commands: &mut Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    terrain_res: Res<TerrainResource>,
+    mut meshes: ResMut<'_, Assets<Mesh>>,
+    mut materials: ResMut<'_, Assets<StandardMaterial>>,
+    terrain_res: Res<'_, TerrainResource>,
 ) {
     let names = [
         "Khustrul Lavablade",
@@ -112,8 +112,8 @@ fn spawn_dwarf(
     name: String,
     (px, py, pz): (f32, f32, f32),
     commands: &mut Commands,
-    meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<StandardMaterial>>,
+    meshes: &mut ResMut<'_, Assets<Mesh>>,
+    materials: &mut ResMut<'_, Assets<StandardMaterial>>,
 ) {
     trace!("Spawning dwarf at {:?}", (px, py, pz));
     const SIZE: f32 = 1.;
@@ -151,11 +151,11 @@ fn random_point_in_circle(origin: (f64, f64), radius: f64) -> (f64, f64) {
 }
 
 fn input_system(
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<'_, Input<KeyCode>>,
     commands: &mut Commands,
-    meshes: ResMut<Assets<Mesh>>,
-    materials: ResMut<Assets<StandardMaterial>>,
-    terrain_res: Res<TerrainResource>,
+    meshes: ResMut<'_, Assets<Mesh>>,
+    materials: ResMut<'_, Assets<StandardMaterial>>,
+    terrain_res: Res<'_, TerrainResource>,
 ) {
     // If the `T` button is pressed, spawn in 10 more dwarves.
     if keyboard_input.pressed(KeyCode::T) {
@@ -164,10 +164,10 @@ fn input_system(
 }
 
 fn handle_physics_events(
-    events: Res<EventQueue>,
-    collider_set: Res<ColliderSet>,
-    mut dwarf_query: Query<&mut Dwarf>,
-    chunk_query: Query<&Chunk>,
+    events: Res<'_, EventQueue>,
+    collider_set: Res<'_, ColliderSet>,
+    mut dwarf_query: Query<'_, &mut Dwarf>,
+    chunk_query: Query<'_, &Chunk>,
 ) {
     while let Ok(proximity_event) = events.proximity_events.pop() {
         trace!("Received proximity event: {:?}", proximity_event);
@@ -244,9 +244,9 @@ fn handle_physics_events(
 }
 
 fn move_around(
-    mut rigid_body_set: ResMut<RigidBodySet>,
-    mut dwarf_rigid_body_query: Query<(&mut Dwarf, &Name, &RigidBodyHandleComponent)>,
-    terrain_res: ResMut<TerrainResource>,
+    mut rigid_body_set: ResMut<'_, RigidBodySet>,
+    mut dwarf_rigid_body_query: Query<'_, (&mut Dwarf, &Name, &RigidBodyHandleComponent)>,
+    terrain_res: ResMut<'_, TerrainResource>,
 ) {
     let mut rng = thread_rng();
 
@@ -288,9 +288,9 @@ fn move_around(
 }
 
 fn select_dwarves(
-    event_query: Query<(&InteractableMesh, Entity)>,
-    dwarf_query: Query<&mut Dwarf>,
-    mut selected_dwarf: ResMut<SelectedDwarf>,
+    event_query: Query<'_, (&InteractableMesh, Entity)>,
+    dwarf_query: Query<'_, &mut Dwarf>,
+    mut selected_dwarf: ResMut<'_, SelectedDwarf>,
 ) {
     for (interactable, entity) in &mut event_query.iter() {
         let mouse_down_event = interactable
@@ -309,7 +309,7 @@ fn select_dwarves(
 }
 
 fn movement_direction(
-    input: &Res<Input<KeyCode>>,
+    input: &Res<'_, Input<KeyCode>>,
     positive: &[KeyCode],
     negative: &[KeyCode],
 ) -> i8 {
@@ -324,10 +324,10 @@ fn movement_direction(
 }
 
 fn keyboard_movement_system(
-    keyboard_input: Res<Input<KeyCode>>,
-    mut rigid_body_set: ResMut<RigidBodySet>,
-    selected_dwarf: ResMut<SelectedDwarf>,
-    mut dwarf_query: Query<&mut RigidBodyHandleComponent>,
+    keyboard_input: Res<'_, Input<KeyCode>>,
+    mut rigid_body_set: ResMut<'_, RigidBodySet>,
+    selected_dwarf: ResMut<'_, SelectedDwarf>,
+    mut dwarf_query: Query<'_, &mut RigidBodyHandleComponent>,
 ) {
     if let Some(entity) = selected_dwarf.dwarf {
         let rigid_body_handle = dwarf_query

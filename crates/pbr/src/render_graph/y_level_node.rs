@@ -16,6 +16,7 @@ pub struct YLevelNode {
     command_queue: CommandQueue,
 }
 
+#[allow(clippy::new_without_default)]
 impl YLevelNode {
     pub fn new() -> Self {
         YLevelNode {
@@ -60,11 +61,11 @@ pub struct YLevelNodeState {
 }
 
 pub(crate) fn y_level_node_system(
-    mut state: Local<YLevelNodeState>,
-    render_resource_context: Res<Box<dyn RenderResourceContext>>,
+    mut state: Local<'_, YLevelNodeState>,
+    render_resource_context: Res<'_, Box<dyn RenderResourceContext>>,
     // TODO: this write on RenderResourceBindings will prevent this system from running in parallel with other systems that do the same
-    mut render_resource_bindings: ResMut<RenderResourceBindings>,
-    y_level: Res<YLevel>,
+    mut render_resource_bindings: ResMut<'_, RenderResourceBindings>,
+    y_level: Res<'_, YLevel>,
 ) {
     let state = &mut state;
     let render_resource_context = &**render_resource_context;

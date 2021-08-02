@@ -98,12 +98,12 @@ pub struct LightsNodeSystemState {
 }
 
 pub fn lights_node_system(
-    mut state: Local<LightsNodeSystemState>,
-    render_resource_context: Res<Box<dyn RenderResourceContext>>,
-    ambient_light_resource: Res<AmbientLight>,
+    mut state: Local<'_, LightsNodeSystemState>,
+    render_resource_context: Res<'_, Box<dyn RenderResourceContext>>,
+    ambient_light_resource: Res<'_, AmbientLight>,
     // TODO: this write on RenderResourceBindings will prevent this system from running in parallel with other systems that do the same
-    mut render_resource_bindings: ResMut<RenderResourceBindings>,
-    query: Query<(&Light, &GlobalTransform)>,
+    mut render_resource_bindings: ResMut<'_, RenderResourceBindings>,
+    query: Query<'_, (&Light, &GlobalTransform)>,
 ) {
     let state = &mut state;
     let render_resource_context = &**render_resource_context;
